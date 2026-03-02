@@ -15,7 +15,7 @@
                         bengali: ['Hind Siliguri', 'sans-serif'],
                     },
                     colors: {
-                        glassBorder: 'rgba(255, 255, 255, 0.2)',
+                        glassBorder: 'rgba(255, 255, 255, 0.15)',
                     }
                 }
             }
@@ -24,13 +24,14 @@
     <style>
         body {
             font-family: 'Hind Siliguri', sans-serif;
+            background-color: #0f172a; /* Fallback dark color */
         }
         
-        /* Liquid Background Animation */
+        /* Refined Premium Liquid Background Animation */
         .liquid-bg {
-            background: linear-gradient(-45deg, #4f46e5, #ec4899, #8b5cf6, #3b82f6);
+            background: linear-gradient(-45deg, #0f172a, #1e1b4b, #2e1065, #172554);
             background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
+            animation: gradientBG 20s ease infinite;
             background-attachment: fixed;
         }
 
@@ -40,67 +41,69 @@
             100% { background-position: 0% 50%; }
         }
 
-        /* Floating Blobs for Liquid Effect */
+        /* Floating Blobs with Softer Colors for Deep Background */
         .blob {
             position: absolute;
-            filter: blur(60px);
+            filter: blur(80px);
             z-index: -1;
-            opacity: 0.6;
-            animation: float 10s infinite alternate;
+            border-radius: 50%;
+            animation: float 12s infinite alternate ease-in-out;
         }
 
         @keyframes float {
             0% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(30px, -50px) scale(1.1); }
-            66% { transform: translate(-20px, 20px) scale(0.9); }
+            33% { transform: translate(5vw, -5vh) scale(1.1); }
+            66% { transform: translate(-3vw, 4vh) scale(0.9); }
             100% { transform: translate(0, 0) scale(1); }
         }
 
-        /* Glassmorphism Classes */
+        /* Refined Glassmorphism Classes */
         .glass {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
         }
 
         .glass-card {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03));
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
         }
 
         .glass-btn {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             transition: all 0.3s ease;
         }
 
         .glass-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.2);
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
         .glass-input {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             color: white;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(10px);
         }
 
         .glass-input::placeholder {
-            color: rgba(255, 255, 255, 0.7);
+            color: rgba(255, 255, 255, 0.5);
         }
 
         .glass-input:focus {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.5);
+            background: rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 255, 255, 0.4);
             outline: none;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
         }
 
         /* Modal Animation */
@@ -114,387 +117,416 @@
 
         /* Text readability */
         .text-shadow {
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
         }
         
         /* Select option colors */
         select option {
-            background-color: #1f2937; /* Dark bg for options so text is visible */
+            background-color: #1e1b4b; /* Match deep theme for dropdown options */
             color: white;
         }
     </style>
 </head>
-<body class="liquid-bg text-white antialiased relative min-h-screen overflow-x-hidden">
+<body class="liquid-bg text-white antialiased">
 
-    <!-- Decorative Liquid Blobs -->
-    <div class="blob bg-pink-500 w-96 h-96 rounded-full top-0 left-10"></div>
-    <div class="blob bg-indigo-500 w-96 h-96 rounded-full bottom-20 right-10" style="animation-delay: -3s;"></div>
-    <div class="blob bg-purple-500 w-80 h-80 rounded-full top-1/2 left-1/3" style="animation-delay: -6s;"></div>
+    <!-- Wrapper to ensure no horizontal scrolling on mobile -->
+    <div class="relative overflow-hidden min-h-screen w-full">
 
-    <!-- Navbar -->
-    <nav class="glass fixed w-full z-40 top-0 transition-all duration-300">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-20 items-center">
-                <div class="flex-shrink-0 flex items-center">
-                    <span class="font-bengali font-bold text-2xl tracking-wide text-shadow">
-                        <i class="fa-solid fa-pen-nib mr-2"></i>অ্যাসাইনমেন্ট করান
-                    </span>
-                </div>
-                <div class="hidden md:flex space-x-8 items-center">
-                    <a href="#home" class="text-white/90 hover:text-white transition font-medium">হোম</a>
-                    <a href="#works" class="text-white/90 hover:text-white transition font-medium">আমাদের কাজ</a>
-                    <a href="#ratings" class="text-white/90 hover:text-white transition font-medium">রিভিউ</a>
-                    <button onclick="openModal()" class="glass-btn text-white px-6 py-2.5 rounded-full font-medium shadow-lg">
-                        রাইটার হোন
-                    </button>
-                </div>
-                <!-- Mobile menu button -->
-                <div class="md:hidden flex items-center">
-                    <button id="mobile-menu-btn" class="text-white hover:text-white/80 focus:outline-none">
-                        <i class="fa-solid fa-bars text-2xl"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-        <!-- Mobile Menu -->
-        <div id="mobile-menu" class="hidden md:hidden glass border-t border-white/20 pb-4 px-4 space-y-3">
-            <a href="#home" class="block text-white pt-3 hover:text-white/80 font-medium">হোম</a>
-            <a href="#works" class="block text-white hover:text-white/80 font-medium">আমাদের কাজ</a>
-            <a href="#ratings" class="block text-white hover:text-white/80 font-medium">রিভিউ</a>
-            <button onclick="openModal()" class="w-full text-left glass-btn text-white px-4 py-2 rounded-md font-medium mt-2">
-                রাইটার হোন
-            </button>
-        </div>
-    </nav>
+        <!-- Decorative Responsive Liquid Blobs -->
+        <div class="blob bg-blue-500/30 w-[60vw] h-[60vw] max-w-lg max-h-lg top-[-10%] left-[-10%]"></div>
+        <div class="blob bg-purple-500/30 w-[50vw] h-[50vw] max-w-md max-h-md bottom-[10%] right-[-5%]" style="animation-delay: -3s;"></div>
+        <div class="blob bg-indigo-500/20 w-[70vw] h-[70vw] max-w-xl max-h-xl top-[40%] left-[20%]" style="animation-delay: -6s;"></div>
 
-    <!-- Hero Section -->
-    <section id="home" class="pt-32 pb-16 md:pt-48 md:pb-32 relative z-10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <div class="glass-card inline-block p-8 md:p-12 rounded-3xl max-w-4xl mx-auto border border-white/30 relative overflow-hidden">
-                <!-- Inner glow -->
-                <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1/2 bg-white/10 blur-2xl rounded-full"></div>
-                
-                <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-6 text-shadow relative z-10 leading-tight">
-                    সেরা মানের অ্যাসাইনমেন্ট, <br class="hidden md:block">
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-300 to-indigo-200">নিখুঁত সমাধান</span>
-                </h1>
-                <p class="mt-4 text-lg md:text-xl text-white/90 mb-10 text-shadow relative z-10">
-                    ডেডলাইন নিয়ে চিন্তিত? আমাদের দক্ষ রাইটারদের দিয়ে আপনার প্রবন্ধ, রিপোর্ট, কোডিং প্রজেক্ট এবং রিসার্চ পেপার লিখিয়ে নিন এবং নিশ্চিত করুন সেরা ফলাফল।
-                </p>
-                <div class="flex flex-col sm:flex-row justify-center gap-5 relative z-10">
-                    <a href="#works" class="bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/40 text-white px-8 py-3.5 rounded-full font-semibold text-lg transition shadow-[0_0_15px_rgba(255,255,255,0.3)] hover:shadow-[0_0_25px_rgba(255,255,255,0.5)]">
-                        আমাদের কাজগুলো দেখুন
-                    </a>
-                    <button onclick="openModal()" class="glass text-white border border-white/30 px-8 py-3.5 rounded-full font-semibold text-lg hover:bg-white/20 transition shadow-lg">
-                        রাইটার হিসেবে যোগ দিন
-                    </button>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Stats Section -->
-    <section class="py-8 relative z-10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="glass-card rounded-2xl grid grid-cols-1 md:grid-cols-3 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-white/20 p-6">
-                <div class="p-4">
-                    <div class="text-4xl md:text-5xl font-bold mb-2 flex justify-center items-center text-shadow">
-                        <span class="counter" data-target="15420">0</span>+
+        <!-- Navbar -->
+        <nav class="glass fixed w-full z-40 top-0 transition-all duration-300">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-20 items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <span class="font-bengali font-bold text-2xl tracking-wide text-shadow">
+                            <i class="fa-solid fa-pen-nib mr-2"></i>অ্যাসাইনমেন্ট করান
+                        </span>
                     </div>
-                    <div class="text-white/80 font-medium text-lg tracking-wider">সম্পন্ন প্রজেক্ট</div>
-                </div>
-                <div class="p-4">
-                    <div class="text-4xl md:text-5xl font-bold mb-2 flex justify-center items-center text-shadow">
-                        <span class="counter" data-target="850">0</span>+
+                    <div class="hidden md:flex space-x-8 items-center">
+                        <a href="#home" class="text-white/80 hover:text-white transition font-medium">হোম</a>
+                        <a href="#works" class="text-white/80 hover:text-white transition font-medium">আমাদের কাজ</a>
+                        <a href="#ratings" class="text-white/80 hover:text-white transition font-medium">রিভিউ</a>
+                        <button onclick="openModal()" class="glass-btn text-white px-6 py-2.5 rounded-full font-medium shadow-lg">
+                            রাইটার হোন
+                        </button>
                     </div>
-                    <div class="text-white/80 font-medium text-lg tracking-wider">দক্ষ রাইটার</div>
-                </div>
-                <div class="p-4">
-                    <div class="text-4xl md:text-5xl font-bold mb-2 flex justify-center items-center text-shadow">
-                        <span class="counter" data-target="12300">0</span>+
-                    </div>
-                    <div class="text-white/80 font-medium text-lg tracking-wider">সন্তুষ্ট গ্রাহক</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Our Works Section -->
-    <section id="works" class="py-24 relative z-10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl md:text-4xl font-bold mb-4 text-shadow">আমাদের কাজসমূহ</h2>
-                <div class="w-24 h-1 bg-white/50 mx-auto rounded-full shadow-[0_0_10px_rgba(255,255,255,0.8)]"></div>
-                <p class="mt-6 text-white/90 max-w-2xl mx-auto text-lg text-shadow">আমাদের বিশেষজ্ঞদের দ্বারা সফলভাবে সম্পন্ন করা কিছু চমৎকার অ্যাসাইনমেন্ট, রিসার্চ পেপার এবং প্রজেক্ট দেখে নিন।</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Work Card 1 -->
-                <div class="glass-card rounded-2xl overflow-hidden hover:-translate-y-2 transition duration-300 group">
-                    <div class="h-48 glass relative overflow-hidden flex items-center justify-center border-b border-white/10">
-                        <div class="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
-                        <i class="fa-solid fa-file-code text-6xl text-white/80 group-hover:scale-110 group-hover:text-white transition duration-500 relative z-10 filter drop-shadow-lg"></i>
-                    </div>
-                    <div class="p-8">
-                        <span class="text-xs font-semibold tracking-widest text-pink-200 uppercase mb-2 block">কম্পিউটার সায়েন্স</span>
-                        <h3 class="text-xl font-bold mb-3 text-shadow">ই-কমার্স ওয়েব অ্যাপ (রিয়েক্ট)</h3>
-                        <p class="text-white/80 text-sm mb-5 leading-relaxed">নিরাপদ পেমেন্ট গেটওয়ে সহ সম্পূর্ণ ফ্রন্টএন্ড এবং ব্যাকএন্ড ইমপ্লিমেন্টেশন।</p>
-                        <div class="flex items-center text-sm font-medium bg-white/10 inline-flex px-3 py-1.5 rounded-full border border-white/20">
-                            <i class="fa-solid fa-star text-yellow-300 mr-2"></i> ৫.০ (A+ গ্রেড)
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Work Card 2 -->
-                <div class="glass-card rounded-2xl overflow-hidden hover:-translate-y-2 transition duration-300 group">
-                    <div class="h-48 glass relative overflow-hidden flex items-center justify-center border-b border-white/10">
-                        <div class="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
-                        <i class="fa-solid fa-chart-pie text-6xl text-white/80 group-hover:scale-110 group-hover:text-white transition duration-500 relative z-10 filter drop-shadow-lg"></i>
-                    </div>
-                    <div class="p-8">
-                        <span class="text-xs font-semibold tracking-widest text-indigo-200 uppercase mb-2 block">বিজনেস অ্যাডমিনিস্ট্রেশন</span>
-                        <h3 class="text-xl font-bold mb-3 text-shadow">মার্কেট অ্যানালাইসিস রিপোর্ট</h3>
-                        <p class="text-white/80 text-sm mb-5 leading-relaxed">পরিসংখ্যানগত ডেটা সহ দক্ষিণ এশিয়ায় উদীয়মান বাজারের প্রবণতা নিয়ে ব্যাপক কেস স্টাডি।</p>
-                        <div class="flex items-center text-sm font-medium bg-white/10 inline-flex px-3 py-1.5 rounded-full border border-white/20">
-                            <i class="fa-solid fa-star text-yellow-300 mr-2"></i> ৪.৯ (High Distinction)
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Work Card 3 -->
-                <div class="glass-card rounded-2xl overflow-hidden hover:-translate-y-2 transition duration-300 group">
-                    <div class="h-48 glass relative overflow-hidden flex items-center justify-center border-b border-white/10">
-                        <div class="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
-                        <i class="fa-solid fa-book-medical text-6xl text-white/80 group-hover:scale-110 group-hover:text-white transition duration-500 relative z-10 filter drop-shadow-lg"></i>
-                    </div>
-                    <div class="p-8">
-                        <span class="text-xs font-semibold tracking-widest text-cyan-200 uppercase mb-2 block">মেডিকেল সায়েন্স</span>
-                        <h3 class="text-xl font-bold mb-3 text-shadow">নিউরোলজি রিসার্চ পেপার</h3>
-                        <p class="text-white/80 text-sm mb-5 leading-relaxed">জ্ঞানীয় আচরণগত নিদর্শনের উপর গভীর সাহিত্য পর্যালোচনা এবং বিশ্লেষণ।</p>
-                        <div class="flex items-center text-sm font-medium bg-white/10 inline-flex px-3 py-1.5 rounded-full border border-white/20">
-                            <i class="fa-solid fa-star text-yellow-300 mr-2"></i> ৫.০ (Published Level)
-                        </div>
+                    <!-- Mobile menu button -->
+                    <div class="md:hidden flex items-center">
+                        <button id="mobile-menu-btn" class="text-white hover:text-white/80 focus:outline-none p-2">
+                            <i class="fa-solid fa-bars text-2xl"></i>
+                        </button>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
-
-    <!-- Ratings Section -->
-    <section id="ratings" class="py-24 relative z-10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl md:text-4xl font-bold mb-4 text-shadow">গ্রাহকদের রেটিং ও রিভিউ</h2>
-                <div class="w-24 h-1 bg-white/50 mx-auto rounded-full shadow-[0_0_10px_rgba(255,255,255,0.8)]"></div>
-                <p class="mt-6 text-white/90 max-w-2xl mx-auto text-lg text-shadow">আমাদের কাজ নিয়ে আমাদের শিক্ষার্থী এবং প্রফেশনাল ক্লায়েন্টদের মতামত জেনে নিন।</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- Review 1 -->
-                <div class="glass-card p-8 rounded-3xl relative">
-                    <i class="fa-solid fa-quote-left text-5xl text-white/10 absolute top-6 left-6"></i>
-                    <div class="flex items-center mb-6 relative z-10">
-                        <div class="text-yellow-300 flex space-x-1 text-sm filter drop-shadow-md">
-                            <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-                        </div>
-                    </div>
-                    <p class="text-white/90 mb-8 italic relative z-10 leading-relaxed text-shadow-sm">"অসাধারণ! আমি আমার ফাইনাল ইয়ার পাইথন প্রজেক্ট নিয়ে সম্পূর্ণ আটকে ছিলাম। আমাকে যে রাইটার দেওয়া হয়েছিল তিনি অত্যন্ত পেশাদার ছিলেন এবং ডেডলাইনের ২ দিন আগেই বাগ-মুক্ত কোড ডেলিভারি দিয়েছেন।"</p>
-                    <div class="flex items-center pt-4 border-t border-white/10">
-                        <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white font-bold mr-4 text-xl border border-white/30 shadow-inner">রা</div>
-                        <div>
-                            <h4 class="font-bold text-shadow">রাহাত হাসান</h4>
-                            <span class="text-sm text-white/70">বিএসসি সিএস শিক্ষার্থী</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Review 2 -->
-                <div class="glass-card p-8 rounded-3xl relative">
-                    <i class="fa-solid fa-quote-left text-5xl text-white/10 absolute top-6 left-6"></i>
-                    <div class="flex items-center mb-6 relative z-10">
-                        <div class="text-yellow-300 flex space-x-1 text-sm filter drop-shadow-md">
-                            <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-                        </div>
-                    </div>
-                    <p class="text-white/90 mb-8 italic relative z-10 leading-relaxed text-shadow-sm">"রিসার্চের মান ছিল অসামান্য। সঠিক এপিএ (APA) সাইটেশন ব্যবহার করা হয়েছে এবং কোনো প্লেজিয়ারিজম ছিল না। সবাইকে 'অ্যাসাইনমেন্ট করান' রেকমেন্ড করছি।"</p>
-                    <div class="flex items-center pt-4 border-t border-white/10">
-                        <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white font-bold mr-4 text-xl border border-white/30 shadow-inner">সা</div>
-                        <div>
-                            <h4 class="font-bold text-shadow">সাদিয়া রহমান</h4>
-                            <span class="text-sm text-white/70">এমবিএ পরীক্ষার্থী</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Review 3 -->
-                <div class="glass-card p-8 rounded-3xl relative">
-                    <i class="fa-solid fa-quote-left text-5xl text-white/10 absolute top-6 left-6"></i>
-                    <div class="flex items-center mb-6 relative z-10">
-                        <div class="text-yellow-300 flex space-x-1 text-sm filter drop-shadow-md">
-                            <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-                        </div>
-                    </div>
-                    <p class="text-white/90 mb-8 italic relative z-10 leading-relaxed text-shadow-sm">"আন্তর্জাতিক সাইটগুলোর তুলনায় মূল্য বেশ সাশ্রয়ী, কিন্তু কোয়ালিটি সমান বা তার চেয়েও ভালো। সাপোর্ট টিমও খুব দ্রুত রেসপন্স করে।"</p>
-                    <div class="flex items-center pt-4 border-t border-white/10">
-                        <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white font-bold mr-4 text-xl border border-white/30 shadow-inner">তা</div>
-                        <div>
-                            <h4 class="font-bold text-shadow">তানভীর আহমেদ</h4>
-                            <span class="text-sm text-white/70">বিশ্ববিদ্যালয় শিক্ষার্থী</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Become a Writer CTA Section -->
-    <section class="py-24 relative z-10">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="glass-card rounded-3xl p-10 md:p-16 text-center shadow-2xl relative overflow-hidden border border-white/40">
-                <!-- Highlight effect -->
-                <div class="absolute inset-0 bg-gradient-to-t from-transparent via-white/5 to-white/20"></div>
-                
-                <h2 class="text-3xl md:text-5xl font-bold mb-6 relative z-10 text-shadow">আপনি কি আপনার বিষয়ে পারদর্শী?</h2>
-                <p class="text-white/90 text-lg md:text-xl mb-10 max-w-3xl mx-auto relative z-10 leading-relaxed">আমাদের ফ্রিল্যান্স একাডেমিক রাইটার এবং ডেভেলপারদের ক্রমবর্ধমান টিমে যোগ দিন। ঘরে বসে কাজ করুন, নিজের সময়মতো কাজ করুন এবং আকর্ষণীয় আয় করুন।</p>
-                <button onclick="openModal()" class="relative z-10 bg-white text-indigo-600 px-10 py-4 rounded-full font-bold text-lg transition shadow-[0_0_20px_rgba(255,255,255,0.4)] hover:shadow-[0_0_30px_rgba(255,255,255,0.6)] transform hover:-translate-y-1">
-                    রাইটার হওয়ার জন্য আবেদন করুন
+            <!-- Mobile Menu -->
+            <div id="mobile-menu" class="hidden md:hidden glass border-t border-white/10 pb-4 px-4 space-y-2 backdrop-blur-xl bg-black/20">
+                <a href="#home" class="block text-white pt-3 px-2 hover:text-white/80 font-medium">হোম</a>
+                <a href="#works" class="block text-white px-2 hover:text-white/80 font-medium">আমাদের কাজ</a>
+                <a href="#ratings" class="block text-white px-2 hover:text-white/80 font-medium">রিভিউ</a>
+                <button onclick="openModal()" class="w-full text-center glass-btn text-white px-4 py-3 rounded-xl font-medium mt-4">
+                    রাইটার হোন
                 </button>
             </div>
-        </div>
-    </section>
+        </nav>
 
-    <!-- Footer -->
-    <footer class="glass border-t border-white/20 pt-16 pb-8 relative z-10">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-10">
-            <div class="col-span-1 md:col-span-2">
-                <span class="font-bengali font-bold text-3xl mb-4 block text-shadow">
-                    <i class="fa-solid fa-pen-nib mr-2"></i>অ্যাসাইনমেন্ট করান
-                </span>
-                <p class="text-white/80 max-w-sm leading-relaxed text-sm">একাডেমিক এবং পেশাদার অ্যাসাইনমেন্ট সম্পন্ন করার জন্য আপনার বিশ্বস্ত পার্টনার। গুণগত মান, মৌলিকত্ব এবং সময়মতো ডেলিভারির নিশ্চয়তা।</p>
-            </div>
-            <div>
-                <h4 class="font-bold text-xl mb-5 text-shadow">প্রয়োজনীয় লিংক</h4>
-                <ul class="space-y-3 text-white/80">
-                    <li><a href="#home" class="hover:text-white transition flex items-center"><i class="fa-solid fa-chevron-right text-xs mr-2 opacity-60"></i> হোম</a></li>
-                    <li><a href="#works" class="hover:text-white transition flex items-center"><i class="fa-solid fa-chevron-right text-xs mr-2 opacity-60"></i> আমাদের কাজ</a></li>
-                    <li><a href="#ratings" class="hover:text-white transition flex items-center"><i class="fa-solid fa-chevron-right text-xs mr-2 opacity-60"></i> রিভিউ</a></li>
-                </ul>
-            </div>
-            <div>
-                <h4 class="font-bold text-xl mb-5 text-shadow">যোগাযোগ করুন</h4>
-                <ul class="space-y-4 text-white/90">
-                    <li class="flex items-center p-3 glass rounded-xl border border-white/10">
-                        <i class="fa-solid fa-envelope mr-3 text-lg text-pink-200"></i> 
-                        <a href="mailto:assignmentkoran@gmail.com" class="hover:underline">assignmentkoran@gmail.com</a>
-                    </li>
-                    <li class="pt-2 flex space-x-4">
-                        <a href="https://facebook.com/assignmentKoran" target="_blank" class="glass-btn w-12 h-12 rounded-full flex items-center justify-center text-white text-xl shadow-lg">
-                            <i class="fa-brands fa-facebook-f"></i>
+        <!-- Hero Section -->
+        <section id="home" class="pt-32 pb-16 md:pt-48 md:pb-32 relative z-10 px-4">
+            <div class="max-w-7xl mx-auto text-center">
+                <div class="glass-card inline-block p-6 sm:p-10 md:p-14 rounded-[2rem] max-w-4xl mx-auto relative overflow-hidden w-full">
+                    <!-- Inner glow -->
+                    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-1/2 bg-indigo-400/20 blur-3xl rounded-full"></div>
+                    
+                    <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-6 text-shadow relative z-10 leading-tight">
+                        সেরা মানের অ্যাসাইনমেন্ট, <br class="hidden sm:block">
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-indigo-300 to-purple-300">নিখুঁত সমাধান</span>
+                    </h1>
+                    <p class="mt-4 text-base sm:text-lg md:text-xl text-white/80 mb-10 text-shadow relative z-10 max-w-2xl mx-auto px-2">
+                        ডেডলাইন নিয়ে চিন্তিত? আমাদের দক্ষ রাইটারদের দিয়ে আপনার প্রবন্ধ, রিপোর্ট, কোডিং প্রজেক্ট এবং রিসার্চ পেপার লিখিয়ে নিন এবং নিশ্চিত করুন সেরা ফলাফল।
+                    </p>
+                    <div class="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6 relative z-10">
+                        <a href="#works" class="bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/30 text-white px-6 sm:px-8 py-3.5 rounded-full font-semibold text-base sm:text-lg transition shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(255,255,255,0.2)] w-full sm:w-auto text-center">
+                            আমাদের কাজগুলো দেখুন
                         </a>
-                    </li>
-                </ul>
+                        <button onclick="openModal()" class="glass-btn text-white px-6 sm:px-8 py-3.5 rounded-full font-semibold text-base sm:text-lg w-full sm:w-auto text-center">
+                            রাইটার হিসেবে যোগ দিন
+                        </button>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 pt-8 border-t border-white/10 text-sm text-center text-white/60">
-            &copy; <span id="year"></span> অ্যাসাইনমেন্ট করান। সর্বস্বত্ব সংরক্ষিত।
-        </div>
-    </footer>
+        </section>
 
-    <!-- Become a Writer Modal -->
-    <div id="writerModal" class="fixed inset-0 z-50 hidden overflow-y-auto h-full w-full backdrop-blur-md bg-black/40 transition-opacity" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
-            <!-- Modal Background (Liquid Glass) -->
-            <div class="relative glass-card border border-white/30 rounded-3xl text-left overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.3)] transform transition-all sm:my-8 sm:max-w-2xl sm:w-full fade-in">
-                
-                <!-- Modal Header -->
-                <div class="bg-white/10 backdrop-blur-sm border-b border-white/20 px-6 py-5 flex justify-between items-center relative overflow-hidden">
-                    <div class="absolute inset-0 bg-gradient-to-r from-pink-500/20 to-indigo-500/20"></div>
-                    <h3 class="text-2xl font-bold text-white relative z-10 text-shadow" id="modal-title">
-                        রাইটার আবেদন ফর্ম
-                    </h3>
-                    <button type="button" onclick="closeModal()" class="relative z-10 text-white/80 hover:text-white focus:outline-none glass-btn rounded-full w-8 h-8 flex items-center justify-center transition">
-                        <i class="fa-solid fa-xmark text-lg"></i>
-                    </button>
+        <!-- Stats Section -->
+        <section class="py-10 relative z-10 px-4">
+            <div class="max-w-7xl mx-auto">
+                <div class="glass-card rounded-3xl grid grid-cols-1 md:grid-cols-3 gap-6 text-center divide-y md:divide-y-0 md:divide-x divide-white/10 p-6 sm:p-8">
+                    <div class="p-4">
+                        <div class="text-4xl sm:text-5xl font-bold mb-2 flex justify-center items-center text-shadow text-blue-200">
+                            <span class="counter" data-target="15420">0</span>+
+                        </div>
+                        <div class="text-white/70 font-medium text-sm sm:text-lg tracking-wider">সম্পন্ন প্রজেক্ট</div>
+                    </div>
+                    <div class="p-4">
+                        <div class="text-4xl sm:text-5xl font-bold mb-2 flex justify-center items-center text-shadow text-purple-200">
+                            <span class="counter" data-target="850">0</span>+
+                        </div>
+                        <div class="text-white/70 font-medium text-sm sm:text-lg tracking-wider">দক্ষ রাইটার</div>
+                    </div>
+                    <div class="p-4">
+                        <div class="text-4xl sm:text-5xl font-bold mb-2 flex justify-center items-center text-shadow text-indigo-200">
+                            <span class="counter" data-target="12300">0</span>+
+                        </div>
+                        <div class="text-white/70 font-medium text-sm sm:text-lg tracking-wider">সন্তুষ্ট গ্রাহক</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Our Works Section -->
+        <section id="works" class="py-20 md:py-28 relative z-10 px-4">
+            <div class="max-w-7xl mx-auto">
+                <div class="text-center mb-12 sm:mb-16">
+                    <h2 class="text-3xl sm:text-4xl font-bold mb-4 text-shadow">আমাদের কাজসমূহ</h2>
+                    <div class="w-20 sm:w-24 h-1 bg-gradient-to-r from-blue-400 to-purple-400 mx-auto rounded-full shadow-[0_0_15px_rgba(167,139,250,0.5)]"></div>
+                    <p class="mt-6 text-white/80 max-w-2xl mx-auto text-base sm:text-lg text-shadow px-2">আমাদের বিশেষজ্ঞদের দ্বারা সফলভাবে সম্পন্ন করা কিছু চমৎকার অ্যাসাইনমেন্ট, রিসার্চ পেপার এবং প্রজেক্ট দেখে নিন।</p>
                 </div>
 
-                <!-- Form Content -->
-                <form id="writerForm" class="px-6 py-6 sm:p-8 relative z-10">
-                    <div id="formAlert" class="hidden mb-6 p-4 rounded-xl glass bg-green-500/20 border border-green-400/40 text-white shadow-lg backdrop-blur-md">
-                        <div class="flex items-center">
-                            <i class="fa-solid fa-circle-check text-green-300 text-xl mr-3"></i>
-                            <p class="font-medium text-shadow-sm">আবেদন সফলভাবে জমা দেওয়া হয়েছে! আমরা শীঘ্রই আপনার সাথে যোগাযোগ করব।</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+                    <!-- Work Card 1 -->
+                    <div class="glass-card rounded-3xl overflow-hidden hover:-translate-y-2 transition duration-300 group flex flex-col">
+                        <div class="h-48 sm:h-56 glass relative overflow-hidden flex items-center justify-center border-b border-white/5">
+                            <div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent"></div>
+                            <i class="fa-solid fa-file-code text-5xl sm:text-6xl text-white/60 group-hover:scale-110 group-hover:text-blue-300 transition duration-500 relative z-10 drop-shadow-2xl"></i>
+                        </div>
+                        <div class="p-6 sm:p-8 flex-grow flex flex-col">
+                            <span class="text-xs font-semibold tracking-widest text-blue-300 uppercase mb-2 block">কম্পিউটার সায়েন্স</span>
+                            <h3 class="text-lg sm:text-xl font-bold mb-3 text-shadow leading-snug">ই-কমার্স ওয়েব অ্যাপ (রিয়েক্ট)</h3>
+                            <p class="text-white/70 text-sm mb-5 leading-relaxed flex-grow">নিরাপদ পেমেন্ট গেটওয়ে সহ সম্পূর্ণ ফ্রন্টএন্ড এবং ব্যাকএন্ড ইমপ্লিমেন্টেশন।</p>
+                            <div class="flex items-center text-sm font-medium bg-black/20 inline-flex px-4 py-2 rounded-full border border-white/10 self-start">
+                                <i class="fa-solid fa-star text-yellow-400 mr-2"></i> ৫.০ (A+ গ্রেড)
+                            </div>
                         </div>
                     </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-                        <div>
-                            <label for="fullName" class="block text-sm font-medium text-white/90 mb-2">পুরো নাম</label>
-                            <input type="text" id="fullName" required class="w-full px-4 py-3 glass-input rounded-xl transition" placeholder="আপনার নাম">
+                    
+                    <!-- Work Card 2 -->
+                    <div class="glass-card rounded-3xl overflow-hidden hover:-translate-y-2 transition duration-300 group flex flex-col">
+                        <div class="h-48 sm:h-56 glass relative overflow-hidden flex items-center justify-center border-b border-white/5">
+                            <div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent"></div>
+                            <i class="fa-solid fa-chart-pie text-5xl sm:text-6xl text-white/60 group-hover:scale-110 group-hover:text-purple-300 transition duration-500 relative z-10 drop-shadow-2xl"></i>
                         </div>
-                        <div>
-                            <label for="email" class="block text-sm font-medium text-white/90 mb-2">ইমেইল এড্রেস</label>
-                            <input type="email" id="email" required class="w-full px-4 py-3 glass-input rounded-xl transition" placeholder="example@email.com">
-                        </div>
-                        <div class="sm:col-span-2">
-                            <label for="education" class="block text-sm font-medium text-white/90 mb-2">সর্বোচ্চ শিক্ষাগত যোগ্যতা</label>
-                            <select id="education" required class="w-full px-4 py-3 glass-input rounded-xl transition cursor-pointer appearance-none relative">
-                                <option value="" disabled selected class="text-gray-400">একটি বিকল্প নির্বাচন করুন</option>
-                                <option value="Bachelors">স্নাতক (Bachelor's)</option>
-                                <option value="Masters">স্নাতকোত্তর (Master's)</option>
-                                <option value="PhD">পিএইচডি (Ph.D.)</option>
-                                <option value="Other">অন্যান্য</option>
-                            </select>
-                            <!-- Custom dropdown arrow -->
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-white/70">
-                                <i class="fa-solid fa-chevron-down mt-7"></i>
+                        <div class="p-6 sm:p-8 flex-grow flex flex-col">
+                            <span class="text-xs font-semibold tracking-widest text-purple-300 uppercase mb-2 block">বিজনেস অ্যাডমিনিস্ট্রেশন</span>
+                            <h3 class="text-lg sm:text-xl font-bold mb-3 text-shadow leading-snug">মার্কেট অ্যানালাইসিস রিপোর্ট</h3>
+                            <p class="text-white/70 text-sm mb-5 leading-relaxed flex-grow">পরিসংখ্যানগত ডেটা সহ দক্ষিণ এশিয়ায় উদীয়মান বাজারের প্রবণতা নিয়ে ব্যাপক কেস স্টাডি।</p>
+                            <div class="flex items-center text-sm font-medium bg-black/20 inline-flex px-4 py-2 rounded-full border border-white/10 self-start">
+                                <i class="fa-solid fa-star text-yellow-400 mr-2"></i> ৪.৯ (High Distinction)
                             </div>
                         </div>
                     </div>
 
-                    <div class="mb-6">
-                        <label for="expertise" class="block text-sm font-medium text-white/90 mb-2">দক্ষতার ক্ষেত্র (বিষয়সমূহ)</label>
-                        <input type="text" id="expertise" required class="w-full px-4 py-3 glass-input rounded-xl transition" placeholder="যেমন: কম্পিউটার সায়েন্স, একাউন্টিং, এসে রাইটিং...">
-                    </div>
-
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium text-white/90 mb-2">রেজুমে/সিভি আপলোড করুন (PDF)</label>
-                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed border-white/30 rounded-xl hover:border-white/60 transition cursor-pointer glass hover:bg-white/5" id="dropzone">
-                            <div class="space-y-2 text-center">
-                                <div class="glass-btn inline-flex w-16 h-16 rounded-full items-center justify-center mb-2">
-                                    <i class="fa-solid fa-cloud-arrow-up text-2xl text-white"></i>
-                                </div>
-                                <div class="flex text-sm text-white/90 justify-center">
-                                    <label for="file-upload" class="relative cursor-pointer rounded-md font-medium text-pink-200 hover:text-pink-100 focus-within:outline-none">
-                                        <span class="underline">ফাইল আপলোড করুন</span>
-                                        <input id="file-upload" name="file-upload" type="file" class="sr-only" accept=".pdf,.doc,.docx">
-                                    </label>
-                                    <p class="pl-2">অথবা টেনে এনে ছেড়ে দিন</p>
-                                </div>
-                                <p class="text-xs text-white/60">PDF, DOC সর্বোচ্চ ৫ এমবি (5MB)</p>
+                    <!-- Work Card 3 -->
+                    <div class="glass-card rounded-3xl overflow-hidden hover:-translate-y-2 transition duration-300 group flex flex-col">
+                        <div class="h-48 sm:h-56 glass relative overflow-hidden flex items-center justify-center border-b border-white/5">
+                            <div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent"></div>
+                            <i class="fa-solid fa-book-medical text-5xl sm:text-6xl text-white/60 group-hover:scale-110 group-hover:text-indigo-300 transition duration-500 relative z-10 drop-shadow-2xl"></i>
+                        </div>
+                        <div class="p-6 sm:p-8 flex-grow flex flex-col">
+                            <span class="text-xs font-semibold tracking-widest text-indigo-300 uppercase mb-2 block">মেডিকেল সায়েন্স</span>
+                            <h3 class="text-lg sm:text-xl font-bold mb-3 text-shadow leading-snug">নিউরোলজি রিসার্চ পেপার</h3>
+                            <p class="text-white/70 text-sm mb-5 leading-relaxed flex-grow">জ্ঞানীয় আচরণগত নিদর্শনের উপর গভীর সাহিত্য পর্যালোচনা এবং বিশ্লেষণ।</p>
+                            <div class="flex items-center text-sm font-medium bg-black/20 inline-flex px-4 py-2 rounded-full border border-white/10 self-start">
+                                <i class="fa-solid fa-star text-yellow-400 mr-2"></i> ৫.০ (Published Level)
                             </div>
                         </div>
-                        <div id="fileNameDisplay" class="text-sm text-green-300 mt-3 font-medium hidden flex items-center bg-green-500/10 inline-block px-3 py-1 rounded-lg border border-green-500/20">
-                            <i class="fa-solid fa-file-check mr-2"></i> <span id="fileNameText"></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Ratings Section -->
+        <section id="ratings" class="py-20 md:py-28 relative z-10 px-4">
+            <div class="max-w-7xl mx-auto">
+                <div class="text-center mb-12 sm:mb-16">
+                    <h2 class="text-3xl sm:text-4xl font-bold mb-4 text-shadow">গ্রাহকদের রেটিং ও রিভিউ</h2>
+                    <div class="w-20 sm:w-24 h-1 bg-gradient-to-r from-purple-400 to-indigo-400 mx-auto rounded-full shadow-[0_0_15px_rgba(129,140,248,0.5)]"></div>
+                    <p class="mt-6 text-white/80 max-w-2xl mx-auto text-base sm:text-lg text-shadow px-2">আমাদের কাজ নিয়ে আমাদের শিক্ষার্থী এবং প্রফেশনাল ক্লায়েন্টদের মতামত জেনে নিন।</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+                    <!-- Review 1 -->
+                    <div class="glass-card p-6 sm:p-8 rounded-3xl relative">
+                        <i class="fa-solid fa-quote-left text-4xl sm:text-5xl text-white/5 absolute top-6 left-6"></i>
+                        <div class="flex items-center mb-6 relative z-10">
+                            <div class="text-yellow-400 flex space-x-1 text-sm sm:text-base filter drop-shadow-md">
+                                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                            </div>
+                        </div>
+                        <p class="text-white/80 mb-8 italic relative z-10 leading-relaxed text-sm sm:text-base">"অসাধারণ! আমি আমার ফাইনাল ইয়ার পাইথন প্রজেক্ট নিয়ে সম্পূর্ণ আটকে ছিলাম। আমাকে যে রাইটার দেওয়া হয়েছিল তিনি অত্যন্ত পেশাদার ছিলেন এবং ডেডলাইনের ২ দিন আগেই বাগ-মুক্ত কোড ডেলিভারি দিয়েছেন।"</p>
+                        <div class="flex items-center pt-5 border-t border-white/10">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center text-white font-bold mr-4 text-lg sm:text-xl border border-white/20">রা</div>
+                            <div>
+                                <h4 class="font-bold text-shadow text-sm sm:text-base">রাহাত হাসান</h4>
+                                <span class="text-xs sm:text-sm text-white/60">বিএসসি সিএস শিক্ষার্থী</span>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="mb-8">
-                        <label for="message" class="block text-sm font-medium text-white/90 mb-2">আমরা আপনাকে কেন নিয়োগ দেব? (সংক্ষিপ্ত বায়ো)</label>
-                        <textarea id="message" rows="3" class="w-full px-4 py-3 glass-input rounded-xl transition" placeholder="আপনার কাজের অভিজ্ঞতা সম্পর্কে সংক্ষেপে লিখুন..."></textarea>
+                    <!-- Review 2 -->
+                    <div class="glass-card p-6 sm:p-8 rounded-3xl relative">
+                        <i class="fa-solid fa-quote-left text-4xl sm:text-5xl text-white/5 absolute top-6 left-6"></i>
+                        <div class="flex items-center mb-6 relative z-10">
+                            <div class="text-yellow-400 flex space-x-1 text-sm sm:text-base filter drop-shadow-md">
+                                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                            </div>
+                        </div>
+                        <p class="text-white/80 mb-8 italic relative z-10 leading-relaxed text-sm sm:text-base">"রিসার্চের মান ছিল অসামান্য। সঠিক এপিএ (APA) সাইটেশন ব্যবহার করা হয়েছে এবং কোনো প্লেজিয়ারিজম ছিল লাল না। সবাইকে 'অ্যাসাইনমেন্ট করান' রেকমেন্ড করছি।"</p>
+                        <div class="flex items-center pt-5 border-t border-white/10">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center text-white font-bold mr-4 text-lg sm:text-xl border border-white/20">সা</div>
+                            <div>
+                                <h4 class="font-bold text-shadow text-sm sm:text-base">সাদিয়া রহমান</h4>
+                                <span class="text-xs sm:text-sm text-white/60">এমবিএ পরীক্ষার্থী</span>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="flex flex-col sm:flex-row-reverse gap-3 mt-4">
-                        <button type="submit" class="w-full sm:w-auto inline-flex justify-center rounded-xl px-8 py-3 bg-white text-indigo-600 font-bold text-base shadow-[0_0_15px_rgba(255,255,255,0.4)] hover:shadow-[0_0_25px_rgba(255,255,255,0.7)] transition transform hover:-translate-y-0.5">
-                            আবেদন জমা দিন
-                        </button>
-                        <button type="button" onclick="closeModal()" class="w-full sm:w-auto inline-flex justify-center rounded-xl border border-white/30 px-8 py-3 glass-btn text-base font-medium text-white transition">
-                            বাতিল করুন
+                    <!-- Review 3 -->
+                    <div class="glass-card p-6 sm:p-8 rounded-3xl relative">
+                        <i class="fa-solid fa-quote-left text-4xl sm:text-5xl text-white/5 absolute top-6 left-6"></i>
+                        <div class="flex items-center mb-6 relative z-10">
+                            <div class="text-yellow-400 flex space-x-1 text-sm sm:text-base filter drop-shadow-md">
+                                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                            </div>
+                        </div>
+                        <p class="text-white/80 mb-8 italic relative z-10 leading-relaxed text-sm sm:text-base">"আন্তর্জাতিক সাইটগুলোর তুলনায় মূল্য বেশ সাশ্রয়ী, কিন্তু কোয়ালিটি সমান বা তার চেয়েও ভালো। সাপোর্ট টিমও খুব দ্রুত রেসপন্স করে।"</p>
+                        <div class="flex items-center pt-5 border-t border-white/10">
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center text-white font-bold mr-4 text-lg sm:text-xl border border-white/20">তা</div>
+                            <div>
+                                <h4 class="font-bold text-shadow text-sm sm:text-base">তানভীর আহমেদ</h4>
+                                <span class="text-xs sm:text-sm text-white/60">বিশ্ববিদ্যালয় শিক্ষার্থী</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Become a Writer CTA Section -->
+        <section class="py-20 md:py-28 relative z-10 px-4">
+            <div class="max-w-5xl mx-auto">
+                <div class="glass-card rounded-[2.5rem] p-8 sm:p-12 md:p-16 text-center shadow-2xl relative overflow-hidden border border-white/20">
+                    <!-- Highlight effect -->
+                    <div class="absolute inset-0 bg-gradient-to-t from-transparent via-white/5 to-white/10"></div>
+                    
+                    <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-6 relative z-10 text-shadow leading-tight">আপনি কি আপনার বিষয়ে পারদর্শী?</h2>
+                    <p class="text-white/80 text-base sm:text-lg md:text-xl mb-10 max-w-3xl mx-auto relative z-10 leading-relaxed px-2">আমাদের ফ্রিল্যান্স একাডেমিক রাইটার এবং ডেভেলপারদের ক্রমবর্ধমান টিমে যোগ দিন। ঘরে বসে কাজ করুন, নিজের সময়মতো কাজ করুন এবং আকর্ষণীয় আয় করুন।</p>
+                    <button onclick="openModal()" class="relative z-10 bg-white text-indigo-900 px-8 sm:px-10 py-3.5 sm:py-4 rounded-full font-bold text-base sm:text-lg transition shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] transform hover:-translate-y-1 w-full sm:w-auto">
+                        রাইটার হওয়ার জন্য আবেদন করুন
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="glass border-t border-white/10 pt-16 pb-8 relative z-10 px-4">
+            <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-10 lg:gap-16">
+                <div class="md:col-span-5 lg:col-span-6 text-center md:text-left">
+                    <span class="font-bengali font-bold text-2xl sm:text-3xl mb-4 block text-shadow">
+                        <i class="fa-solid fa-pen-nib mr-2"></i>অ্যাসাইনমেন্ট করান
+                    </span>
+                    <p class="text-white/60 max-w-md mx-auto md:mx-0 leading-relaxed text-sm sm:text-base">একাডেমিক এবং পেশাদার অ্যাসাইনমেন্ট সম্পন্ন করার জন্য আপনার বিশ্বস্ত পার্টনার। গুণগত মান, মৌলিকত্ব এবং সময়মতো ডেলিভারির নিশ্চয়তা।</p>
+                </div>
+                <div class="md:col-span-3 lg:col-span-3 text-center md:text-left">
+                    <h4 class="font-bold text-lg sm:text-xl mb-5 text-shadow">প্রয়োজনীয় লিংক</h4>
+                    <ul class="space-y-3 text-white/70 text-sm sm:text-base flex flex-col items-center md:items-start">
+                        <li><a href="#home" class="hover:text-white transition flex items-center"><i class="fa-solid fa-chevron-right text-xs mr-2 opacity-50"></i> হোম</a></li>
+                        <li><a href="#works" class="hover:text-white transition flex items-center"><i class="fa-solid fa-chevron-right text-xs mr-2 opacity-50"></i> আমাদের কাজ</a></li>
+                        <li><a href="#ratings" class="hover:text-white transition flex items-center"><i class="fa-solid fa-chevron-right text-xs mr-2 opacity-50"></i> রিভিউ</a></li>
+                    </ul>
+                </div>
+                <div class="md:col-span-4 lg:col-span-3 flex flex-col items-center md:items-start">
+                    <h4 class="font-bold text-lg sm:text-xl mb-5 text-shadow">যোগাযোগ করুন</h4>
+                    <ul class="space-y-4 text-white/80 w-full max-w-xs md:max-w-none">
+                        <!-- Email Block: responsive fix with break-all -->
+                        <li>
+                            <a href="mailto:assignmentkoran@gmail.com" class="flex items-center p-3 sm:p-4 glass rounded-2xl border border-white/10 hover:bg-white/5 transition group w-full">
+                                <div class="bg-white/10 p-2 sm:p-3 rounded-xl mr-3 sm:mr-4 group-hover:bg-white/20 transition shrink-0">
+                                    <i class="fa-solid fa-envelope text-base sm:text-lg text-blue-300"></i>
+                                </div>
+                                <span class="break-all text-sm sm:text-base leading-tight group-hover:text-white transition">assignmentkoran@gmail.com</span>
+                            </a>
+                        </li>
+                        <li class="pt-2 flex justify-center md:justify-start">
+                            <a href="https://facebook.com/assignmentKoran" target="_blank" class="glass-btn w-12 h-12 rounded-full flex items-center justify-center text-white text-xl shadow-lg hover:text-blue-400">
+                                <i class="fa-brands fa-facebook-f"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="max-w-7xl mx-auto mt-16 pt-8 border-t border-white/10 text-xs sm:text-sm text-center text-white/40">
+                &copy; <span id="year"></span> অ্যাসাইনমেন্ট করান। সর্বস্বত্ব সংরক্ষিত।
+            </div>
+        </footer>
+
+        <!-- Become a Writer Modal -->
+        <div id="writerModal" class="fixed inset-0 z-50 hidden overflow-y-auto h-full w-full backdrop-blur-xl bg-black/60 transition-opacity p-4 sm:p-6" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-center justify-center min-h-screen">
+                <!-- Modal Background -->
+                <div class="relative glass-card border border-white/20 rounded-[2rem] text-left overflow-hidden shadow-2xl transform transition-all w-full max-w-2xl fade-in mx-auto">
+                    
+                    <!-- Modal Header -->
+                    <div class="bg-white/5 backdrop-blur-md border-b border-white/10 px-6 sm:px-8 py-5 flex justify-between items-center relative overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10"></div>
+                        <h3 class="text-xl sm:text-2xl font-bold text-white relative z-10 text-shadow" id="modal-title">
+                            রাইটার আবেদন ফর্ম
+                        </h3>
+                        <button type="button" onclick="closeModal()" class="relative z-10 text-white/60 hover:text-white focus:outline-none glass-btn rounded-full w-8 h-8 flex items-center justify-center transition">
+                            <i class="fa-solid fa-xmark text-lg"></i>
                         </button>
                     </div>
-                </form>
+
+                    <!-- Form Content -->
+                    <form id="writerForm" class="px-6 py-6 sm:p-8 relative z-10 max-h-[75vh] overflow-y-auto custom-scrollbar">
+                        <div id="formAlert" class="hidden mb-6 p-4 rounded-xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-100 shadow-lg backdrop-blur-md">
+                            <div class="flex items-start sm:items-center">
+                                <i class="fa-solid fa-circle-check text-emerald-400 text-xl mr-3 mt-0.5 sm:mt-0"></i>
+                                <p class="font-medium text-sm sm:text-base text-shadow-sm leading-snug">আবেদন সফলভাবে জমা দেওয়া হয়েছে! আমরা শীঘ্রই যোগাযোগ করব।</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6 mb-5 sm:mb-6">
+                            <div>
+                                <label for="fullName" class="block text-sm font-medium text-white/80 mb-2">পুরো নাম</label>
+                                <input type="text" id="fullName" required class="w-full px-4 py-3 glass-input rounded-xl transition text-sm sm:text-base" placeholder="আপনার নাম">
+                            </div>
+                            <div>
+                                <label for="email" class="block text-sm font-medium text-white/80 mb-2">ইমেইল এড্রেস</label>
+                                <input type="email" id="email" required class="w-full px-4 py-3 glass-input rounded-xl transition text-sm sm:text-base" placeholder="example@email.com">
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label for="education" class="block text-sm font-medium text-white/80 mb-2">সর্বোচ্চ শিক্ষাগত যোগ্যতা</label>
+                                <div class="relative">
+                                    <select id="education" required class="w-full px-4 py-3 glass-input rounded-xl transition cursor-pointer appearance-none text-sm sm:text-base">
+                                        <option value="" disabled selected class="text-white/40">একটি বিকল্প নির্বাচন করুন</option>
+                                        <option value="Bachelors">স্নাতক (Bachelor's)</option>
+                                        <option value="Masters">স্নাতকোত্তর (Master's)</option>
+                                        <option value="PhD">পিএইচডি (Ph.D.)</option>
+                                        <option value="Other">অন্যান্য</option>
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-white/50">
+                                        <i class="fa-solid fa-chevron-down"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-5 sm:mb-6">
+                            <label for="expertise" class="block text-sm font-medium text-white/80 mb-2">দক্ষতার ক্ষেত্র (বিষয়সমূহ)</label>
+                            <input type="text" id="expertise" required class="w-full px-4 py-3 glass-input rounded-xl transition text-sm sm:text-base" placeholder="যেমন: কম্পিউটার সায়েন্স, একাউন্টিং...">
+                        </div>
+
+                        <div class="mb-5 sm:mb-6">
+                            <label class="block text-sm font-medium text-white/80 mb-2">রেজুমে/সিভি আপলোড করুন (PDF)</label>
+                            <div class="mt-1 flex justify-center px-4 sm:px-6 pt-5 pb-6 border-2 border-dashed border-white/20 rounded-xl hover:border-white/40 transition cursor-pointer glass hover:bg-white/5 group" id="dropzone">
+                                <div class="space-y-2 text-center">
+                                    <div class="glass-btn inline-flex w-14 h-14 sm:w-16 sm:h-16 rounded-full items-center justify-center mb-2 group-hover:scale-105 transition">
+                                        <i class="fa-solid fa-cloud-arrow-up text-xl sm:text-2xl text-blue-300"></i>
+                                    </div>
+                                    <div class="flex flex-col sm:flex-row text-sm text-white/80 justify-center items-center gap-1 sm:gap-2">
+                                        <label for="file-upload" class="relative cursor-pointer rounded-md font-medium text-blue-300 hover:text-blue-200 focus-within:outline-none">
+                                            <span class="underline">ফাইল আপলোড করুন</span>
+                                            <input id="file-upload" name="file-upload" type="file" class="sr-only" accept=".pdf,.doc,.docx">
+                                        </label>
+                                        <p class="hidden sm:block">অথবা টেনে এনে ছেড়ে দিন</p>
+                                    </div>
+                                    <p class="text-xs text-white/50 mt-1">PDF, DOC সর্বোচ্চ ৫ এমবি (5MB)</p>
+                                </div>
+                            </div>
+                            <div id="fileNameDisplay" class="text-sm text-blue-200 mt-3 font-medium hidden flex items-center bg-blue-500/10 inline-block px-3 py-2 rounded-lg border border-blue-500/20 break-all">
+                                <i class="fa-solid fa-file-check mr-2 shrink-0"></i> <span id="fileNameText"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-6 sm:mb-8">
+                            <label for="message" class="block text-sm font-medium text-white/80 mb-2">আমরা আপনাকে কেন নিয়োগ দেব? (সংক্ষিপ্ত বায়ো)</label>
+                            <textarea id="message" rows="3" class="w-full px-4 py-3 glass-input rounded-xl transition text-sm sm:text-base" placeholder="আপনার কাজের অভিজ্ঞতা সম্পর্কে সংক্ষেপে লিখুন..."></textarea>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row-reverse gap-3 sm:gap-4 mt-2">
+                            <button type="submit" class="w-full sm:w-auto inline-flex justify-center items-center rounded-xl px-6 sm:px-8 py-3.5 bg-white text-indigo-900 font-bold text-sm sm:text-base shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:shadow-[0_0_25px_rgba(255,255,255,0.4)] transition transform hover:-translate-y-0.5">
+                                আবেদন জমা দিন
+                            </button>
+                            <button type="button" onclick="closeModal()" class="w-full sm:w-auto inline-flex justify-center items-center rounded-xl border border-white/20 px-6 sm:px-8 py-3.5 glass-btn text-sm sm:text-base font-medium text-white transition">
+                                বাতিল করুন
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
-    </div>
+
+    </div> <!-- End of overflow-hidden wrapper -->
+
+    <style>
+        /* Custom scrollbar for modal */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
 
     <script>
         // Set current year in footer
@@ -566,6 +598,9 @@
             // Reset form fields but keep alert visible
             writerForm.reset();
             fileNameDisplay.classList.add('hidden');
+            
+            // Scroll modal to top so user sees the alert
+            writerForm.scrollTop = 0;
             
             // Optionally close modal after a delay
             setTimeout(() => {
