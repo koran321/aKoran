@@ -139,9 +139,9 @@
             </div>
         </div>
 
-        <!-- CHARTS SECTION -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <!-- Pie Chart -->
+        <!-- CHARTS SECTION - ROW 1 (Pie Charts) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Device Pie Chart -->
             <div class="glass-card rounded-2xl p-6 flex flex-col">
                 <h3 class="text-lg font-semibold mb-2 flex items-center gap-2 text-slate-100">
                     <i class="fa-solid fa-chart-pie text-emerald-400"></i> Device Distribution
@@ -151,22 +151,33 @@
                 </div>
             </div>
 
-            <!-- Histogram Chart -->
-            <div class="glass-card rounded-2xl p-6 lg:col-span-2 flex flex-col">
+            <!-- Region Pie Chart -->
+            <div class="glass-card rounded-2xl p-6 flex flex-col">
                 <h3 class="text-lg font-semibold mb-2 flex items-center gap-2 text-slate-100">
-                    <i class="fa-solid fa-chart-column text-emerald-400"></i> Hourly Traffic
+                    <i class="fa-solid fa-map-location-dot text-emerald-400"></i> Region Distribution
                 </h3>
-                <div class="relative flex-1 w-full min-h-[250px]">
-                    <canvas id="timeChart"></canvas>
+                <div class="relative flex-1 w-full flex items-center justify-center min-h-[250px]">
+                    <canvas id="regionChart"></canvas>
                 </div>
             </div>
         </div>
 
+        <!-- CHARTS SECTION - ROW 2 (Histogram) -->
+        <div class="glass-card rounded-2xl p-6 mb-8 flex flex-col">
+            <h3 class="text-lg font-semibold mb-2 flex items-center gap-2 text-slate-100">
+                <i class="fa-solid fa-chart-column text-emerald-400"></i> Hourly Traffic
+            </h3>
+            <div class="relative flex-1 w-full min-h-[250px]">
+                <canvas id="timeChart"></canvas>
+            </div>
+        </div>
+
+        <!-- LOCATIONS & TABLE ROW -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Locations List -->
             <div class="glass-card rounded-2xl p-6">
                 <h3 class="text-lg font-semibold mb-6 flex items-center gap-2 text-slate-100">
-                    <i class="fa-solid fa-earth-americas text-emerald-400"></i> Viewer Locations
+                    <i class="fa-solid fa-earth-americas text-emerald-400"></i> Viewers by Country
                 </h3>
                 <div id="locations-list" class="space-y-3 h-[420px] overflow-y-auto pr-2">
                     <!-- Locations populated by JS -->
@@ -237,7 +248,7 @@
             return 'Desktop';
         }
 
-        // Color mapping for charts
+        // Color mapping for Device chart
         const DEVICE_COLORS = {
             'Mobile': '#10b981',   // Emerald
             'Desktop': '#3b82f6',  // Blue
@@ -245,6 +256,20 @@
             'Tablet': '#8b5cf6',   // Purple
             'Unknown': '#64748b'   // Slate
         };
+
+        // Nice gradient color palette for regions dynamically added
+        const REGION_COLORS = [
+            '#06b6d4', // Cyan
+            '#8b5cf6', // Violet
+            '#ec4899', // Pink
+            '#f59e0b', // Amber
+            '#10b981', // Emerald
+            '#3b82f6', // Blue
+            '#f97316', // Orange
+            '#14b8a6', // Teal
+            '#6366f1', // Indigo
+            '#eab308'  // Yellow
+        ];
 
         // Icon mapping for devices
         const DEVICE_ICONS = {
@@ -324,6 +349,7 @@
             const deviceCounts = {};
             const hourCounts = {};
             const countryCounts = {};
+            const cityCounts = {};
             const uniqueIPs = new Set();
 
             // Setup 24h structure but with 12h labels for the X-axis
@@ -344,9 +370,15 @@
                 const hourLabel = format12Hour(date.getHours());
                 hourCounts[hourLabel] += 1;
 
-                // Location
+                // Location Tracking
                 const country = locations[log.ip_address]?.country || 'Unknown';
                 countryCounts[country] = (countryCounts[country] || 0) + 1;
+
+                // Region / City Tracking
+                const city = locations[log.ip_address]?.city && locations[log.ip_address]?.city !== 'Unknown' 
+                    ? locations[log.ip_address].city 
+                    : 'Unknown Region';
+                cityCounts[city] = (cityCounts[city] || 0) + 1;
             });
 
             // Calculate Peaks & Tops
@@ -364,17 +396,18 @@
             document.getElementById('kpi-device').textContent = topDevice;
             document.getElementById('kpi-peak').textContent = peakHour;
 
-            renderCharts(deviceCounts, hourCounts);
+            renderCharts(deviceCounts, hourCounts, cityCounts);
             renderLocations(countryCounts);
             renderTable();
         }
 
-        function renderCharts(deviceCounts, hourCounts) {
-            // Check if chart exists and destroy to prevent duplicate render overlapping
+        function renderCharts(deviceCounts, hourCounts, cityCounts) {
+            // Check if charts exist and destroy to prevent duplicate render overlapping
             if (window.deviceChartInstance) window.deviceChartInstance.destroy();
+            if (window.regionChartInstance) window.regionChartInstance.destroy();
             if (window.timeChartInstance) window.timeChartInstance.destroy();
 
-            // Real Pie Chart
+            // 1. Device Pie Chart
             const ctxDevice = document.getElementById('deviceChart').getContext('2d');
             window.deviceChartInstance = new Chart(ctxDevice, {
                 type: 'pie',
@@ -391,25 +424,45 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    layout: {
-                        padding: 10
-                    },
+                    layout: { padding: 10 },
                     plugins: {
-                        legend: { 
-                            position: 'right', 
-                            labels: { 
-                                color: '#e2e8f0',
-                                font: { size: 13 },
-                                padding: 20
-                            } 
-                        }
+                        legend: { position: 'right', labels: { color: '#e2e8f0', font: { size: 13 }, padding: 20 } }
                     }
                 }
             });
 
-            // Hourly Histogram Chart
+            // 2. Region Pie Chart
+            const ctxRegion = document.getElementById('regionChart').getContext('2d');
+            // Sort regions to show biggest slices first
+            const regionLabels = Object.keys(cityCounts).sort((a,b) => cityCounts[b] - cityCounts[a]);
+            const regionData = regionLabels.map(label => cityCounts[label]);
+            // Assign a color to each slice from the palette
+            const regionBgColors = regionLabels.map((_, i) => REGION_COLORS[i % REGION_COLORS.length]);
+
+            window.regionChartInstance = new Chart(ctxRegion, {
+                type: 'pie',
+                data: {
+                    labels: regionLabels,
+                    datasets: [{
+                        data: regionData,
+                        backgroundColor: regionBgColors,
+                        borderWidth: 1,
+                        borderColor: '#111827',
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: { padding: 10 },
+                    plugins: {
+                        legend: { position: 'right', labels: { color: '#e2e8f0', font: { size: 13 }, padding: 20 } }
+                    }
+                }
+            });
+
+            // 3. Hourly Histogram Chart
             const ctxTime = document.getElementById('timeChart').getContext('2d');
-            
             // Find max for highlighting
             const maxVal = Math.max(...Object.values(hourCounts), 1);
             const bgColors = Object.values(hourCounts).map(v => 
