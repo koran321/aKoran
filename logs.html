@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assignment করান - Viewers Log</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Lottie Player for Loading Animation -->
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            dark: '#0a0f18',
+                            card: '#111827',
+                            border: '#1f2937',
+                            primary: '#10b981', // Emerald
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #0a0f18; color: #e2e8f0; }
+        /* Custom Scrollbar for the table */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0a0f18; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        .glass-card {
+            background: linear-gradient(145deg, rgba(17,24,39,1) 0%, rgba(15,23,42,1) 100%);
+            border: 1px solid #1f2937;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body class="font-sans antialiased min-h-screen p-4 md:p-8">
+
+    <!-- Loading Screen -->
+    <div id="loader" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-brand-dark text-brand-primary transition-opacity duration-500">
+        <!-- Cat Lottie Animation -->
+        <lottie-player 
+            src="https://tukitaki.vercel.app/src/json/LottieFiles/cat_loader.json" 
+            background="transparent" 
+            speed="1" 
+            style="width: 250px; height: 250px;" 
+            loop 
+            autoplay>
+        </lottie-player>
+        <h2 class="text-xl font-semibold tracking-wider animate-pulse mt-2">Loading Logs...</h2>
+    </div>
+
+    <div id="app" class="max-w-7xl mx-auto opacity-0 transition-opacity duration-500">
+        <!-- HEADER -->
+        <header class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-brand-border pb-6">
+            <div class="flex items-center gap-4">
+                <div class="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+                    <i class="fa-solid fa-chart-line text-emerald-400 text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-emerald-400 to-teal-200 bg-clip-text text-transparent">
+                        Assignment করান
+                    </h1>
+                    <p class="text-slate-400 text-sm mt-1 flex items-center gap-2">
+                        Viewers Log & Analytics Dashboard
+                        <span id="data-status" class="hidden items-center gap-1 text-amber-500/80 bg-amber-500/10 px-2 py-0.5 rounded text-xs ml-2 border border-amber-500/20">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Cached Data
+                        </span>
+                    </p>
+                </div>
+            </div>
+            <div class="text-right flex items-center gap-2 text-slate-400 bg-slate-900/80 px-4 py-2 rounded-lg border border-brand-border">
+                <i class="fa-regular fa-calendar text-emerald-500"></i>
+                <span id="current-date" class="text-sm"></span>
+            </div>
+        </header>
+
+        <!-- KPI CARDS -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="glass-card rounded-2xl p-6 relative overflow-hidden group">
+                <div class="absolute -right-6 -top-6 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl"></div>
+                <div class="relative z-10">
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-blue-500/10 text-blue-400 border border-blue-500/20 mb-4">
+                        <i class="fa-solid fa-eye text-xl"></i>
+                    </div>
+                    <p class="text-slate-400 text-sm font-medium mb-1">Total Views</p>
+                    <p id="kpi-total" class="text-3xl font-bold text-slate-100">0</p>
+                </div>
+            </div>
+
+            <div class="glass-card rounded-2xl p-6 relative overflow-hidden group">
+                <div class="absolute -right-6 -top-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl"></div>
+                <div class="relative z-10">
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-4">
+                        <i class="fa-solid fa-users text-xl"></i>
+                    </div>
+                    <p class="text-slate-400 text-sm font-medium mb-1">Unique Visitors</p>
+                    <p id="kpi-unique" class="text-3xl font-bold text-slate-100">0</p>
+                </div>
+            </div>
+
+            <div class="glass-card rounded-2xl p-6 relative overflow-hidden group">
+                <div class="absolute -right-6 -top-6 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl"></div>
+                <div class="relative z-10">
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-amber-500/10 text-amber-400 border border-amber-500/20 mb-4">
+                        <i class="fa-solid fa-mobile-screen-button text-xl"></i>
+                    </div>
+                    <p class="text-slate-400 text-sm font-medium mb-1">Top Device</p>
+                    <p id="kpi-device" class="text-3xl font-bold text-slate-100">-</p>
+                </div>
+            </div>
+
+            <div class="glass-card rounded-2xl p-6 relative overflow-hidden group">
+                <div class="absolute -right-6 -top-6 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl"></div>
+                <div class="relative z-10">
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-purple-500/10 text-purple-400 border border-purple-500/20 mb-4">
+                        <i class="fa-regular fa-clock text-xl"></i>
+                    </div>
+                    <p class="text-slate-400 text-sm font-medium mb-1">Peak Hour</p>
+                    <p id="kpi-peak" class="text-3xl font-bold text-slate-100">-</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CHARTS SECTION -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Pie Chart -->
+            <div class="glass-card rounded-2xl p-6 flex flex-col">
+                <h3 class="text-lg font-semibold mb-2 flex items-center gap-2 text-slate-100">
+                    <i class="fa-solid fa-chart-pie text-emerald-400"></i> Device Distribution
+                </h3>
+                <div class="relative flex-1 w-full flex items-center justify-center min-h-[250px]">
+                    <canvas id="deviceChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Histogram Chart -->
+            <div class="glass-card rounded-2xl p-6 lg:col-span-2 flex flex-col">
+                <h3 class="text-lg font-semibold mb-2 flex items-center gap-2 text-slate-100">
+                    <i class="fa-solid fa-chart-column text-emerald-400"></i> Hourly Traffic
+                </h3>
+                <div class="relative flex-1 w-full min-h-[250px]">
+                    <canvas id="timeChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Locations List -->
+            <div class="glass-card rounded-2xl p-6">
+                <h3 class="text-lg font-semibold mb-6 flex items-center gap-2 text-slate-100">
+                    <i class="fa-solid fa-earth-americas text-emerald-400"></i> Viewer Locations
+                </h3>
+                <div id="locations-list" class="space-y-3">
+                    <!-- Locations populated by JS -->
+                </div>
+            </div>
+
+            <!-- Recent Logs Table -->
+            <div class="glass-card rounded-2xl lg:col-span-2 overflow-hidden flex flex-col">
+                <div class="p-6 border-b border-brand-border">
+                    <h3 class="text-lg font-semibold flex items-center gap-2 text-slate-100">
+                        <i class="fa-solid fa-server text-emerald-400"></i> Recent Log Entries
+                    </h3>
+                </div>
+                <div class="overflow-x-auto p-0 flex-1">
+                    <table class="w-full text-left text-sm whitespace-nowrap">
+                        <thead class="bg-slate-800/50 text-slate-400">
+                            <tr>
+                                <th class="px-6 py-4 font-medium">Time (Local)</th>
+                                <th class="px-6 py-4 font-medium">IP Address & Location</th>
+                                <th class="px-6 py-4 font-medium">Device Type</th>
+                                <th class="px-6 py-4 font-medium">User Agent</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logs-table-body" class="divide-y divide-brand-border">
+                            <!-- Table rows populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Logic -->
+    <script>
+        // Set Date
+        document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+        // Fallback Data
+        const FALLBACK_DATA = [
+            {"id":"517c3c85-3396-4840-a195-8c901e3c4455","ip_address":"203.190.14.226","user_agent":"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Mobile Safari/537.36","created_at":"2026-04-11T19:40:14.469251+00:00"},
+            {"id":"a8d98ec0-33c1-4476-b9df-d7c3932b4c7f","ip_address":"203.190.14.226","user_agent":"Mozilla/5.0 (iPhone; CPU iPhone OS 18_7_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/147.0.7727.47 Mobile/15E148 Safari/604.1","created_at":"2026-04-11T19:39:16.015737+00:00"},
+            {"id":"829501fd-35f8-427c-8437-7df7409153d9","ip_address":"54.86.50.139","user_agent":"PostmanRuntime/7.53.0","created_at":"2026-04-11T19:33:40.303282+00:00"}
+        ];
+
+        // Device Parser
+        function parseDevice(ua) {
+            const lowerUA = ua.toLowerCase();
+            if (lowerUA.includes('postman') || lowerUA.includes('bot') || lowerUA.includes('curl')) return 'API/Bot';
+            if (lowerUA.includes('mobile') || lowerUA.includes('android') || lowerUA.includes('iphone')) return 'Mobile';
+            if (lowerUA.includes('tablet') || lowerUA.includes('ipad')) return 'Tablet';
+            return 'Desktop';
+        }
+
+        // Color mapping for charts
+        const DEVICE_COLORS = {
+            'Mobile': '#10b981',   // Emerald
+            'Desktop': '#3b82f6',  // Blue
+            'API/Bot': '#f59e0b',  // Amber
+            'Tablet': '#8b5cf6',   // Purple
+            'Unknown': '#64748b'   // Slate
+        };
+
+        // Icon mapping for devices
+        const DEVICE_ICONS = {
+            'Mobile': '<i class="fa-solid fa-mobile-screen text-emerald-400"></i>',
+            'Desktop': '<i class="fa-solid fa-desktop text-blue-400"></i>',
+            'API/Bot': '<i class="fa-solid fa-robot text-amber-400"></i>',
+            'Tablet': '<i class="fa-solid fa-tablet-screen-button text-purple-400"></i>',
+            'Unknown': '<i class="fa-solid fa-circle-question text-slate-400"></i>'
+        };
+
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.font.family = 'Inter, sans-serif';
+
+        // Helper function for 12-hour format
+        function format12Hour(hour) {
+            const h = parseInt(hour, 10);
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            const h12 = h % 12 || 12;
+            return `${h12} ${ampm}`;
+        }
+
+        async function initDashboard() {
+            let logs = [];
+            let locations = {};
+
+            // Fetch Logs
+            try {
+                const res = await fetch('https://a-koran.vercel.app/api/data.js');
+                if (!res.ok) throw new Error('Network response was not ok');
+                logs = await res.json();
+            } catch (error) {
+                console.warn('Using fallback data due to fetch error (likely CORS):', error);
+                logs = FALLBACK_DATA;
+                document.getElementById('data-status').classList.remove('hidden');
+                document.getElementById('data-status').classList.add('inline-flex');
+            }
+
+            // Fetch Locations
+            const uniqueIps = [...new Set(logs.map(l => l.ip_address))];
+            
+            await Promise.all(uniqueIps.map(async (ip) => {
+                try {
+                    const geoRes = await fetch(`https://get.geojs.io/v1/ip/geo/${ip}.json`);
+                    if (geoRes.ok) {
+                        const geoData = await geoRes.json();
+                        locations[ip] = {
+                            country: geoData.country || 'Unknown',
+                            city: geoData.city || 'Unknown'
+                        };
+                    } else {
+                        throw new Error('Geo API failed');
+                    }
+                } catch (e) {
+                    locations[ip] = { country: 'Unknown', city: 'Unknown' };
+                }
+            }));
+
+            processDataAndRender(logs, locations);
+            
+            // Hide Loader, Show App smoothly (letting the Lottie animation play a bit)
+            setTimeout(() => {
+                document.getElementById('loader').classList.add('opacity-0');
+                setTimeout(() => {
+                    document.getElementById('loader').style.display = 'none';
+                    document.getElementById('app').classList.remove('opacity-0');
+                }, 500);
+            }, 800);
+        }
+
+        function processDataAndRender(logs, locations) {
+            const deviceCounts = {};
+            const hourCounts = {};
+            const countryCounts = {};
+            const uniqueIPs = new Set();
+
+            // Setup 24h structure but with 12h labels for the X-axis
+            for(let i=0; i<24; i++) {
+                hourCounts[format12Hour(i)] = 0;
+            }
+
+            logs.forEach(log => {
+                // Unique Visitors
+                uniqueIPs.add(log.ip_address);
+
+                // Devices
+                const device = parseDevice(log.user_agent);
+                deviceCounts[device] = (deviceCounts[device] || 0) + 1;
+
+                // Time (Local hour - converted to 12h format)
+                const date = new Date(log.created_at);
+                const hourLabel = format12Hour(date.getHours());
+                hourCounts[hourLabel] += 1;
+
+                // Location
+                const country = locations[log.ip_address]?.country || 'Unknown';
+                countryCounts[country] = (countryCounts[country] || 0) + 1;
+            });
+
+            // Calculate Peaks & Tops
+            let peakHour = '-';
+            let maxHourVal = 0;
+            Object.entries(hourCounts).forEach(([h, v]) => { if(v > maxHourVal) { maxHourVal = v; peakHour = h; } });
+
+            let topDevice = '-';
+            let maxDevVal = 0;
+            Object.entries(deviceCounts).forEach(([d, v]) => { if(v > maxDevVal) { maxDevVal = v; topDevice = d; } });
+
+            // Update KPIs
+            document.getElementById('kpi-total').textContent = logs.length;
+            document.getElementById('kpi-unique').textContent = uniqueIPs.size;
+            document.getElementById('kpi-device').textContent = topDevice;
+            document.getElementById('kpi-peak').textContent = peakHour;
+
+            renderCharts(deviceCounts, hourCounts);
+            renderLocations(countryCounts);
+            renderTable(logs, locations);
+        }
+
+        function renderCharts(deviceCounts, hourCounts) {
+            // Real Pie Chart
+            const ctxDevice = document.getElementById('deviceChart').getContext('2d');
+            new Chart(ctxDevice, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(deviceCounts),
+                    datasets: [{
+                        data: Object.values(deviceCounts),
+                        backgroundColor: Object.keys(deviceCounts).map(k => DEVICE_COLORS[k] || DEVICE_COLORS['Unknown']),
+                        borderWidth: 1,
+                        borderColor: '#111827',
+                        hoverOffset: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: {
+                        padding: 10
+                    },
+                    plugins: {
+                        legend: { 
+                            position: 'right', 
+                            labels: { 
+                                color: '#e2e8f0',
+                                font: { size: 13 },
+                                padding: 20
+                            } 
+                        }
+                    }
+                }
+            });
+
+            // Hourly Histogram Chart
+            const ctxTime = document.getElementById('timeChart').getContext('2d');
+            
+            // Find max for highlighting
+            const maxVal = Math.max(...Object.values(hourCounts), 1);
+            const bgColors = Object.values(hourCounts).map(v => 
+                v === maxVal && v > 0 ? '#10b981' : '#334155'
+            );
+
+            new Chart(ctxTime, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(hourCounts),
+                    datasets: [{
+                        label: 'Views',
+                        data: Object.values(hourCounts),
+                        backgroundColor: bgColors,
+                        // Make it a Histogram by removing gaps between bars
+                        barPercentage: 1.0,
+                        categoryPercentage: 1.0,
+                        borderWidth: 1,
+                        borderColor: '#0a0f18' // Small border to distinguish histogram bins
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: { stepSize: 1 },
+                            grid: { color: '#1f2937' }
+                        },
+                        x: { 
+                            grid: { display: false },
+                            ticks: { maxRotation: 45, minRotation: 45 }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderLocations(countryCounts) {
+            const container = document.getElementById('locations-list');
+            const sortedCountries = Object.entries(countryCounts).sort((a, b) => b[1] - a[1]);
+            
+            if(sortedCountries.length === 0) {
+                container.innerHTML = '<p class="text-slate-500">No location data.</p>';
+                return;
+            }
+
+            let html = '';
+            sortedCountries.forEach(([country, count], index) => {
+                html += `
+                <div class="flex items-center justify-between p-3 rounded-xl bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-300 shadow-inner">
+                            ${index + 1}
+                        </div>
+                        <span class="font-medium text-slate-200">${country}</span>
+                    </div>
+                    <div class="bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full text-sm font-semibold border border-emerald-500/20">
+                        ${count} views
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function renderTable(logs, locations) {
+            const tbody = document.getElementById('logs-table-body');
+            let html = '';
+
+            logs.forEach(log => {
+                const dateObj = new Date(log.created_at);
+                
+                // Format time to 12 hour AM/PM
+                const timeStr = dateObj.toLocaleTimeString('en-US', { 
+                    hour: 'numeric', 
+                    minute: '2-digit', 
+                    hour12: true 
+                });
+                const dateStr = dateObj.toLocaleDateString();
+                
+                const loc = locations[log.ip_address];
+                const locationStr = loc && loc.city !== 'Unknown' ? `${loc.city}, ${loc.country}` : (loc?.country || 'Unknown');
+                
+                const deviceType = parseDevice(log.user_agent);
+                const icon = DEVICE_ICONS[deviceType] || DEVICE_ICONS['Unknown'];
+
+                html += `
+                <tr class="hover:bg-slate-800/40 transition-colors">
+                    <td class="px-6 py-4 text-slate-300">
+                        ${timeStr}
+                        <div class="text-xs text-slate-500 mt-1">${dateStr}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="font-mono text-emerald-400 text-sm">${log.ip_address}</div>
+                        <div class="text-xs text-slate-400 flex items-center gap-1 mt-1">
+                            <i class="fa-solid fa-location-dot"></i> ${locationStr}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-slate-900 border border-slate-700 text-slate-200 shadow-sm text-sm">
+                            ${icon} ${deviceType}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-slate-400 max-w-[200px] truncate" title="${log.user_agent}">
+                        ${log.user_agent}
+                    </td>
+                </tr>`;
+            });
+            
+            tbody.innerHTML = html;
+        }
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', initDashboard);
+
+    </script>
+</body>
+</html>
