@@ -13,11 +13,47 @@ app.use(cors({
 
 const uri = "mongodb+srv://bsnsone:shihabsolidgets@akcluster0.zax3xwc.mongodb.net/ak_process?retryWrites=true&w=majority";
 
-mongoose.connect(uri)
-  .then(() => console.log("MongoDB Connected"))
-  .catch(err => console.log(err));
+// --- 🌐 GLOBAL DB CONNECTION CACHE FOR VERCEL ---
+let cachedDb = global.mongoose;
 
-// --- 🚀 SERVER-SIDE CACHE ---
+if (!cachedDb) {
+  cachedDb = global.mongoose = { conn: null, promise: null };
+}
+
+async function dbConnect() {
+  if (cachedDb.conn) {
+    return cachedDb.conn; // ⚡ Re-use existing connection
+  }
+
+  if (!cachedDb.promise) {
+    cachedDb.promise = mongoose.connect(uri).then((mongoose) => {
+      console.log("🟢 New MongoDB Connection Established");
+      return mongoose;
+    });
+  }
+  
+  try {
+    cachedDb.conn = await cachedDb.promise;
+  } catch (e) {
+    cachedDb.promise = null;
+    throw e;
+  }
+  
+  return cachedDb.conn;
+}
+
+// Ensure DB is connected before handling ANY request
+app.use(async (req, res, next) => {
+  try {
+    await dbConnect();
+    next();
+  } catch (error) {
+    res.status(500).json({ error: "Failed to connect to database" });
+  }
+});
+
+
+// --- 🚀 SERVER-SIDE DATA CACHE ---
 // Vercel serverless functions keep variables in memory while "warm".
 let appCache = {};
 
