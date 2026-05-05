@@ -1,7 +1,16 @@
 {
-  "name": "your-project-name",
+  "name": "assignment-koran-mongodb",
   "version": "1.0.0",
+  "description": "Agency Management System with Mongodb and Vercel",
+  "main": "api/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node api/index.js",
+    "dev": "nodemon api/index.js"
+  },
   "dependencies": {
-    "@supabase/supabase-js": "^2.x.x" 
+    "@supabase/supabase-js": "^2.43.0",
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
   }
 }
