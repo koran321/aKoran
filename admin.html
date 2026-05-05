@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agency OS - Minimalist</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } }
+    }
+  </script>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <style>
+    body { font-family: 'Inter', sans-serif; margin: 0; min-height: 100vh; }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 4px; }
+    .dark ::-webkit-scrollbar-thumb { background: #27272a; }
+    dialog::backdrop { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); }
+    .dark dialog::backdrop { background: rgba(0, 0, 0, 0.8); }
+    .tab-active { border-bottom: 2px solid; }
+    .tab-inactive { border-bottom: 2px solid transparent; }
+  </style>
+</head>
+<body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 p-4 sm:p-8 transition-colors duration-300">
+
+  <div class="max-w-6xl mx-auto">
+    <!-- Header & Navigation -->
+    <header class="mb-8 border-b border-zinc-200 dark:border-zinc-800">
+      <div class="flex flex-col sm:flex-row sm:items-end justify-between pb-6 gap-4">
+        <div>
+          <h1 class="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white" data-i18n="title">Agency OS</h1>
+          <p class="text-zinc-500 dark:text-zinc-400 mt-1 text-sm font-medium" data-i18n="subtitle">Manage tasks, clients, and finances.</p>
+        </div>
+
+        <div class="flex items-center gap-3 shrink-0">
+          <button onclick="toggleLang()" id="langBtn" class="px-3 py-1.5 text-xs font-bold uppercase tracking-wider border rounded-full border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shadow-sm dark:shadow-none text-indigo-600 dark:text-indigo-400">
+            বাং/EN
+          </button>
+          <button onclick="toggleTheme()" class="p-2 border rounded-full border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shadow-sm dark:shadow-none text-zinc-600 dark:text-zinc-400">
+            <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Tabs -->
+      <nav class="flex gap-6 text-sm font-medium overflow-x-auto whitespace-nowrap hide-scrollbar border-zinc-900 dark:border-white">
+        <button onclick="switchTab('dashboard')" id="tab-dashboard" class="pb-3 tab-active text-zinc-900 dark:text-white border-zinc-900 dark:border-white transition-colors" data-i18n="nav_overview">Overview</button>
+        <button onclick="switchTab('clients-view')" id="tab-clients-view" class="pb-3 tab-inactive text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors" data-i18n="nav_clients">Clients</button>
+        <button onclick="switchTab('tasks')" id="tab-tasks" class="pb-3 tab-inactive text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors" data-i18n="nav_active">Active Pipeline</button>
+        <button onclick="switchTab('done')" id="tab-done" class="pb-3 tab-inactive text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors" data-i18n="nav_done">Completed Works</button>
+        <button onclick="switchTab('accounts')" id="tab-accounts" class="pb-3 tab-inactive text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors" data-i18n="nav_accounts">Expenses</button>
+      </nav>
+    </header>
+
+    <!-- ==================== VIEW: DASHBOARD ==================== -->
+    <main id="view-dashboard" class="block space-y-6 pb-24">
+      <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-2xl shadow-sm dark:shadow-none">
+          <p class="text-zinc-500 dark:text-zinc-400 text-xs uppercase tracking-wider font-semibold mb-1" data-i18n="stat_earned">Total Earned</p>
+          <h3 class="text-2xl font-bold text-emerald-600 dark:text-emerald-400" id="stat-in">৳0</h3>
+        </div>
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-2xl shadow-sm dark:shadow-none relative overflow-hidden">
+          <div class="absolute -right-4 -bottom-4 opacity-5 dark:opacity-10 text-zinc-900 dark:text-white"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div>
+          <p class="text-zinc-500 dark:text-zinc-400 text-xs uppercase tracking-wider font-semibold mb-1" data-i18n="stat_expected">Expected Earnings</p>
+          <h3 class="text-2xl font-bold text-yellow-600 dark:text-yellow-400" id="stat-expected">৳0</h3>
+        </div>
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-2xl shadow-sm dark:shadow-none">
+          <p class="text-zinc-500 dark:text-zinc-400 text-xs uppercase tracking-wider font-semibold mb-1" data-i18n="stat_expenses">Expenses</p>
+          <h3 class="text-2xl font-bold text-rose-600 dark:text-rose-400" id="stat-out">৳0</h3>
+        </div>
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-2xl shadow-sm dark:shadow-none">
+          <p class="text-zinc-500 dark:text-zinc-400 text-xs uppercase tracking-wider font-semibold mb-1" data-i18n="stat_net">Net Balance</p>
+          <h3 class="text-2xl font-bold text-zinc-900 dark:text-white" id="stat-net">৳0</h3>
+        </div>
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-2xl shadow-sm dark:shadow-none">
+          <p class="text-zinc-500 dark:text-zinc-400 text-xs uppercase tracking-wider font-semibold mb-1" data-i18n="stat_pending">Active Pipeline</p>
+          <h3 class="text-2xl font-bold text-indigo-600 dark:text-indigo-400" id="stat-pending">0 Tasks</h3>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+        <div class="lg:col-span-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 rounded-2xl shadow-sm dark:shadow-none">
+          <h3 class="text-sm font-semibold mb-4 text-zinc-900 dark:text-white uppercase tracking-wider" data-i18n="chart_title">Expense Breakdown</h3>
+          <div class="w-full h-[300px] flex items-center justify-center">
+            <canvas id="expenseChart"></canvas>
+          </div>
+        </div>
+        
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 rounded-2xl shadow-sm dark:shadow-none flex flex-col">
+          <h3 class="text-sm font-semibold mb-4 text-zinc-900 dark:text-white uppercase tracking-wider" data-i18n="top_clients">Top Clients (Earnings)</h3>
+          <ul id="topClientsList" class="flex-1 space-y-3 overflow-y-auto pr-2">
+             <li class="text-zinc-500 text-sm" data-i18n="calculating">Calculating...</li>
+          </ul>
+        </div>
+      </div>
+    </main>
+
+    <!-- ==================== VIEW: CLIENTS ==================== -->
+    <main id="view-clients-view" class="hidden pb-24">
+      <div class="flex justify-between items-center mb-6">
+        <div>
+          <h2 class="text-xl font-semibold text-zinc-900 dark:text-white" data-i18n="nav_clients">Clients</h2>
+          <p class="text-sm text-zinc-500 dark:text-zinc-400"><span data-i18n="total_clients">Total Clients:</span> <span id="clientCount" class="font-bold text-zinc-900 dark:text-white">0</span></p>
+        </div>
+        <button onclick="openClientAddModal()" class="bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-200 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-sm" data-i18n="btn_new_client">
+          + Add Client
+        </button>
+      </div>
+      <div id="clientsGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+    </main>
+
+    <!-- ==================== VIEW: TASKS (ACTIVE) ==================== -->
+    <main id="view-tasks" class="hidden pb-24">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-semibold text-zinc-900 dark:text-white" data-i18n="nav_active">Active Pipeline</h2>
+        <button onclick="openTaskModal()" class="bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-200 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-sm" data-i18n="btn_new_task">
+          + New Task
+        </button>
+      </div>
+      <ul id="taskList" class="grid grid-cols-1 gap-4"></ul>
+    </main>
+
+    <!-- ==================== VIEW: DONE TASKS ==================== -->
+    <main id="view-done" class="hidden pb-24">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-semibold text-zinc-900 dark:text-white" data-i18n="nav_done">Completed Works</h2>
+      </div>
+      <ul id="doneTaskList" class="grid grid-cols-1 gap-4 opacity-80"></ul>
+    </main>
+
+    <!-- ==================== VIEW: EXPENSES ==================== -->
+    <main id="view-accounts" class="hidden pb-24">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-semibold text-zinc-900 dark:text-white" data-i18n="nav_accounts">Expenses</h2>
+        <button onclick="openTxModal()" class="bg-rose-500 text-white hover:bg-rose-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-sm" data-i18n="btn_log_expense">
+          Log Expense
+        </button>
+      </div>
+      <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-none rounded-2xl overflow-hidden">
+        <ul id="txList" class="divide-y divide-zinc-200 dark:divide-zinc-800"></ul>
+      </div>
+    </main>
+  </div>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- Task Modal -->
+  <dialog id="taskModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 max-w-lg w-full m-auto text-zinc-900 dark:text-white transition-colors">
+    <div class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center">
+      <h2 class="text-lg font-semibold" id="taskModalTitle" data-i18n="modal_task_title">Add New Task</h2>
+      <button onclick="document.getElementById('taskModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    
+    <div class="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+      <input type="hidden" id="editTaskId">
+      
+      <div class="grid grid-cols-2 gap-4">
+        <div class="col-span-2 space-y-1.5">
+          <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_desc">Description / Title</label>
+          <input type="text" id="tTitle" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-indigo-500 dark:focus:border-indigo-500">
+        </div>
+        <div class="col-span-2 space-y-1.5">
+          <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_details">Details (Optional)</label>
+          <textarea id="tDetails" rows="2" placeholder="..." class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-indigo-500 dark:focus:border-indigo-500 text-sm"></textarea>
+        </div>
+        <div class="space-y-1.5">
+          <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_type">Type of Work</label>
+          <select id="tType" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white">
+            <option value="Assignment">Assignment</option><option value="Thesis">Thesis</option><option value="Presentation">Presentation</option><option value="Lab Project">Lab Project</option><option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="space-y-1.5">
+          <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_deadline">Deadline</label>
+          <input type="date" id="tDeadline" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-indigo-500 dark:[color-scheme:dark]">
+        </div>
+      </div>
+
+      <div class="p-4 bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-xl space-y-3">
+        <div class="space-y-1.5">
+          <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_client">Client</label>
+          <select id="tClientSelect" onchange="toggleNewClientFields()" class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white">
+            <option value="new">+ Add New Client / No Client</option>
+          </select>
+        </div>
+        <div id="newClientFields" class="grid grid-cols-2 gap-3">
+          <input type="text" id="tClientName" placeholder="Client Name" class="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-sm outline-none">
+          <input type="text" id="tClientPhone" placeholder="Phone Number" class="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-sm outline-none">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div class="space-y-1.5">
+          <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_total">Total Value (৳)</label>
+          <input type="number" id="tTotal" value="0" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-emerald-500 text-emerald-600 dark:text-emerald-400 font-medium">
+        </div>
+        <div class="space-y-1.5">
+          <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_advance">Advance Paid (৳)</label>
+          <input type="number" id="tAdvance" value="0" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-emerald-500">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div class="space-y-1.5">
+          <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_assign">Assign To</label>
+          <select id="tAssignee" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none text-zinc-900 dark:text-white">
+            <option value="Imranul Islam Shihab">Imranul Islam Shihab</option><option value="Siyam Bhuiyan">Siyam Bhuiyan</option>
+          </select>
+        </div>
+        <div class="space-y-1.5">
+          <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_token">Auth Token</label>
+          <input type="password" id="tPassword" placeholder="••••••••" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-rose-500">
+        </div>
+      </div>
+      
+      <button onclick="saveTask(event)" id="btnSaveTask" class="w-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-200 rounded-lg px-4 py-3 font-semibold transition-colors mt-2" data-i18n="btn_deploy">
+        Deploy Task
+      </button>
+    </div>
+  </dialog>
+
+  <!-- Expenses Modal -->
+  <dialog id="txModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 max-w-sm w-full m-auto text-zinc-900 dark:text-white transition-colors">
+    <div class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center">
+      <h2 class="text-lg font-semibold text-rose-600 dark:text-rose-400" data-i18n="modal_exp_title">Log Expense</h2>
+      <button onclick="document.getElementById('txModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    
+    <div class="p-5 space-y-4">
+      <div class="space-y-1.5">
+        <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_exp_cat">Expense Category</label>
+        <select id="txCategory" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none text-zinc-900 dark:text-white">
+          <option value="Facebook Ads">Facebook Ads</option><option value="Supplements">Supplements</option><option value="Withdraws">Withdraws</option><option value="Others">Others</option>
+        </select>
+      </div>
+      <div class="space-y-1.5">
+        <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_exp_desc">Description (Optional)</label>
+        <input type="text" id="txDescription" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none text-zinc-900 dark:text-white">
+      </div>
+      <div class="space-y-1.5">
+        <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_exp_amount">Amount (৳)</label>
+        <input type="number" id="txAmount" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-rose-300 dark:border-rose-800 rounded-lg px-3 py-2 outline-none focus:border-rose-500 font-medium text-zinc-900 dark:text-white">
+      </div>
+      <div class="space-y-1.5">
+        <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_token">Auth Token</label>
+        <input type="password" id="txPassword" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none text-zinc-900 dark:text-white">
+      </div>
+      <button onclick="saveTransaction(event)" class="w-full bg-rose-500 text-white hover:bg-rose-600 rounded-lg px-4 py-3 font-semibold transition-colors mt-2" data-i18n="btn_deduct">
+        Deduct Funds
+      </button>
+    </div>
+  </dialog>
+
+  <!-- Client Edit / Add Modal -->
+  <dialog id="clientEditModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 max-w-sm w-full m-auto text-zinc-900 dark:text-white transition-colors">
+    <div class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center">
+      <h2 class="text-lg font-semibold" id="clientModalTitle" data-i18n="modal_client_edit">Edit Client</h2>
+      <button onclick="document.getElementById('clientEditModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="p-5 space-y-4">
+      <input type="hidden" id="editClientId">
+      <div class="space-y-1.5">
+        <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Client Name</label>
+        <input type="text" id="cEditName" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white">
+      </div>
+      <div class="space-y-1.5">
+        <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Phone Number</label>
+        <input type="text" id="cEditPhone" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white">
+      </div>
+      <div class="space-y-1.5">
+        <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_token">Auth Token</label>
+        <input type="password" id="cEditPassword" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none text-zinc-900 dark:text-white">
+      </div>
+      <button onclick="saveClient(event)" id="btnSaveClient" class="w-full bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg px-4 py-3 font-semibold transition-colors mt-2" data-i18n="btn_update">
+        Update Client
+      </button>
+    </div>
+  </dialog>
+
+  <!-- Client View Tasks Modal -->
+  <dialog id="clientViewModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 max-w-2xl w-full m-auto text-zinc-900 dark:text-white transition-colors">
+    <div class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center">
+      <h2 class="text-lg font-semibold" id="clientViewTitle">Client Overview</h2>
+      <button onclick="document.getElementById('clientViewModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="p-5 max-h-[70vh] overflow-y-auto">
+      <ul id="clientViewTaskList" class="grid grid-cols-1 gap-4"></ul>
+    </div>
+  </dialog>
+
+  <!-- Custom Auth Prompt Modal -->
+  <dialog id="authPromptModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 max-sm w-full m-auto text-zinc-900 dark:text-white transition-colors">
+    <div class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center">
+      <h2 class="text-lg font-semibold text-rose-600 dark:text-rose-400" data-i18n="modal_auth_title">Authentication Required</h2>
+      <button onclick="cancelAuthPrompt()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="p-5 space-y-4">
+      <p id="authPromptMessage" class="text-sm text-zinc-500 dark:text-zinc-400"></p>
+      <div class="space-y-1.5">
+        <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_token">Auth Token</label>
+        <input type="password" id="authPromptInput" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-rose-500 text-zinc-900 dark:text-white" autocomplete="new-password">
+      </div>
+      <div class="flex gap-3 mt-2">
+        <button onclick="cancelAuthPrompt()" class="flex-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg px-4 py-3 font-semibold transition-colors" data-i18n="btn_cancel">Cancel</button>
+        <button onclick="confirmAuthPrompt()" class="flex-1 bg-rose-500 text-white hover:bg-rose-600 rounded-lg px-4 py-3 font-semibold transition-colors" data-i18n="btn_confirm">Confirm</button>
+      </div>
+    </div>
+  </dialog>
+
+<script>
+// Relative path for same-domain deployment on Vercel
+const API = ""; 
+let allClients = [], allTasks = [], allExpenses = [];
+let expenseChartInstance = null;
+
+// === LOCALE (BILINGUAL) & THEME SETUP ===
+let currentLang = localStorage.getItem('agencyLang') || 'en';
+let currentTheme = localStorage.getItem('theme') || 'dark';
+
+function applyTheme() {
+  const html = document.documentElement;
+  const icon = document.getElementById('themeIcon');
+  if (currentTheme === 'dark') {
+    html.classList.add('dark');
+    icon.innerHTML = '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>';
+  } else {
+    html.classList.remove('dark');
+    icon.innerHTML = '<circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path>';
+  }
+}
+applyTheme();
+
+function toggleTheme() {
+  currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('theme', currentTheme);
+  applyTheme();
+  renderDashboard(); 
+}
+
+const translations = {
+  en: {
+    title: "Agency OS", subtitle: "Manage tasks, clients, and finances.",
+    nav_overview: "Overview", nav_clients: "Clients", nav_active: "Active Pipeline",
+    nav_done: "Completed Works", nav_accounts: "Expenses",
+    stat_earned: "Total Earned", stat_expected: "Expected Earnings", stat_expenses: "Expenses",
+    stat_net: "Net Balance", stat_pending: "Active Pipeline",
+    chart_title: "Expense Breakdown", top_clients: "Top Clients (Earnings)",
+    total_clients: "Total Clients:", btn_new_task: "+ New Task", btn_new_client: "+ Add Client", btn_log_expense: "Log Expense",
+    calculating: "Calculating...", no_tasks: "No tasks in pipeline.", no_done: "No completed works yet.",
+    no_clients: "No clients registered.", no_expenses: "No expenses logged yet.",
+    modal_task_title: "Add New Task", lbl_desc: "Description / Title", lbl_details: "Details (Optional)", lbl_type: "Type of Work",
+    lbl_deadline: "Deadline", lbl_client: "Client", lbl_total: "Total Value (৳)", lbl_advance: "Advance Paid (৳)",
+    lbl_assign: "Assign To", lbl_token: "Auth Token", btn_deploy: "Deploy Task",
+    modal_exp_title: "Log Expense", lbl_exp_cat: "Expense Category", lbl_exp_desc: "Description (Optional)",
+    lbl_exp_amount: "Amount (৳)", btn_deduct: "Deduct Funds", btn_update: "Update Task",
+    word_tasks: "Tasks", txt_internal: "Internal/No Client", txt_due: "Due", txt_total: "Total",
+    txt_advance: "Advance", txt_net_income: "Net Income", txt_logged: "Logged", txt_duration: "Duration",
+    txt_open_ended: "Open-ended", txt_overdue: "Overdue", txt_days: "days", txt_unassigned: "Unassigned",
+    btn_edit: "Edit", btn_done: "Done", btn_undo: "Undo", opt_add_client: "+ Add New Client / No Client",
+    modal_client_edit: "Edit Client", modal_client_add: "Add New Client", btn_view_tasks: "View Tasks", btn_edit_client: "Edit Profile",
+    btn_save_client: "Save Client",
+    btn_cancel: "Cancel", btn_confirm: "Confirm", modal_auth_title: "Authentication Required",
+    msg_auth_status: "Enter auth token to change task status.", msg_auth_del_task: "Enter auth token to delete task.",
+    msg_auth_del_exp: "Enter auth token to delete expense."
+  },
+  bn: {
+    title: "এজেন্সি ওএস", subtitle: "টাস্ক, ক্লায়েন্ট এবং হিসাব পরিচালনা করুন।",
+    nav_overview: "সারাংশ", nav_clients: "ক্লায়েন্ট", nav_active: "চলমান কাজ",
+    nav_done: "সম্পন্ন কাজ", nav_accounts: "খরচ",
+    stat_earned: "মোট আয়", stat_expected: "সম্ভাব্য আয়", stat_expenses: "মোট খরচ",
+    stat_net: "নিট ব্যালেন্স", stat_pending: "চলমান কাজ",
+    chart_title: "খরচের বিবরণ", top_clients: "শীর্ষ ক্লায়েন্ট (আয়)",
+    total_clients: "মোট ক্লায়েন্ট:", btn_new_task: "+ নতুন কাজ", btn_new_client: "+ ক্লায়েন্ট যোগ করুন", btn_log_expense: "খরচ যোগ করুন",
+    calculating: "হিসাব করা হচ্ছে...", no_tasks: "কোনো কাজ নেই।", no_done: "কোনো কাজ সম্পন্ন হয়নি।",
+    no_clients: "কোনো ক্লায়েন্ট নেই।", no_expenses: "কোনো খরচের রেকর্ড নেই।",
+    modal_task_title: "নতুন কাজ যোগ করুন", lbl_desc: "কাজের নাম / বিবরণ", lbl_details: "বিস্তারিত (ঐচ্ছিক)", lbl_type: "কাজের ধরন",
+    lbl_deadline: "শেষ সময় (Deadline)", lbl_client: "ক্লায়েন্ট", lbl_total: "মোট মূল্য (৳)", lbl_advance: "অগ্রিম পেমেন্ট (৳)",
+    lbl_assign: "দায়িত্বপ্রাপ্ত ব্যক্তি", lbl_token: "অথ টোকেন", btn_deploy: "সেভ করুন",
+    modal_exp_title: "খরচ যোগ করুন", lbl_exp_cat: "খরচের খাত", lbl_exp_desc: "বিবরণ (ঐচ্ছিক)",
+    lbl_exp_amount: "পরিমাণ (৳)", btn_deduct: "খরচ যুক্ত করুন", btn_update: "আপডেট করুন",
+    word_tasks: "টি কাজ", txt_internal: "নিজস্ব / ক্লায়েন্ট নেই", txt_due: "বাকি", txt_total: "মোট",
+    txt_advance: "অগ্রিম", txt_net_income: "নিট আয়", txt_logged: "যুক্ত হয়েছে", txt_duration: "সময়কাল",
+    txt_open_ended: "নির্ধারিত নয়", txt_overdue: "সময় পার হয়েছে", txt_days: "দিন", txt_unassigned: "নির্ধারিত নয়",
+    btn_edit: "এডিট", btn_done: "সম্পন্ন", btn_undo: "পূর্বাবস্থায়", opt_add_client: "+ নতুন ক্লায়েন্ট / ক্লায়েন্ট নেই",
+    modal_client_edit: "ক্লায়েন্ট এডিট", modal_client_add: "নতুন ক্লায়েন্ট", btn_view_tasks: "কাজগুলো দেখুন", btn_edit_client: "এডিট করুন",
+    btn_save_client: "সেভ করুন",
+    btn_cancel: "বাতিল", btn_confirm: "নিশ্চিত করুন", modal_auth_title: "অথেনটিকেশন প্রয়োজন",
+    msg_auth_status: "স্ট্যাটাস পরিবর্তন করতে টোকেন দিন।", msg_auth_del_task: "কাজ ডিলিট করতে টোকেন দিন।",
+    msg_auth_del_exp: "খরচ ডিলিট করতে টোকেন দিন।"
+  }
+};
+
+function t(key) { return translations[currentLang][key] || key; }
+
+function applyTranslations() {
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.innerText = t(el.getAttribute('data-i18n')); });
+  document.getElementById('btnSaveTask').innerText = document.getElementById('editTaskId').value ? t('btn_update') : t('btn_deploy');
+  const editClientBtn = document.getElementById('btnSaveClient');
+  if (editClientBtn) editClientBtn.innerText = document.getElementById('editClientId').value ? t('btn_update') : t('btn_save_client');
+  renderDashboard(); renderTasks(); renderClientsView(); renderExpenses();
+}
+
+function toggleLang() {
+  currentLang = currentLang === 'en' ? 'bn' : 'en';
+  localStorage.setItem('agencyLang', currentLang);
+  applyTranslations();
+}
+
+function localNum(num) {
+  if(currentLang === 'en') return num.toLocaleString();
+  return String(num).replace(/[0-9]/g, d => '০১২৩৪৫৬৭৮৯'[d]);
+}
+
+function customFormatDate(isoStr) {
+  if (!isoStr) return t('txt_open_ended');
+  const d = new Date(isoStr);
+  const day = String(d.getDate()).padStart(2, '0');
+  const monthStr = currentLang === 'bn' 
+    ? ["জানু","ফেব","মার্চ","এপ্রিল","মে","জুন","জুলাই","আগস্ট","সেপ্টে","অক্টো","নভে","ডিসে"][d.getMonth()] 
+    : ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()];
+  
+  let formatted = `${day} ${monthStr}, ${d.getFullYear()}`;
+  if (currentLang === 'bn') formatted = formatted.replace(/\d/g, digit => '০১২৩৪৫৬৭৮৯'[digit]);
+  return formatted;
+}
+
+// === INITIALIZATION ===
+async function bootstrap() {
+  await Promise.all([fetchTasks(), fetchClients(), fetchExpenses()]);
+  applyTranslations(); 
+  switchTab('dashboard');
+}
+
+function switchTab(tabId) {
+  ['dashboard', 'clients-view', 'tasks', 'done', 'accounts'].forEach(id => {
+    document.getElementById(`view-${id}`).classList.add('hidden');
+    document.getElementById(`tab-${id}`).className = 'pb-3 tab-inactive text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors';
+  });
+  document.getElementById(`view-${tabId}`).classList.remove('hidden');
+  document.getElementById(`tab-${tabId}`).className = 'pb-3 tab-active text-zinc-900 dark:text-white border-zinc-900 dark:border-white transition-colors';
+}
+
+async function handleFetch(url, options) {
+  const res = await fetch(url, options);
+  if (res.ok) return res.json();
+  const errData = await res.json().catch(() => ({}));
+  throw new Error(errData.message || errData.error || `Server Error (${res.status})`);
+}
+
+async function fetchTasks() { try { allTasks = await handleFetch(API + "/tasks"); } catch (e) { console.error(e); } }
+async function fetchClients() {
+  try {
+    allClients = await handleFetch(API + "/clients");
+    const select = document.getElementById("tClientSelect");
+    select.innerHTML = `<option value="new">${t('opt_add_client')}</option>`;
+    allClients.forEach(c => { select.innerHTML += `<option value="${c._id}">${c.name} (${c.phone || '-'})</option>`; });
+  } catch (e) { console.error(e); }
+}
+async function fetchExpenses() {
+  try {
+    let res = await fetch(API + "/accounts");
+    if (res.status === 404) res = await fetch(API + "/transactions"); 
+    allExpenses = await res.json();
+  } catch(e) { console.error(e); }
+}
+
+// === RENDERING FUNCTIONS ===
+function renderDashboard() {
+  let totalEarned = 0, expectedEarnings = 0, totalExpenses = 0, pendingTasksCount = 0;
+  const clientEarningsMap = {};
+
+  allTasks.forEach(tk => {
+    const total = tk.totalValue || 0, advance = tk.advancePaid || 0, balance = total - advance;
+    const isDone = tk.status === 'done';
+
+    let taskEarned = advance;
+    if (isDone) taskEarned += balance; else { expectedEarnings += balance; pendingTasksCount++; }
+    totalEarned += taskEarned;
+
+    if (tk.client && tk.client._id) {
+      if(!clientEarningsMap[tk.client._id]) clientEarningsMap[tk.client._id] = { name: tk.client.name, earned: 0 };
+      clientEarningsMap[tk.client._id].earned += taskEarned;
+    }
+  });
+
+  const expenseBreakdown = { "Facebook Ads": 0, "Supplements": 0, "Withdraws": 0, "Others": 0 };
+  allExpenses.forEach(e => {
+    totalExpenses += (e.amount || 0);
+    if(expenseBreakdown[e.category] !== undefined) expenseBreakdown[e.category] += (e.amount || 0);
+    else expenseBreakdown["Others"] += (e.amount || 0);
+  });
+
+  document.getElementById("stat-in").innerText = `৳${localNum(totalEarned)}`;
+  document.getElementById("stat-expected").innerText = `৳${localNum(expectedEarnings)}`;
+  document.getElementById("stat-out").innerText = `৳${localNum(totalExpenses)}`;
+  document.getElementById("stat-net").innerText = `৳${localNum(totalEarned - totalExpenses)}`;
+  document.getElementById("stat-pending").innerText = `${localNum(pendingTasksCount)} ${t('word_tasks')}`;
+
+  const topList = document.getElementById("topClientsList");
+  const sortedClients = Object.values(clientEarningsMap).sort((a,b) => b.earned - a.earned).slice(0, 5); 
+  topList.innerHTML = sortedClients.length > 0 ? '' : `<li class="text-zinc-500 text-sm italic">${t('no_clients')}</li>`;
+  
+  sortedClients.forEach((c, idx) => {
+    topList.innerHTML += `
+      <li class="flex justify-between items-center p-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-colors">
+        <div class="flex items-center gap-3">
+          <span class="text-zinc-600 dark:text-zinc-500 font-bold text-xs">${localNum(idx + 1)}.</span>
+          <span class="text-zinc-900 dark:text-zinc-300 text-sm font-medium">${c.name}</span>
+        </div>
+        <span class="text-emerald-600 dark:text-emerald-400 font-semibold text-sm">৳${localNum(c.earned)}</span>
+      </li>
+    `;
+  });
+
+  renderChart(expenseBreakdown);
+}
+
+function renderChart(expenseBreakdown) {
+  const ctx = document.getElementById('expenseChart').getContext('2d');
+  if (expenseChartInstance) expenseChartInstance.destroy();
+  
+  Chart.defaults.color = currentTheme === 'dark' ? '#a1a1aa' : '#52525b'; 
+  Chart.defaults.font.family = 'Inter';
+
+  const mapCat = { "Facebook Ads": "ফেসবুক অ্যাড", "Supplements": "সাপ্লিমেন্ট", "Withdraws": "উত্তোলন", "Others": "অন্যান্য" };
+  const labels = Object.keys(expenseBreakdown).map(k => currentLang === 'bn' ? (mapCat[k] || k) : k);
+
+  expenseChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{ label: t('stat_expenses'), data: Object.values(expenseBreakdown), backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'], borderRadius: 4 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: currentTheme === 'dark' ? '#27272a' : '#e4e4e7' } }, x: { grid: { display: false } } } }
+  });
+}
+
+function renderClientsView() {
+  document.getElementById("clientCount").innerText = localNum(allClients.length);
+  const grid = document.getElementById("clientsGrid");
+  grid.innerHTML = "";
+
+  if(allClients.length === 0) {
+    grid.innerHTML = `<div class="col-span-full p-8 text-center border border-zinc-300 dark:border-zinc-800 border-dashed rounded-xl text-zinc-500">${t('no_clients')}</div>`;
+    return;
+  }
+
+  allClients.forEach(client => {
+    const cTasks = allTasks.filter(t => t.client && t.client._id === client._id);
+    let netIncome = 0;
+    cTasks.forEach(tk => {
+      let earned = tk.advancePaid || 0;
+      if (tk.status === 'done') earned += ((tk.totalValue || 0) - (tk.advancePaid || 0));
+      netIncome += earned;
+    });
+
+    grid.innerHTML += `
+      <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-none p-5 rounded-2xl flex flex-col justify-between hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors">
+        <div class="mb-4">
+          <h3 class="font-semibold text-zinc-900 dark:text-white text-lg">${client.name}</h3>
+          <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+            ${client.phone || '-'}
+          </p>
+          <div class="mt-3 inline-block bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 px-2 py-1 rounded text-xs font-semibold">
+            ${t('txt_net_income')}: ৳${localNum(netIncome)}
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2 mt-auto pt-4 border-t border-zinc-100 dark:border-zinc-800">
+          <button onclick="openClientViewModal('${client._id}')" class="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded text-xs font-medium transition-colors">${t('btn_view_tasks')} (${localNum(cTasks.length)})</button>
+          <button onclick="openClientEditModal('${client._id}')" class="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded text-xs font-medium transition-colors">${t('btn_edit_client')}</button>
+        </div>
+      </div>
+    `;
+  });
+}
+
+function generateTaskHTML(tk, isDone) {
+  const clientName = tk.client && tk.client.name ? tk.client.name : t('txt_internal');
+  const total = tk.totalValue || 0, advance = tk.advancePaid || 0;
+  const typeMap = { "Assignment": "অ্যাসাইনমেন্ট", "Thesis": "থিসিস", "Presentation": "প্রেজেন্টেশন", "Lab Project": "ল্যাব", "Other": "অন্যান্য" };
+  const displayType = currentLang === 'bn' ? (typeMap[tk.workType] || tk.workType) : (tk.workType || 'Task');
+  
+  const detailsHTML = tk.details ? `<p class="text-xs text-zinc-500 mt-1 italic">${tk.details}</p>` : '';
+
+  return `
+    <li class="border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-none rounded-2xl p-5 bg-white dark:bg-zinc-900/50 flex flex-col md:flex-row gap-4 justify-between transition-all hover:border-zinc-300 dark:hover:border-zinc-700">
+      <div class="flex-1 space-y-3">
+        <div class="flex items-center gap-2">
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${isDone ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500' : 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300'}">${t(isDone ? 'btn_done' : 'nav_active')}</span>
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">${displayType}</span>
+          <span class="text-xs text-zinc-500 dark:text-zinc-400 font-medium ml-2">${t('txt_due')}: ${customFormatDate(tk.deadline)}</span>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold text-zinc-900 dark:text-white ${isDone ? 'line-through text-zinc-500 dark:text-zinc-500' : ''}">${tk.title}</h3>
+          ${detailsHTML}
+          <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-1.5">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            ${clientName}
+          </p>
+        </div>
+        <div class="flex flex-wrap gap-4 text-xs font-medium border-t border-zinc-100 dark:border-zinc-800/50 pt-3">
+          <div class="text-emerald-600 dark:text-emerald-400">${t('txt_total')}: ৳${localNum(total)}</div>
+          <div class="text-zinc-600 dark:text-zinc-300">${t('txt_advance')}: ৳${localNum(advance)}</div>
+          <div class="text-rose-600 dark:text-rose-400">${t('txt_due')}: ৳${localNum(total - advance)}</div>
+          <div class="text-zinc-500 dark:text-zinc-500 ml-auto flex items-center gap-1">
+             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+             ${tk.assignedTo || t('txt_unassigned')}
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex md:flex-col gap-2 shrink-0 items-end justify-center border-t md:border-t-0 md:border-l border-zinc-100 dark:border-zinc-800/50 pt-3 md:pt-0 md:pl-4">
+        <button onclick="openTaskModal('${tk._id}')" class="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-300 rounded text-xs font-medium transition-colors w-full text-center">${t('btn_edit')}</button>
+        ${!isDone 
+          ? `<button onclick="updateTaskStatus('${tk._id}', 'done')" class="px-3 py-1.5 bg-emerald-100 dark:bg-emerald-500/10 hover:bg-emerald-200 dark:hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded text-xs font-medium transition-colors w-full text-center">${t('btn_done')}</button>`
+          : `<button onclick="updateTaskStatus('${tk._id}', 'pending')" class="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded text-xs font-medium w-full text-center transition-colors">${t('btn_undo')}</button>`
+        }
+        <button onclick="deleteTask('${tk._id}')" class="p-1.5 text-zinc-400 dark:text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 transition-colors" title="Delete">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+        </button>
+      </div>
+    </li>
+  `;
+}
+
+function renderTasks() {
+  const activeList = document.getElementById("taskList"), doneList = document.getElementById("doneTaskList");
+  activeList.innerHTML = ""; doneList.innerHTML = "";
+  const activeTasks = allTasks.filter(t => t.status !== 'done'), doneTasks = allTasks.filter(t => t.status === 'done');
+
+  activeList.innerHTML = activeTasks.length === 0 ? `<li class="text-center text-zinc-500 py-8 border border-dashed border-zinc-300 dark:border-zinc-800 rounded-2xl">${t('no_tasks')}</li>` : activeTasks.map(t => generateTaskHTML(t, false)).join('');
+  doneList.innerHTML = doneTasks.length === 0 ? `<li class="text-center text-zinc-500 py-8 border border-dashed border-zinc-300 dark:border-zinc-800 rounded-2xl">${t('no_done')}</li>` : doneTasks.map(t => generateTaskHTML(t, true)).join('');
+}
+
+function renderExpenses() {
+  const list = document.getElementById("txList");
+  list.innerHTML = "";
+  if(allExpenses.length === 0) return list.innerHTML = `<li class="p-6 text-center text-zinc-500 text-sm">${t('no_expenses')}</li>`;
+
+  allExpenses.forEach(tx => {
+    const mapCat = { "Facebook Ads": "ফেসবুক অ্যাড", "Supplements": "সাপ্লিমেন্ট", "Withdraws": "উত্তোলন", "Others": "অন্যান্য" };
+    const displayCat = currentLang === 'bn' ? (mapCat[tx.category] || tx.category) : tx.category;
+
+    list.innerHTML += `
+      <li class="p-4 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+        <div class="flex items-center gap-4">
+          <div class="p-2 rounded-full bg-rose-100 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg></div>
+          <div>
+            <p class="font-medium text-zinc-900 dark:text-white text-sm">${displayCat}</p>
+            <p class="text-xs text-zinc-500">${customFormatDate(tx.date)} ${tx.description ? `• ${tx.description}` : ''}</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-4">
+          <span class="font-semibold text-rose-600 dark:text-rose-400">-৳${localNum(tx.amount)}</span>
+          <button onclick="deleteTx('${tx._id}')" class="text-zinc-400 hover:text-rose-600 dark:text-zinc-600 dark:hover:text-rose-400"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+        </div>
+      </li>
+    `;
+  });
+}
+
+// === MODALS & ACTIONS ===
+function toggleNewClientFields() { document.getElementById("newClientFields").style.display = document.getElementById("tClientSelect").value === 'new' ? 'grid' : 'none'; }
+
+function openTaskModal(taskId = null) {
+  const modal = document.getElementById("taskModal");
+  document.getElementById("editTaskId").value = taskId || "";
+  document.getElementById("tPassword").value = "";
+  
+  if (taskId) {
+    const tk = allTasks.find(t => t._id === taskId);
+    document.getElementById("taskModalTitle").innerText = t('btn_update');
+    document.getElementById("btnSaveTask").innerText = t('btn_update');
+    document.getElementById("tTitle").value = tk.title;
+    document.getElementById("tDetails").value = tk.details || "";
+    document.getElementById("tType").value = tk.workType || tk.type || "Assignment";
+    document.getElementById("tTotal").value = tk.totalValue || 0;
+    document.getElementById("tAdvance").value = tk.advancePaid || 0;
+    document.getElementById("tAssignee").value = tk.assignedTo || "Imranul Islam Shihab";
+    document.getElementById("tDeadline").value = tk.deadline ? tk.deadline.split('T')[0] : "";
+    document.getElementById("tClientSelect").value = tk.client ? tk.client._id : "new";
+    toggleNewClientFields();
+  } else {
+    document.getElementById("taskModalTitle").innerText = t('modal_task_title');
+    document.getElementById("btnSaveTask").innerText = t('btn_deploy');
+    document.getElementById("tTitle").value = "";
+    document.getElementById("tDetails").value = "";
+    document.getElementById("tTotal").value = "0";
+    document.getElementById("tAdvance").value = "0";
+    document.getElementById("tDeadline").value = ""; 
+    document.getElementById("tClientSelect").value = "new";
+    toggleNewClientFields();
+  }
+  modal.showModal();
+}
+
+async function saveTask(e) {
+  const btn = e.target, id = document.getElementById("editTaskId").value;
+  const password = document.getElementById("tPassword").value.trim(); 
+  const payload = {
+    title: document.getElementById("tTitle").value,
+    details: document.getElementById("tDetails").value,
+    workType: document.getElementById("tType").value, 
+    deadline: document.getElementById("tDeadline").value || null, 
+    clientId: document.getElementById("tClientSelect").value,
+    clientName: document.getElementById("tClientName").value,
+    clientPhone: document.getElementById("tClientPhone").value,
+    totalValue: Number(document.getElementById("tTotal").value) || 0,
+    advancePaid: Number(document.getElementById("tAdvance").value) || 0,
+    assignedTo: document.getElementById("tAssignee").value,
+    password
+  };
+  if(!payload.title) return;
+  btn.innerText = "...";
+  try {
+    await handleFetch(id ? `${API}/update-task/${id}` : `${API}/add-task`, { method: id ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    document.getElementById("taskModal").close(); await bootstrap(); 
+  } catch(err) { alert(err.message); btn.innerText = id ? t('btn_update') : t('btn_deploy'); }
+}
+
+function openTxModal() {
+  document.getElementById("txPassword").value = ""; document.getElementById("txAmount").value = ""; document.getElementById("txDescription").value = "";
+  document.getElementById("txModal").showModal();
+}
+
+// === CUSTOM AUTH PROMPT ===
+let authPromptResolver = null;
+
+function requestAuthToken(message) {
+  return new Promise((resolve) => {
+    const modal = document.getElementById("authPromptModal");
+    document.getElementById("authPromptMessage").innerText = message;
+    const input = document.getElementById("authPromptInput");
+    input.value = "";
+    authPromptResolver = resolve;
+    modal.showModal();
+    input.focus();
+    
+    input.onkeydown = (e) => {
+      if (e.key === 'Enter') confirmAuthPrompt();
+    };
+  });
+}
+
+function cancelAuthPrompt() {
+  document.getElementById("authPromptModal").close();
+  if (authPromptResolver) authPromptResolver(null);
+  authPromptResolver = null;
+}
+
+function confirmAuthPrompt() {
+  const val = document.getElementById("authPromptInput").value.trim();
+  document.getElementById("authPromptModal").close();
+  if (authPromptResolver) authPromptResolver(val || null);
+  authPromptResolver = null;
+}
+
+async function saveTransaction(e) {
+  const password = document.getElementById("txPassword").value.trim();
+  const payload = { category: document.getElementById("txCategory").value, description: document.getElementById("txDescription").value, amount: Number(document.getElementById("txAmount").value), password };
+  if(payload.amount <= 0) return;
+  try {
+    let res = await fetch(`${API}/add-account`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    if (res.status === 404) res = await fetch(`${API}/add-transaction`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    if (!res.ok) { const err = await res.json().catch(()=>({})); throw new Error(err.message || err.error); }
+    document.getElementById("txModal").close(); await bootstrap();
+  } catch(err) { alert(err.message); }
+}
+
+async function updateTaskStatus(id, status) {
+  const password = await requestAuthToken(t('msg_auth_status'));
+  if(!password) return;
+  try { await handleFetch(`${API}/update-task/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status, password }) }); await bootstrap(); } catch(err) { alert(err.message); }
+}
+
+async function deleteTask(id) {
+  const password = await requestAuthToken(t('msg_auth_del_task'));
+  if(!password) return;
+  try { await handleFetch(`${API}/delete-task/${id}`, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) }); await bootstrap(); } catch (err) { alert(err.message); }
+}
+
+async function deleteTx(id) {
+  const password = await requestAuthToken(t('msg_auth_del_exp'));
+  if(!password) return;
+  try {
+    let res = await fetch(`${API}/delete-account/${id}`, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) });
+    if (res.status === 404) res = await fetch(`${API}/delete-transaction/${id}`, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) });
+    await bootstrap();
+  } catch(err) { alert(err.message); }
+}
+
+// CLIENT MODALS
+function openClientAddModal() {
+  document.getElementById("editClientId").value = "";
+  document.getElementById("cEditName").value = "";
+  document.getElementById("cEditPhone").value = "";
+  document.getElementById("cEditPassword").value = "";
+  document.getElementById("clientModalTitle").innerText = t('modal_client_add');
+  document.getElementById("btnSaveClient").innerText = t('btn_save_client');
+  document.getElementById("clientEditModal").showModal();
+}
+
+function openClientEditModal(clientId) {
+  const client = allClients.find(c => c._id === clientId);
+  if(!client) return;
+  document.getElementById("editClientId").value = client._id;
+  document.getElementById("cEditName").value = client.name;
+  document.getElementById("cEditPhone").value = client.phone || "";
+  document.getElementById("cEditPassword").value = "";
+  document.getElementById("clientModalTitle").innerText = t('modal_client_edit');
+  document.getElementById("btnSaveClient").innerText = t('btn_update');
+  document.getElementById("clientEditModal").showModal();
+}
+
+async function saveClient(e) {
+  const id = document.getElementById("editClientId").value;
+  const password = document.getElementById("cEditPassword").value.trim();
+  const payload = {
+    name: document.getElementById("cEditName").value,
+    phone: document.getElementById("cEditPhone").value,
+    password: password
+  };
+  
+  if (!password) {
+      alert("Auth Token is required");
+      return;
+  }
+  
+  try {
+    const url = id ? `${API}/update-client/${id}` : `${API}/add-client`;
+    const method = id ? "PUT" : "POST";
+    await handleFetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    document.getElementById("clientEditModal").close();
+    await bootstrap();
+  } catch(err) { alert(err.message); }
+}
+
+function openClientViewModal(clientId) {
+  const client = allClients.find(c => c._id === clientId);
+  if(!client) return;
+  document.getElementById("clientViewTitle").innerText = `${client.name} - ${t('word_tasks')}`;
+  const cTasks = allTasks.filter(t => t.client && t.client._id === clientId);
+  const list = document.getElementById("clientViewTaskList");
+  list.innerHTML = cTasks.length === 0 ? `<li class="text-zinc-500">${t('no_tasks')}</li>` : cTasks.map(t => generateTaskHTML(t, t.status === 'done')).join('');
+  document.getElementById("clientViewModal").showModal();
+}
+
+bootstrap();
+</script>
+</body>
+</html>
