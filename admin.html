@@ -26,8 +26,11 @@
     /* Double Scrollbar Fix */
     dialog::backdrop { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); }
     .dark dialog::backdrop { background: rgba(0, 0, 0, 0.8); }
-    dialog { max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; }
-    dialog[open] { display: flex; }
+    
+    /* FIX: Only apply flex when the dialog is explicitly open */
+    dialog:not([open]) { display: none; }
+    dialog[open] { display: flex; flex-direction: column; max-height: 90vh; overflow: hidden; }
+    
     .dialog-content { overflow-y: auto; flex: 1; }
     
     .tab-active { border-bottom: 2px solid; }
@@ -73,6 +76,7 @@
           <h3 class="text-2xl font-bold text-emerald-600 dark:text-emerald-400" id="stat-in">৳0</h3>
         </div>
         <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-2xl shadow-sm dark:shadow-none relative overflow-hidden">
+          <div class="absolute -right-4 -bottom-4 opacity-5 dark:opacity-10 text-zinc-900 dark:text-white"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div>
           <p class="text-zinc-500 dark:text-zinc-400 text-xs uppercase tracking-wider font-semibold mb-1" data-i18n="stat_expected">Expected Earnings</p>
           <h3 class="text-2xl font-bold text-yellow-600 dark:text-yellow-400" id="stat-expected">৳0</h3>
         </div>
@@ -230,6 +234,10 @@
             <option value="Imranul Islam Shihab">Imranul Islam Shihab</option><option value="Siyam Bhuiyan">Siyam Bhuiyan</option>
           </select>
         </div>
+        <div class="space-y-1.5">
+          <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_token">Password</label>
+          <input type="password" id="tPassword" placeholder="••••••••" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-rose-500">
+        </div>
       </div>
     </div>
     
@@ -241,7 +249,7 @@
   <!-- Expenses Modal -->
   <dialog id="txModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 max-w-sm w-full m-auto text-zinc-900 dark:text-white transition-colors">
     <div class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center"><h2 class="text-lg font-semibold text-rose-600 dark:text-rose-400" data-i18n="modal_exp_title">Log Expense</h2><button onclick="document.getElementById('txModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
-    <div class="p-5 space-y-4"><div class="space-y-1.5"><label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_exp_cat">Expense Category</label><select id="txCategory" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none text-zinc-900 dark:text-white"><option value="Facebook Ads">Facebook Ads</option><option value="Supplements">Supplements</option><option value="Withdraws">Withdraws</option><option value="Others">Others</option></select></div><div class="space-y-1.5"><label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_exp_desc">Description (Optional)</label><input type="text" id="txDescription" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none text-zinc-900 dark:text-white"></div><div class="space-y-1.5"><label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_exp_amount">Amount (৳)</label><input type="number" id="txAmount" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-rose-300 dark:border-rose-800 rounded-lg px-3 py-2 outline-none focus:border-rose-500 font-medium text-zinc-900 dark:text-white"></div><button onclick="saveTransaction(event)" class="w-full bg-rose-500 text-white hover:bg-rose-600 rounded-lg px-4 py-3 font-semibold transition-colors mt-2" data-i18n="btn_deduct">Deduct Funds</button></div>
+    <div class="p-5 space-y-4"><div class="space-y-1.5"><label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_exp_cat">Expense Category</label><select id="txCategory" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none text-zinc-900 dark:text-white"><option value="Facebook Ads">Facebook Ads</option><option value="Supplements">Supplements</option><option value="Withdraws">Withdraws</option><option value="Others">Others</option></select></div><div class="space-y-1.5"><label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_exp_desc">Description (Optional)</label><input type="text" id="txDescription" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none text-zinc-900 dark:text-white"></div><div class="space-y-1.5"><label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_exp_amount">Amount (৳)</label><input type="number" id="txAmount" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-rose-300 dark:border-rose-800 rounded-lg px-3 py-2 outline-none focus:border-rose-500 font-medium text-zinc-900 dark:text-white"></div><div class="space-y-1.5"><label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_token">Password</label><input type="password" id="txPassword" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none text-zinc-900 dark:text-white"></div><button onclick="saveTransaction(event)" class="w-full bg-rose-500 text-white hover:bg-rose-600 rounded-lg px-4 py-3 font-semibold transition-colors mt-2" data-i18n="btn_deduct">Deduct Funds</button></div>
   </dialog>
 
   <!-- Client Edit/Add Modal -->
@@ -271,12 +279,6 @@
   <dialog id="clientViewModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 max-w-2xl w-full m-auto text-zinc-900 dark:text-white transition-colors flex flex-col">
     <div class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0"><h2 class="text-lg font-semibold" id="clientViewTitle">Client Overview</h2><button onclick="document.getElementById('clientViewModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
     <div class="p-5 dialog-content"><ul id="clientViewTaskList" class="grid grid-cols-1 gap-4"></ul></div>
-  </dialog>
-
-  <!-- Custom Auth Prompt Modal -->
-  <dialog id="authPromptModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 max-sm w-full m-auto text-zinc-900 dark:text-white transition-colors">
-    <div class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center"><h2 class="text-lg font-semibold text-rose-600 dark:text-rose-400" data-i18n="modal_auth_title">Authentication Required</h2><button onclick="cancelAuthPrompt()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
-    <div class="p-5 space-y-4"><p id="authPromptMessage" class="text-sm text-zinc-500 dark:text-zinc-400"></p><div class="space-y-1.5"><label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_token">Auth Token</label><input type="password" id="authPromptInput" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-rose-500 text-zinc-900 dark:text-white" autocomplete="new-password"></div><div class="flex gap-3 mt-2"><button onclick="cancelAuthPrompt()" class="flex-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg px-4 py-3 font-semibold transition-colors" data-i18n="btn_cancel">Cancel</button><button onclick="confirmAuthPrompt()" class="flex-1 bg-rose-500 text-white hover:bg-rose-600 rounded-lg px-4 py-3 font-semibold transition-colors" data-i18n="btn_confirm">Confirm</button></div></div>
   </dialog>
 
 <script>
@@ -335,7 +337,7 @@ const translations = {
     no_clients: "No clients registered.", no_expenses: "No expenses logged yet.",
     modal_task_title: "Add New Task", lbl_desc: "Description / Title", lbl_details: "Details (Optional)", plc_details: "Enter specific requirements, links, or notes...", lbl_type: "Type of Work",
     lbl_deadline: "Deadline", lbl_client: "Client", search_client: "Search clients...", lbl_total: "Total Value (৳)", lbl_advance: "Advance Paid (৳)",
-    lbl_assign: "Assign To", lbl_token: "Auth Token", lbl_university: "University", btn_deploy: "Deploy Task", btn_load_more: "Load More",
+    lbl_assign: "Assign To", lbl_token: "Password", lbl_university: "University", btn_deploy: "Deploy Task", btn_load_more: "Load More",
     modal_exp_title: "Log Expense", lbl_exp_cat: "Expense Category", lbl_exp_desc: "Description (Optional)",
     lbl_exp_amount: "Amount (৳)", btn_deduct: "Deduct Funds", btn_update: "Update", btn_export: "Export CSV",
     word_tasks: "Tasks", txt_internal: "Internal/No Client", txt_due: "Due", txt_total: "Total",
@@ -344,9 +346,9 @@ const translations = {
     btn_edit: "Edit", btn_done: "Done", btn_undo: "Undo", opt_add_client: "+ Add New Client / No Client", btn_delete: "Delete",
     modal_client_edit: "Edit Client", modal_client_add: "Add New Client", btn_view_tasks: "View Tasks", btn_edit_client: "Edit Profile",
     btn_save_client: "Save Client",
-    btn_cancel: "Cancel", btn_confirm: "Confirm", modal_auth_title: "Authentication Required",
-    msg_auth_status: "Enter auth token to change task status.", msg_auth_del_task: "Enter auth token to delete task.",
-    msg_auth_del_exp: "Enter auth token to delete expense.", msg_auth_save: "Enter auth token to save changes."
+    btn_cancel: "Cancel", btn_confirm: "Confirm", modal_auth_title: "Enter Password",
+    msg_auth_status: "Enter password to change task status.", msg_auth_del_task: "Enter password to delete task.",
+    msg_auth_del_exp: "Enter password to delete expense.", msg_auth_save: "Enter password to save changes."
   },
   bn: {
     title: "এজেন্সি ওএস", subtitle: "টাস্ক, ক্লায়েন্ট এবং হিসাব পরিচালনা করুন।",
@@ -360,7 +362,7 @@ const translations = {
     no_clients: "কোনো ক্লায়েন্ট নেই।", no_expenses: "কোনো খরচের রেকর্ড নেই।",
     modal_task_title: "নতুন কাজ যোগ করুন", lbl_desc: "কাজের নাম / বিবরণ", lbl_details: "বিস্তারিত (ঐচ্ছিক)", plc_details: "নির্দিষ্ট প্রয়োজনীয়তা, লিঙ্ক বা নোট লিখুন...", lbl_type: "কাজের ধরন",
     lbl_deadline: "শেষ সময় (Deadline)", lbl_client: "ক্লায়েন্ট", search_client: "ক্লায়েন্ট খুঁজুন...", lbl_total: "মোট মূল্য (৳)", lbl_advance: "অগ্রিম পেমেন্ট (৳)",
-    lbl_assign: "দায়িত্বপ্রাপ্ত ব্যক্তি", lbl_token: "অথ টোকেন", lbl_university: "বিশ্ববিদ্যালয়", btn_deploy: "সেভ করুন", btn_load_more: "আরও দেখুন",
+    lbl_assign: "দায়িত্বপ্রাপ্ত ব্যক্তি", lbl_token: "পাসওয়ার্ড", lbl_university: "বিশ্ববিদ্যালয়", btn_deploy: "সেভ করুন", btn_load_more: "আরও দেখুন",
     modal_exp_title: "খরচ যোগ করুন", lbl_exp_cat: "খরচের খাত", lbl_exp_desc: "বিবরণ (ঐচ্ছিক)",
     lbl_exp_amount: "পরিমাণ (৳)", btn_deduct: "খরচ যুক্ত করুন", btn_update: "আপডেট", btn_export: "CSV এক্সপোর্ট",
     word_tasks: "টি কাজ", txt_internal: "নিজস্ব / ক্লায়েন্ট নেই", txt_due: "বাকি", txt_total: "মোট",
@@ -369,9 +371,9 @@ const translations = {
     btn_edit: "এডিট", btn_done: "সম্পন্ন", btn_undo: "পূর্বাবস্থায়", opt_add_client: "+ নতুন ক্লায়েন্ট / ক্লায়েন্ট নেই", btn_delete: "ডিলিট",
     modal_client_edit: "ক্লায়েন্ট এডিট", modal_client_add: "নতুন ক্লায়েন্ট", btn_view_tasks: "কাজগুলো দেখুন", btn_edit_client: "এডিট করুন",
     btn_save_client: "সেভ করুন",
-    btn_cancel: "বাতিল", btn_confirm: "নিশ্চিত করুন", modal_auth_title: "অথেনটিকেশন প্রয়োজন",
-    msg_auth_status: "স্ট্যাটাস পরিবর্তন করতে টোকেন দিন।", msg_auth_del_task: "কাজ ডিলিট করতে টোকেন দিন।",
-    msg_auth_del_exp: "খরচ ডিলিট করতে টোকেন দিন.", msg_auth_save: "সেভ করতে টোকেন দিন।"
+    btn_cancel: "বাতিল", btn_confirm: "নিশ্চিত করুন", modal_auth_title: "পাসওয়ার্ড দিন",
+    msg_auth_status: "স্ট্যাটাস পরিবর্তন করতে পাসওয়ার্ড দিন।", msg_auth_del_task: "কাজ ডিলিট করতে পাসওয়ার্ড দিন।",
+    msg_auth_del_exp: "খরচ ডিলিট করতে পাসওয়ার্ড দিন.", msg_auth_save: "সেভ করতে পাসওয়ার্ড দিন।"
   }
 };
 
@@ -750,8 +752,7 @@ function openTaskModal(taskId = null) {
 
 async function saveTask(e) {
   const btn = e.target, id = document.getElementById("editTaskId").value;
-  const password = await requestAuthToken(t('msg_auth_save')); 
-  if(!password) return;
+  const password = document.getElementById("tPassword").value.trim();
 
   const payload = {
     title: document.getElementById("tTitle").value,
@@ -777,7 +778,7 @@ async function saveTask(e) {
     currentTaskPage = 1; 
     await Promise.all([fetchTasks(1, false), fetchClients(), fetchExpenses()]);
     renderDashboard(); renderTasks(); renderClientsView();
-  } catch(err) { alert(err.message); btn.innerText = t('btn_deploy'); }
+  } catch(err) { alert(err.message); btn.innerText = id ? t('btn_update') : t('btn_deploy'); }
 }
 
 function openTxModal() {
@@ -785,41 +786,8 @@ function openTxModal() {
   document.getElementById("txModal").showModal();
 }
 
-// === CUSTOM AUTH PROMPT ===
-let authPromptResolver = null;
-
-function requestAuthToken(message) {
-  return new Promise((resolve) => {
-    const modal = document.getElementById("authPromptModal");
-    document.getElementById("authPromptMessage").innerText = message;
-    const input = document.getElementById("authPromptInput");
-    input.value = "";
-    authPromptResolver = resolve;
-    modal.showModal();
-    input.focus();
-    
-    input.onkeydown = (e) => {
-      if (e.key === 'Enter') confirmAuthPrompt();
-    };
-  });
-}
-
-function cancelAuthPrompt() {
-  document.getElementById("authPromptModal").close();
-  if (authPromptResolver) authPromptResolver(null);
-  authPromptResolver = null;
-}
-
-function confirmAuthPrompt() {
-  const val = document.getElementById("authPromptInput").value.trim();
-  document.getElementById("authPromptModal").close();
-  if (authPromptResolver) authPromptResolver(val || null);
-  authPromptResolver = null;
-}
-
 async function saveTransaction(e) {
-  const password = await requestAuthToken(t('msg_auth_save'));
-  if(!password) return;
+  const password = document.getElementById("txPassword").value.trim();
   
   const payload = { category: document.getElementById("txCategory").value, description: document.getElementById("txDescription").value, amount: Number(document.getElementById("txAmount").value), password };
   if(payload.amount <= 0) return;
@@ -830,7 +798,7 @@ async function saveTransaction(e) {
 }
 
 async function updateTaskStatus(id, status) {
-  const password = await requestAuthToken(t('msg_auth_status'));
+  const password = prompt(t('msg_auth_status'))?.trim();
   if(!password) return;
   try { 
     await handleFetch(`${API}/update-task/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status, password }) }); 
@@ -841,7 +809,7 @@ async function updateTaskStatus(id, status) {
 }
 
 async function deleteTask(id) {
-  const password = await requestAuthToken(t('msg_auth_del_task'));
+  const password = prompt(t('msg_auth_del_task'))?.trim();
   if(!password) return;
   try { 
     await handleFetch(`${API}/delete-task/${id}`, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) }); 
@@ -852,7 +820,7 @@ async function deleteTask(id) {
 }
 
 async function deleteTx(id) {
-  const password = await requestAuthToken(t('msg_auth_del_exp'));
+  const password = prompt(t('msg_auth_del_exp'))?.trim();
   if(!password) return;
   try {
     await handleFetch(`${API}/delete-account/${id}`, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) });
@@ -883,8 +851,8 @@ function openClientEditModal(clientId) {
 
 async function saveClient(e) {
   const id = document.getElementById("editClientId").value;
-  const password = await requestAuthToken(t('msg_auth_save'));
-  if (!password) return;
+  const password = document.getElementById("cEditPassword").value.trim();
+  if (!password) return alert("Password is required");
 
   const payload = {
     name: document.getElementById("cEditName").value,
