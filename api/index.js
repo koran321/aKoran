@@ -17,13 +17,23 @@ mongoose.connect(uri)
   .then(() => console.log("MongoDB Connected"))
   .catch(err => console.log(err));
 
+// --- 🚀 SERVER-SIDE CACHE ---
+// Vercel serverless functions keep variables in memory while "warm".
+let appCache = {};
+
+// Clears the cache whenever data is modified
+const clearCache = () => {
+  appCache = {};
+};
+
 // --- SCHEMAS ---
 const securitySchema = new mongoose.Schema({ password: String });
 const Security = mongoose.model("Security", securitySchema, "security");
 
 const clientSchema = new mongoose.Schema({
   name: String,
-  phone: String
+  phone: String,
+  university: { type: String, default: "" } // ✅ NEW FIELD: University
 }, { timestamps: true });
 const Client = mongoose.model("Client", clientSchema, "clients");
 
@@ -62,71 +72,159 @@ const checkPassword = async (req, res, next) => {
   }
 };
 
-// --- API ROUTES ---
-app.get("/tasks", async (req, res) => {
-  const tasks = await Task.find().populate('client').sort({ createdAt: -1 });
-  res.json(tasks);
+// --- API ROUTES (Updated to /api/...) ---
+
+// 📊 STATS
+app.get("/api/dashboard-stats", async (req, res) => {
+  if (appCache.stats) return res.json(appCache.stats); // ⚡ Cache Hit
+
+  try {
+    const tasks = await Task.find();
+    const txs = await Account.find();
+    let totalTaskValue = 0, totalAdvance = 0, totalExp = 0, expectedEarnings = 0;
+
+    tasks.forEach(t => { 
+      totalTaskValue += (t.totalValue || 0); 
+      totalAdvance += (t.advancePaid || 0); 
+      if (t.status !== 'done') expectedEarnings += ((t.totalValue || 0) - (t.advancePaid || 0));
+    });
+    txs.forEach(tx => totalExp += (tx.amount || 0));
+    
+    const stats = { 
+      totalIn: totalAdvance, 
+      expectedEarnings,
+      totalExpenses: totalExp, 
+      netBalance: totalAdvance - totalExp, 
+      pendingTasks: tasks.filter(t => t.status !== 'done').length 
+    };
+
+    appCache.stats = stats; // ⚡ Cache Save
+    res.json(stats);
+  } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-app.post("/add-task", checkPassword, async (req, res) => {
-  const { title, details, workType, clientId, clientName, clientPhone, deadline, totalValue, advancePaid, assignedTo } = req.body;
-  let finalClientId = clientId;
-  if (clientId === 'new' && (clientName || clientPhone)) {
-    const newClient = await Client.create({ name: clientName || "Unnamed Client", phone: clientPhone || "" });
-    finalClientId = newClient._id;
-  }
-  const task = await Task.create({ title, details, workType, client: finalClientId, deadline, totalValue, advancePaid, assignedTo });
-  res.json(task);
+// 📌 TASKS (With Pagination)
+app.get("/api/tasks", async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 30; // 30 tasks per page
+    const cacheKey = `tasks_${page}_${limit}`;
+
+    if (appCache[cacheKey]) return res.json(appCache[cacheKey]); // ⚡ Cache Hit
+
+    const skip = (page - 1) * limit;
+    const total = await Task.countDocuments();
+    const tasks = await Task.find().populate('client').sort({ createdAt: -1 }).skip(skip).limit(limit);
+    
+    const result = { data: tasks, total, page, totalPages: Math.ceil(total / limit) };
+    appCache[cacheKey] = result; // ⚡ Cache Save
+    
+    res.json(result);
+  } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-app.put("/update-task/:id", checkPassword, async (req, res) => {
-  const task = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true });
-  res.json(task);
+app.post("/api/add-task", checkPassword, async (req, res) => {
+  try {
+    const { title, details, workType, clientId, clientName, clientPhone, clientUniversity, deadline, totalValue, advancePaid, assignedTo } = req.body;
+    let finalClientId = clientId;
+
+    if (clientId === 'new' && (clientName || clientPhone)) {
+      const newClient = await Client.create({ name: clientName || "Unnamed Client", phone: clientPhone || "", university: clientUniversity || "" });
+      finalClientId = newClient._id;
+    } else if (clientId === 'new') { finalClientId = null; }
+
+    const task = await Task.create({
+      title, details: details || "", workType, client: finalClientId, 
+      deadline: deadline || null, totalValue: totalValue || 0, 
+      advancePaid: advancePaid || 0, assignedTo
+    });
+
+    clearCache(); // 🧹 Clear Cache on update
+    res.json(task);
+  } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-app.delete("/delete-task/:id", checkPassword, async (req, res) => {
-  await Task.findByIdAndDelete(req.params.id);
-  res.json({ message: "Deleted" });
+app.put("/api/update-task/:id", checkPassword, async (req, res) => {
+  try {
+    const updates = { ...req.body };
+    delete updates.password;
+    if (updates.deadline === "") updates.deadline = null;
+
+    let finalClientId = updates.clientId;
+    if (finalClientId === 'new') {
+      if ((updates.clientName && updates.clientName.trim() !== "") || (updates.clientPhone && updates.clientPhone.trim() !== "")) {
+        const newClient = await Client.create({ name: updates.clientName || "Unnamed Client", phone: updates.clientPhone || "", university: updates.clientUniversity || "" });
+        finalClientId = newClient._id;
+      } else { finalClientId = null; }
+    }
+
+    if (finalClientId !== undefined) updates.client = finalClientId || null;
+    delete updates.clientId; delete updates.clientName; delete updates.clientPhone; delete updates.clientUniversity;
+
+    const task = await Task.findByIdAndUpdate(req.params.id, updates, { new: true });
+    clearCache(); // 🧹 Clear Cache
+    res.json(task);
+  } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-app.get("/clients", async (req, res) => {
-  const clients = await Client.find().sort({ name: 1 });
-  res.json(clients);
+app.delete("/api/delete-task/:id", checkPassword, async (req, res) => {
+  try {
+    await Task.findByIdAndDelete(req.params.id);
+    clearCache(); // 🧹 Clear Cache
+    res.json({ message: "Deleted" });
+  } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-app.post("/add-client", checkPassword, async (req, res) => {
-  const client = await Client.create(req.body);
-  res.json(client);
+// 👥 CLIENTS
+app.get("/api/clients", async (req, res) => {
+  if (appCache.clients) return res.json(appCache.clients);
+  try {
+    const clients = await Client.find().sort({ name: 1 });
+    appCache.clients = clients;
+    res.json(clients);
+  } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-app.put("/update-client/:id", checkPassword, async (req, res) => {
-  const client = await Client.findByIdAndUpdate(req.params.id, req.body, { new: true });
-  res.json(client);
+app.post("/api/add-client", checkPassword, async (req, res) => {
+  try {
+    const client = await Client.create(req.body);
+    clearCache(); // 🧹 Clear Cache
+    res.json(client);
+  } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-app.get("/accounts", async (req, res) => {
-  const expenses = await Account.find().sort({ date: -1 });
-  res.json(expenses);
+app.put("/api/update-client/:id", checkPassword, async (req, res) => {
+  try {
+    const client = await Client.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    clearCache(); // 🧹 Clear Cache
+    res.json(client);
+  } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-app.post("/add-account", checkPassword, async (req, res) => {
-  const expense = await Account.create(req.body);
-  res.json(expense);
+// 💰 ACCOUNTS (Expenses)
+app.get("/api/accounts", async (req, res) => {
+  if (appCache.accounts) return res.json(appCache.accounts);
+  try {
+    const expenses = await Account.find().sort({ date: -1 });
+    appCache.accounts = expenses;
+    res.json(expenses);
+  } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-app.delete("/delete-account/:id", checkPassword, async (req, res) => {
-  await Account.findByIdAndDelete(req.params.id);
-  res.json({ message: "Deleted" });
+app.post("/api/add-account", checkPassword, async (req, res) => {
+  try {
+    const expense = await Account.create(req.body);
+    clearCache(); // 🧹 Clear Cache
+    res.json(expense);
+  } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-// Vercel Stats Helper
-app.get("/dashboard-stats", async (req, res) => {
-  const tasks = await Task.find();
-  const txs = await Account.find();
-  let totalTaskValue = 0, totalAdvance = 0, totalExp = 0;
-  tasks.forEach(t => { totalTaskValue += (t.totalValue || 0); totalAdvance += (t.advancePaid || 0); });
-  txs.forEach(tx => totalExp += (tx.amount || 0));
-  res.json({ totalIn: totalAdvance, totalExpenses: totalExp, netBalance: totalAdvance - totalExp, pendingTasks: tasks.filter(t => t.status !== 'done').length });
+app.delete("/api/delete-account/:id", checkPassword, async (req, res) => {
+  try {
+    await Account.findByIdAndDelete(req.params.id);
+    clearCache(); // 🧹 Clear Cache
+    res.json({ message: "Deleted" });
+  } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
 export default app;
