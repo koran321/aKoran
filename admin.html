@@ -22,8 +22,14 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 4px; }
     .dark ::-webkit-scrollbar-thumb { background: #27272a; }
+    
+    /* Double Scrollbar Fix */
     dialog::backdrop { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); }
     .dark dialog::backdrop { background: rgba(0, 0, 0, 0.8); }
+    dialog { max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; }
+    dialog[open] { display: flex; }
+    .dialog-content { overflow-y: auto; flex: 1; }
+    
     .tab-active { border-bottom: 2px solid; }
     .tab-inactive { border-bottom: 2px solid transparent; }
   </style>
@@ -67,7 +73,6 @@
           <h3 class="text-2xl font-bold text-emerald-600 dark:text-emerald-400" id="stat-in">৳0</h3>
         </div>
         <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-2xl shadow-sm dark:shadow-none relative overflow-hidden">
-          <div class="absolute -right-4 -bottom-4 opacity-5 dark:opacity-10 text-zinc-900 dark:text-white"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div>
           <p class="text-zinc-500 dark:text-zinc-400 text-xs uppercase tracking-wider font-semibold mb-1" data-i18n="stat_expected">Expected Earnings</p>
           <h3 class="text-2xl font-bold text-yellow-600 dark:text-yellow-400" id="stat-expected">৳0</h3>
         </div>
@@ -88,9 +93,7 @@
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
         <div class="lg:col-span-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 rounded-2xl shadow-sm dark:shadow-none">
           <h3 class="text-sm font-semibold mb-4 text-zinc-900 dark:text-white uppercase tracking-wider" data-i18n="chart_title">Expense Breakdown</h3>
-          <div class="w-full h-[300px] flex items-center justify-center">
-            <canvas id="expenseChart"></canvas>
-          </div>
+          <div class="w-full h-[300px] flex items-center justify-center"><canvas id="expenseChart"></canvas></div>
         </div>
         
         <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 rounded-2xl shadow-sm dark:shadow-none flex flex-col">
@@ -125,6 +128,9 @@
         </button>
       </div>
       <ul id="taskList" class="grid grid-cols-1 gap-4"></ul>
+      <div id="taskPaginationControls" class="mt-8 flex justify-center hidden">
+        <button onclick="loadMoreTasks()" class="px-6 py-2 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg text-sm font-medium transition-colors" data-i18n="btn_load_more">Load More</button>
+      </div>
     </main>
 
     <!-- ==================== VIEW: DONE TASKS ==================== -->
@@ -137,11 +143,18 @@
 
     <!-- ==================== VIEW: EXPENSES ==================== -->
     <main id="view-accounts" class="hidden pb-24">
-      <div class="flex justify-between items-center mb-6">
+      <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
         <h2 class="text-xl font-semibold text-zinc-900 dark:text-white" data-i18n="nav_accounts">Expenses</h2>
-        <button onclick="openTxModal()" class="bg-rose-500 text-white hover:bg-rose-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-sm" data-i18n="btn_log_expense">
-          Log Expense
-        </button>
+        <div class="flex items-center gap-3">
+          <!-- 📊 DATA EXPORT BUTTON -->
+          <button onclick="exportAccountsCSV()" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <span data-i18n="btn_export">Export CSV</span>
+          </button>
+          <button onclick="openTxModal()" class="bg-rose-500 text-white hover:bg-rose-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-sm" data-i18n="btn_log_expense">
+            Log Expense
+          </button>
+        </div>
       </div>
       <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-none rounded-2xl overflow-hidden">
         <ul id="txList" class="divide-y divide-zinc-200 dark:divide-zinc-800"></ul>
@@ -153,14 +166,14 @@
 
   <!-- Task Modal -->
   <dialog id="taskModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 max-w-lg w-full m-auto text-zinc-900 dark:text-white transition-colors">
-    <div class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center">
+    <div class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0">
       <h2 class="text-lg font-semibold" id="taskModalTitle" data-i18n="modal_task_title">Add New Task</h2>
       <button onclick="document.getElementById('taskModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
     </div>
     
-    <div class="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+    <div class="p-5 space-y-4 dialog-content">
       <input type="hidden" id="editTaskId">
       
       <div class="grid grid-cols-2 gap-4">
@@ -170,7 +183,7 @@
         </div>
         <div class="col-span-2 space-y-1.5">
           <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_details">Details (Optional)</label>
-          <textarea id="tDetails" rows="2" placeholder="..." class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-indigo-500 dark:focus:border-indigo-500 text-sm"></textarea>
+          <textarea id="tDetails" rows="2" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-indigo-500 dark:focus:border-indigo-500 text-sm" data-i18n-placeholder="plc_details" placeholder="Enter specific requirements, links, or notes..."></textarea>
         </div>
         <div class="space-y-1.5">
           <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_type">Type of Work</label>
@@ -187,13 +200,15 @@
       <div class="p-4 bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-xl space-y-3">
         <div class="space-y-1.5">
           <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_client">Client</label>
-          <select id="tClientSelect" onchange="toggleNewClientFields()" class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white">
+          <input type="text" id="clientSearchInput" oninput="filterClientDropdown()" placeholder="Search clients..." class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-t-lg border-b-0 px-3 py-1.5 outline-none focus:border-indigo-500 text-sm text-zinc-900 dark:text-white mb-0" data-i18n-placeholder="search_client">
+          <select id="tClientSelect" onchange="toggleNewClientFields()" class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-b-lg px-3 py-2 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white">
             <option value="new">+ Add New Client / No Client</option>
           </select>
         </div>
-        <div id="newClientFields" class="grid grid-cols-2 gap-3">
+        <div id="newClientFields" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <input type="text" id="tClientName" placeholder="Client Name" class="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-sm outline-none">
           <input type="text" id="tClientPhone" placeholder="Phone Number" class="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-sm outline-none">
+          <input type="text" id="tClientUniversity" placeholder="University (Optional)" class="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-sm outline-none">
         </div>
       </div>
 
@@ -215,60 +230,23 @@
             <option value="Imranul Islam Shihab">Imranul Islam Shihab</option><option value="Siyam Bhuiyan">Siyam Bhuiyan</option>
           </select>
         </div>
-        <div class="space-y-1.5">
-          <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_token">Auth Token</label>
-          <input type="password" id="tPassword" placeholder="••••••••" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-rose-500">
-        </div>
       </div>
-      
-      <button onclick="saveTask(event)" id="btnSaveTask" class="w-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-200 rounded-lg px-4 py-3 font-semibold transition-colors mt-2" data-i18n="btn_deploy">
-        Deploy Task
-      </button>
+    </div>
+    
+    <div class="p-5 border-t border-zinc-200 dark:border-zinc-800 shrink-0">
+      <button onclick="saveTask(event)" id="btnSaveTask" class="w-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-200 rounded-lg px-4 py-3 font-semibold transition-colors mt-2 shadow-sm" data-i18n="btn_deploy">Deploy Task</button>
     </div>
   </dialog>
 
   <!-- Expenses Modal -->
   <dialog id="txModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 max-w-sm w-full m-auto text-zinc-900 dark:text-white transition-colors">
-    <div class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center">
-      <h2 class="text-lg font-semibold text-rose-600 dark:text-rose-400" data-i18n="modal_exp_title">Log Expense</h2>
-      <button onclick="document.getElementById('txModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-      </button>
-    </div>
-    
-    <div class="p-5 space-y-4">
-      <div class="space-y-1.5">
-        <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_exp_cat">Expense Category</label>
-        <select id="txCategory" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none text-zinc-900 dark:text-white">
-          <option value="Facebook Ads">Facebook Ads</option><option value="Supplements">Supplements</option><option value="Withdraws">Withdraws</option><option value="Others">Others</option>
-        </select>
-      </div>
-      <div class="space-y-1.5">
-        <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_exp_desc">Description (Optional)</label>
-        <input type="text" id="txDescription" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none text-zinc-900 dark:text-white">
-      </div>
-      <div class="space-y-1.5">
-        <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_exp_amount">Amount (৳)</label>
-        <input type="number" id="txAmount" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-rose-300 dark:border-rose-800 rounded-lg px-3 py-2 outline-none focus:border-rose-500 font-medium text-zinc-900 dark:text-white">
-      </div>
-      <div class="space-y-1.5">
-        <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_token">Auth Token</label>
-        <input type="password" id="txPassword" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none text-zinc-900 dark:text-white">
-      </div>
-      <button onclick="saveTransaction(event)" class="w-full bg-rose-500 text-white hover:bg-rose-600 rounded-lg px-4 py-3 font-semibold transition-colors mt-2" data-i18n="btn_deduct">
-        Deduct Funds
-      </button>
-    </div>
+    <div class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center"><h2 class="text-lg font-semibold text-rose-600 dark:text-rose-400" data-i18n="modal_exp_title">Log Expense</h2><button onclick="document.getElementById('txModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
+    <div class="p-5 space-y-4"><div class="space-y-1.5"><label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_exp_cat">Expense Category</label><select id="txCategory" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none text-zinc-900 dark:text-white"><option value="Facebook Ads">Facebook Ads</option><option value="Supplements">Supplements</option><option value="Withdraws">Withdraws</option><option value="Others">Others</option></select></div><div class="space-y-1.5"><label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_exp_desc">Description (Optional)</label><input type="text" id="txDescription" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none text-zinc-900 dark:text-white"></div><div class="space-y-1.5"><label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_exp_amount">Amount (৳)</label><input type="number" id="txAmount" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-rose-300 dark:border-rose-800 rounded-lg px-3 py-2 outline-none focus:border-rose-500 font-medium text-zinc-900 dark:text-white"></div><button onclick="saveTransaction(event)" class="w-full bg-rose-500 text-white hover:bg-rose-600 rounded-lg px-4 py-3 font-semibold transition-colors mt-2" data-i18n="btn_deduct">Deduct Funds</button></div>
   </dialog>
 
-  <!-- Client Edit / Add Modal -->
+  <!-- Client Edit/Add Modal -->
   <dialog id="clientEditModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 max-w-sm w-full m-auto text-zinc-900 dark:text-white transition-colors">
-    <div class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center">
-      <h2 class="text-lg font-semibold" id="clientModalTitle" data-i18n="modal_client_edit">Edit Client</h2>
-      <button onclick="document.getElementById('clientEditModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-      </button>
-    </div>
+    <div class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center"><h2 class="text-lg font-semibold" id="clientModalTitle" data-i18n="modal_client_edit">Edit Client</h2><button onclick="document.getElementById('clientEditModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
     <div class="p-5 space-y-4">
       <input type="hidden" id="editClientId">
       <div class="space-y-1.5">
@@ -280,58 +258,49 @@
         <input type="text" id="cEditPhone" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white">
       </div>
       <div class="space-y-1.5">
-        <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_token">Auth Token</label>
-        <input type="password" id="cEditPassword" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none text-zinc-900 dark:text-white">
+        <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_university">University (Optional)</label>
+        <input type="text" id="cEditUniversity" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white">
       </div>
-      <button onclick="saveClient(event)" id="btnSaveClient" class="w-full bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg px-4 py-3 font-semibold transition-colors mt-2" data-i18n="btn_update">
+      <button onclick="saveClient(event)" id="btnSaveClient" class="w-full bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg px-4 py-3 font-semibold transition-colors mt-4" data-i18n="btn_update">
         Update Client
       </button>
     </div>
   </dialog>
 
   <!-- Client View Tasks Modal -->
-  <dialog id="clientViewModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 max-w-2xl w-full m-auto text-zinc-900 dark:text-white transition-colors">
-    <div class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center">
-      <h2 class="text-lg font-semibold" id="clientViewTitle">Client Overview</h2>
-      <button onclick="document.getElementById('clientViewModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-      </button>
-    </div>
-    <div class="p-5 max-h-[70vh] overflow-y-auto">
-      <ul id="clientViewTaskList" class="grid grid-cols-1 gap-4"></ul>
-    </div>
+  <dialog id="clientViewModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 max-w-2xl w-full m-auto text-zinc-900 dark:text-white transition-colors flex flex-col">
+    <div class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0"><h2 class="text-lg font-semibold" id="clientViewTitle">Client Overview</h2><button onclick="document.getElementById('clientViewModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
+    <div class="p-5 dialog-content"><ul id="clientViewTaskList" class="grid grid-cols-1 gap-4"></ul></div>
   </dialog>
 
   <!-- Custom Auth Prompt Modal -->
   <dialog id="authPromptModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 max-sm w-full m-auto text-zinc-900 dark:text-white transition-colors">
-    <div class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center">
-      <h2 class="text-lg font-semibold text-rose-600 dark:text-rose-400" data-i18n="modal_auth_title">Authentication Required</h2>
-      <button onclick="cancelAuthPrompt()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-      </button>
-    </div>
-    <div class="p-5 space-y-4">
-      <p id="authPromptMessage" class="text-sm text-zinc-500 dark:text-zinc-400"></p>
-      <div class="space-y-1.5">
-        <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_token">Auth Token</label>
-        <input type="password" id="authPromptInput" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-rose-500 text-zinc-900 dark:text-white" autocomplete="new-password">
-      </div>
-      <div class="flex gap-3 mt-2">
-        <button onclick="cancelAuthPrompt()" class="flex-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg px-4 py-3 font-semibold transition-colors" data-i18n="btn_cancel">Cancel</button>
-        <button onclick="confirmAuthPrompt()" class="flex-1 bg-rose-500 text-white hover:bg-rose-600 rounded-lg px-4 py-3 font-semibold transition-colors" data-i18n="btn_confirm">Confirm</button>
-      </div>
-    </div>
+    <div class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center"><h2 class="text-lg font-semibold text-rose-600 dark:text-rose-400" data-i18n="modal_auth_title">Authentication Required</h2><button onclick="cancelAuthPrompt()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
+    <div class="p-5 space-y-4"><p id="authPromptMessage" class="text-sm text-zinc-500 dark:text-zinc-400"></p><div class="space-y-1.5"><label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_token">Auth Token</label><input type="password" id="authPromptInput" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-rose-500 text-zinc-900 dark:text-white" autocomplete="new-password"></div><div class="flex gap-3 mt-2"><button onclick="cancelAuthPrompt()" class="flex-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg px-4 py-3 font-semibold transition-colors" data-i18n="btn_cancel">Cancel</button><button onclick="confirmAuthPrompt()" class="flex-1 bg-rose-500 text-white hover:bg-rose-600 rounded-lg px-4 py-3 font-semibold transition-colors" data-i18n="btn_confirm">Confirm</button></div></div>
   </dialog>
 
 <script>
-// Relative path for same-domain deployment on Vercel
-const API = ""; 
+// Now explicitly points to Vercel API Route configuration
+const API = "/api"; 
 let allClients = [], allTasks = [], allExpenses = [];
 let expenseChartInstance = null;
 
-// === LOCALE (BILINGUAL) & THEME SETUP ===
+// Pagination State
+let currentTaskPage = 1;
+let totalTaskPages = 1;
+
+// === LOCALE & THEME SETUP ===
 let currentLang = localStorage.getItem('agencyLang') || 'en';
 let currentTheme = localStorage.getItem('theme') || 'dark';
+
+// Task Tag Colors Map
+const tagColors = {
+  "Assignment": "bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300",
+  "Thesis": "bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300",
+  "Presentation": "bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-300",
+  "Lab Project": "bg-cyan-100 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300",
+  "Other": "bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
+};
 
 function applyTheme() {
   const html = document.documentElement;
@@ -364,20 +333,20 @@ const translations = {
     total_clients: "Total Clients:", btn_new_task: "+ New Task", btn_new_client: "+ Add Client", btn_log_expense: "Log Expense",
     calculating: "Calculating...", no_tasks: "No tasks in pipeline.", no_done: "No completed works yet.",
     no_clients: "No clients registered.", no_expenses: "No expenses logged yet.",
-    modal_task_title: "Add New Task", lbl_desc: "Description / Title", lbl_details: "Details (Optional)", lbl_type: "Type of Work",
-    lbl_deadline: "Deadline", lbl_client: "Client", lbl_total: "Total Value (৳)", lbl_advance: "Advance Paid (৳)",
-    lbl_assign: "Assign To", lbl_token: "Auth Token", btn_deploy: "Deploy Task",
+    modal_task_title: "Add New Task", lbl_desc: "Description / Title", lbl_details: "Details (Optional)", plc_details: "Enter specific requirements, links, or notes...", lbl_type: "Type of Work",
+    lbl_deadline: "Deadline", lbl_client: "Client", search_client: "Search clients...", lbl_total: "Total Value (৳)", lbl_advance: "Advance Paid (৳)",
+    lbl_assign: "Assign To", lbl_token: "Auth Token", lbl_university: "University", btn_deploy: "Deploy Task", btn_load_more: "Load More",
     modal_exp_title: "Log Expense", lbl_exp_cat: "Expense Category", lbl_exp_desc: "Description (Optional)",
-    lbl_exp_amount: "Amount (৳)", btn_deduct: "Deduct Funds", btn_update: "Update Task",
+    lbl_exp_amount: "Amount (৳)", btn_deduct: "Deduct Funds", btn_update: "Update", btn_export: "Export CSV",
     word_tasks: "Tasks", txt_internal: "Internal/No Client", txt_due: "Due", txt_total: "Total",
     txt_advance: "Advance", txt_net_income: "Net Income", txt_logged: "Logged", txt_duration: "Duration",
-    txt_open_ended: "Open-ended", txt_overdue: "Overdue", txt_days: "days", txt_unassigned: "Unassigned",
-    btn_edit: "Edit", btn_done: "Done", btn_undo: "Undo", opt_add_client: "+ Add New Client / No Client",
+    txt_open_ended: "Open-ended", txt_overdue: "Overdue", txt_days: "days", txt_unassigned: "Unassigned", txt_university: "University",
+    btn_edit: "Edit", btn_done: "Done", btn_undo: "Undo", opt_add_client: "+ Add New Client / No Client", btn_delete: "Delete",
     modal_client_edit: "Edit Client", modal_client_add: "Add New Client", btn_view_tasks: "View Tasks", btn_edit_client: "Edit Profile",
     btn_save_client: "Save Client",
     btn_cancel: "Cancel", btn_confirm: "Confirm", modal_auth_title: "Authentication Required",
     msg_auth_status: "Enter auth token to change task status.", msg_auth_del_task: "Enter auth token to delete task.",
-    msg_auth_del_exp: "Enter auth token to delete expense."
+    msg_auth_del_exp: "Enter auth token to delete expense.", msg_auth_save: "Enter auth token to save changes."
   },
   bn: {
     title: "এজেন্সি ওএস", subtitle: "টাস্ক, ক্লায়েন্ট এবং হিসাব পরিচালনা করুন।",
@@ -389,20 +358,20 @@ const translations = {
     total_clients: "মোট ক্লায়েন্ট:", btn_new_task: "+ নতুন কাজ", btn_new_client: "+ ক্লায়েন্ট যোগ করুন", btn_log_expense: "খরচ যোগ করুন",
     calculating: "হিসাব করা হচ্ছে...", no_tasks: "কোনো কাজ নেই।", no_done: "কোনো কাজ সম্পন্ন হয়নি।",
     no_clients: "কোনো ক্লায়েন্ট নেই।", no_expenses: "কোনো খরচের রেকর্ড নেই।",
-    modal_task_title: "নতুন কাজ যোগ করুন", lbl_desc: "কাজের নাম / বিবরণ", lbl_details: "বিস্তারিত (ঐচ্ছিক)", lbl_type: "কাজের ধরন",
-    lbl_deadline: "শেষ সময় (Deadline)", lbl_client: "ক্লায়েন্ট", lbl_total: "মোট মূল্য (৳)", lbl_advance: "অগ্রিম পেমেন্ট (৳)",
-    lbl_assign: "দায়িত্বপ্রাপ্ত ব্যক্তি", lbl_token: "অথ টোকেন", btn_deploy: "সেভ করুন",
+    modal_task_title: "নতুন কাজ যোগ করুন", lbl_desc: "কাজের নাম / বিবরণ", lbl_details: "বিস্তারিত (ঐচ্ছিক)", plc_details: "নির্দিষ্ট প্রয়োজনীয়তা, লিঙ্ক বা নোট লিখুন...", lbl_type: "কাজের ধরন",
+    lbl_deadline: "শেষ সময় (Deadline)", lbl_client: "ক্লায়েন্ট", search_client: "ক্লায়েন্ট খুঁজুন...", lbl_total: "মোট মূল্য (৳)", lbl_advance: "অগ্রিম পেমেন্ট (৳)",
+    lbl_assign: "দায়িত্বপ্রাপ্ত ব্যক্তি", lbl_token: "অথ টোকেন", lbl_university: "বিশ্ববিদ্যালয়", btn_deploy: "সেভ করুন", btn_load_more: "আরও দেখুন",
     modal_exp_title: "খরচ যোগ করুন", lbl_exp_cat: "খরচের খাত", lbl_exp_desc: "বিবরণ (ঐচ্ছিক)",
-    lbl_exp_amount: "পরিমাণ (৳)", btn_deduct: "খরচ যুক্ত করুন", btn_update: "আপডেট করুন",
+    lbl_exp_amount: "পরিমাণ (৳)", btn_deduct: "খরচ যুক্ত করুন", btn_update: "আপডেট", btn_export: "CSV এক্সপোর্ট",
     word_tasks: "টি কাজ", txt_internal: "নিজস্ব / ক্লায়েন্ট নেই", txt_due: "বাকি", txt_total: "মোট",
     txt_advance: "অগ্রিম", txt_net_income: "নিট আয়", txt_logged: "যুক্ত হয়েছে", txt_duration: "সময়কাল",
-    txt_open_ended: "নির্ধারিত নয়", txt_overdue: "সময় পার হয়েছে", txt_days: "দিন", txt_unassigned: "নির্ধারিত নয়",
-    btn_edit: "এডিট", btn_done: "সম্পন্ন", btn_undo: "পূর্বাবস্থায়", opt_add_client: "+ নতুন ক্লায়েন্ট / ক্লায়েন্ট নেই",
+    txt_open_ended: "নির্ধারিত নয়", txt_overdue: "সময় পার হয়েছে", txt_days: "দিন", txt_unassigned: "নির্ধারিত নয়", txt_university: "বিশ্ববিদ্যালয়",
+    btn_edit: "এডিট", btn_done: "সম্পন্ন", btn_undo: "পূর্বাবস্থায়", opt_add_client: "+ নতুন ক্লায়েন্ট / ক্লায়েন্ট নেই", btn_delete: "ডিলিট",
     modal_client_edit: "ক্লায়েন্ট এডিট", modal_client_add: "নতুন ক্লায়েন্ট", btn_view_tasks: "কাজগুলো দেখুন", btn_edit_client: "এডিট করুন",
     btn_save_client: "সেভ করুন",
     btn_cancel: "বাতিল", btn_confirm: "নিশ্চিত করুন", modal_auth_title: "অথেনটিকেশন প্রয়োজন",
     msg_auth_status: "স্ট্যাটাস পরিবর্তন করতে টোকেন দিন।", msg_auth_del_task: "কাজ ডিলিট করতে টোকেন দিন।",
-    msg_auth_del_exp: "খরচ ডিলিট করতে টোকেন দিন।"
+    msg_auth_del_exp: "খরচ ডিলিট করতে টোকেন দিন.", msg_auth_save: "সেভ করতে টোকেন দিন।"
   }
 };
 
@@ -410,10 +379,12 @@ function t(key) { return translations[currentLang][key] || key; }
 
 function applyTranslations() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.innerText = t(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.getAttribute('data-i18n-placeholder')); });
+  
   document.getElementById('btnSaveTask').innerText = document.getElementById('editTaskId').value ? t('btn_update') : t('btn_deploy');
   const editClientBtn = document.getElementById('btnSaveClient');
   if (editClientBtn) editClientBtn.innerText = document.getElementById('editClientId').value ? t('btn_update') : t('btn_save_client');
-  renderDashboard(); renderTasks(); renderClientsView(); renderExpenses();
+  renderDashboard(); renderTasks(); renderClientsView(); renderExpenses(); filterClientDropdown();
 }
 
 function toggleLang() {
@@ -440,9 +411,31 @@ function customFormatDate(isoStr) {
   return formatted;
 }
 
+// === EXPORT CSV ===
+function exportAccountsCSV() {
+  if (!allExpenses.length) return alert(t('no_expenses'));
+  let csvContent = "data:text/csv;charset=utf-8,Date,Category,Description,Amount (Tk)\n";
+  
+  allExpenses.forEach(e => {
+    const d = new Date(e.date).toLocaleDateString();
+    const cat = `"${e.category}"`;
+    const desc = `"${e.description || ''}"`;
+    csvContent += `${d},${cat},${desc},${e.amount}\n`;
+  });
+  
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", `expenses_${new Date().toISOString().split('T')[0]}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
 // === INITIALIZATION ===
 async function bootstrap() {
-  await Promise.all([fetchTasks(), fetchClients(), fetchExpenses()]);
+  currentTaskPage = 1;
+  await Promise.all([fetchTasks(1, false), fetchClients(), fetchExpenses()]);
   applyTranslations(); 
   switchTab('dashboard');
 }
@@ -463,21 +456,46 @@ async function handleFetch(url, options) {
   throw new Error(errData.message || errData.error || `Server Error (${res.status})`);
 }
 
-async function fetchTasks() { try { allTasks = await handleFetch(API + "/tasks"); } catch (e) { console.error(e); } }
+// Data fetching with pagination support for tasks
+async function fetchTasks(page = 1, append = false) { 
+  try { 
+    const res = await handleFetch(`${API}/tasks?page=${page}&limit=30`); 
+    if (append) {
+      allTasks = [...allTasks, ...res.data];
+    } else {
+      allTasks = res.data || res; // Handle both paginated object or fallback array
+    }
+    currentTaskPage = res.page || 1;
+    totalTaskPages = res.totalPages || 1;
+  } catch (e) { console.error(e); } 
+}
+
+async function loadMoreTasks() {
+  if (currentTaskPage >= totalTaskPages) return;
+  await fetchTasks(currentTaskPage + 1, true);
+  renderTasks();
+}
+
 async function fetchClients() {
   try {
     allClients = await handleFetch(API + "/clients");
-    const select = document.getElementById("tClientSelect");
-    select.innerHTML = `<option value="new">${t('opt_add_client')}</option>`;
-    allClients.forEach(c => { select.innerHTML += `<option value="${c._id}">${c.name} (${c.phone || '-'})</option>`; });
+    allClients.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    filterClientDropdown();
   } catch (e) { console.error(e); }
 }
+
 async function fetchExpenses() {
-  try {
-    let res = await fetch(API + "/accounts");
-    if (res.status === 404) res = await fetch(API + "/transactions"); 
-    allExpenses = await res.json();
-  } catch(e) { console.error(e); }
+  try { allExpenses = await handleFetch(API + "/accounts"); } catch(e) { console.error(e); }
+}
+
+function filterClientDropdown() {
+  const q = document.getElementById("clientSearchInput").value.toLowerCase();
+  const select = document.getElementById("tClientSelect");
+  select.innerHTML = `<option value="new">${t('opt_add_client')}</option>`;
+  
+  allClients.filter(c => (c.name || "").toLowerCase().includes(q) || (c.phone || "").includes(q)).forEach(c => { 
+    select.innerHTML += `<option value="${c._id || c.id}">${c.name} (${c.phone || '-'})</option>`; 
+  });
 }
 
 // === RENDERING FUNCTIONS ===
@@ -493,9 +511,13 @@ function renderDashboard() {
     if (isDone) taskEarned += balance; else { expectedEarnings += balance; pendingTasksCount++; }
     totalEarned += taskEarned;
 
-    if (tk.client && tk.client._id) {
-      if(!clientEarningsMap[tk.client._id]) clientEarningsMap[tk.client._id] = { name: tk.client.name, earned: 0 };
-      clientEarningsMap[tk.client._id].earned += taskEarned;
+    // Check both populate syntax (tk.client._id) and reference syntax (tk.client)
+    const cid = (tk.client && tk.client._id) ? tk.client._id : tk.client;
+    const cname = (tk.client && tk.client.name) ? tk.client.name : null;
+
+    if (cid && cname) {
+      if(!clientEarningsMap[cid]) clientEarningsMap[cid] = { name: cname, earned: 0 };
+      clientEarningsMap[cid].earned += taskEarned;
     }
   });
 
@@ -562,7 +584,8 @@ function renderClientsView() {
   }
 
   allClients.forEach(client => {
-    const cTasks = allTasks.filter(t => t.client && t.client._id === client._id);
+    // Populate client object comparison safe check
+    const cTasks = allTasks.filter(t => (t.client && t.client._id === client._id) || t.client === client._id);
     let netIncome = 0;
     cTasks.forEach(tk => {
       let earned = tk.advancePaid || 0;
@@ -574,9 +597,16 @@ function renderClientsView() {
       <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-none p-5 rounded-2xl flex flex-col justify-between hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors">
         <div class="mb-4">
           <h3 class="font-semibold text-zinc-900 dark:text-white text-lg">${client.name}</h3>
-          <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-1">
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-            ${client.phone || '-'}
+          <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-2 flex-wrap">
+            <span class="flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+              ${client.phone || '-'}
+            </span>
+            ${client.university ? `
+            <span class="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[10px]">
+              <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+              ${client.university}
+            </span>` : ''}
           </p>
           <div class="mt-3 inline-block bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 px-2 py-1 rounded text-xs font-semibold">
             ${t('txt_net_income')}: ৳${localNum(netIncome)}
@@ -594,9 +624,10 @@ function renderClientsView() {
 function generateTaskHTML(tk, isDone) {
   const clientName = tk.client && tk.client.name ? tk.client.name : t('txt_internal');
   const total = tk.totalValue || 0, advance = tk.advancePaid || 0;
+  
   const typeMap = { "Assignment": "অ্যাসাইনমেন্ট", "Thesis": "থিসিস", "Presentation": "প্রেজেন্টেশন", "Lab Project": "ল্যাব", "Other": "অন্যান্য" };
   const displayType = currentLang === 'bn' ? (typeMap[tk.workType] || tk.workType) : (tk.workType || 'Task');
-  
+  const colorClass = tagColors[tk.workType] || tagColors["Other"];
   const detailsHTML = tk.details ? `<p class="text-xs text-zinc-500 mt-1 italic">${tk.details}</p>` : '';
 
   return `
@@ -604,7 +635,7 @@ function generateTaskHTML(tk, isDone) {
       <div class="flex-1 space-y-3">
         <div class="flex items-center gap-2">
           <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${isDone ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500' : 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300'}">${t(isDone ? 'btn_done' : 'nav_active')}</span>
-          <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">${displayType}</span>
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${colorClass}">${displayType}</span>
           <span class="text-xs text-zinc-500 dark:text-zinc-400 font-medium ml-2">${t('txt_due')}: ${customFormatDate(tk.deadline)}</span>
         </div>
         <div>
@@ -626,14 +657,15 @@ function generateTaskHTML(tk, isDone) {
         </div>
       </div>
       
-      <div class="flex md:flex-col gap-2 shrink-0 items-end justify-center border-t md:border-t-0 md:border-l border-zinc-100 dark:border-zinc-800/50 pt-3 md:pt-0 md:pl-4">
-        <button onclick="openTaskModal('${tk._id}')" class="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-300 rounded text-xs font-medium transition-colors w-full text-center">${t('btn_edit')}</button>
+      <div class="flex flex-col gap-2 shrink-0 items-stretch justify-center w-full md:w-32 border-t md:border-t-0 md:border-l border-zinc-100 dark:border-zinc-800/50 pt-3 md:pt-0 md:pl-4">
+        <button onclick="openTaskModal('${tk._id}')" class="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-300 rounded text-xs font-medium transition-colors text-center">${t('btn_edit')}</button>
         ${!isDone 
-          ? `<button onclick="updateTaskStatus('${tk._id}', 'done')" class="px-3 py-1.5 bg-emerald-100 dark:bg-emerald-500/10 hover:bg-emerald-200 dark:hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded text-xs font-medium transition-colors w-full text-center">${t('btn_done')}</button>`
-          : `<button onclick="updateTaskStatus('${tk._id}', 'pending')" class="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded text-xs font-medium w-full text-center transition-colors">${t('btn_undo')}</button>`
+          ? `<button onclick="updateTaskStatus('${tk._id}', 'done')" class="px-3 py-1.5 bg-emerald-100 dark:bg-emerald-500/10 hover:bg-emerald-200 dark:hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded text-xs font-medium transition-colors text-center">${t('btn_done')}</button>`
+          : `<button onclick="updateTaskStatus('${tk._id}', 'pending')" class="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded text-xs font-medium text-center transition-colors">${t('btn_undo')}</button>`
         }
-        <button onclick="deleteTask('${tk._id}')" class="p-1.5 text-zinc-400 dark:text-zinc-500 hover:text-rose-600 dark:hover:text-rose-400 transition-colors" title="Delete">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+        <button onclick="deleteTask('${tk._id}')" class="px-3 py-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded text-xs font-medium transition-colors text-center flex items-center justify-center gap-1">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+          ${t('btn_delete')}
         </button>
       </div>
     </li>
@@ -641,12 +673,15 @@ function generateTaskHTML(tk, isDone) {
 }
 
 function renderTasks() {
-  const activeList = document.getElementById("taskList"), doneList = document.getElementById("doneTaskList");
+  const activeList = document.getElementById("taskList"), doneList = document.getElementById("doneTaskList"), pagControl = document.getElementById("taskPaginationControls");
   activeList.innerHTML = ""; doneList.innerHTML = "";
   const activeTasks = allTasks.filter(t => t.status !== 'done'), doneTasks = allTasks.filter(t => t.status === 'done');
 
   activeList.innerHTML = activeTasks.length === 0 ? `<li class="text-center text-zinc-500 py-8 border border-dashed border-zinc-300 dark:border-zinc-800 rounded-2xl">${t('no_tasks')}</li>` : activeTasks.map(t => generateTaskHTML(t, false)).join('');
   doneList.innerHTML = doneTasks.length === 0 ? `<li class="text-center text-zinc-500 py-8 border border-dashed border-zinc-300 dark:border-zinc-800 rounded-2xl">${t('no_done')}</li>` : doneTasks.map(t => generateTaskHTML(t, true)).join('');
+  
+  if (currentTaskPage < totalTaskPages) pagControl.classList.remove('hidden');
+  else pagControl.classList.add('hidden');
 }
 
 function renderExpenses() {
@@ -682,12 +717,12 @@ function toggleNewClientFields() { document.getElementById("newClientFields").st
 function openTaskModal(taskId = null) {
   const modal = document.getElementById("taskModal");
   document.getElementById("editTaskId").value = taskId || "";
-  document.getElementById("tPassword").value = "";
+  document.getElementById("clientSearchInput").value = "";
+  filterClientDropdown();
   
   if (taskId) {
     const tk = allTasks.find(t => t._id === taskId);
     document.getElementById("taskModalTitle").innerText = t('btn_update');
-    document.getElementById("btnSaveTask").innerText = t('btn_update');
     document.getElementById("tTitle").value = tk.title;
     document.getElementById("tDetails").value = tk.details || "";
     document.getElementById("tType").value = tk.workType || tk.type || "Assignment";
@@ -699,13 +734,15 @@ function openTaskModal(taskId = null) {
     toggleNewClientFields();
   } else {
     document.getElementById("taskModalTitle").innerText = t('modal_task_title');
-    document.getElementById("btnSaveTask").innerText = t('btn_deploy');
     document.getElementById("tTitle").value = "";
     document.getElementById("tDetails").value = "";
     document.getElementById("tTotal").value = "0";
     document.getElementById("tAdvance").value = "0";
     document.getElementById("tDeadline").value = ""; 
     document.getElementById("tClientSelect").value = "new";
+    document.getElementById("tClientName").value = "";
+    document.getElementById("tClientPhone").value = "";
+    document.getElementById("tClientUniversity").value = "";
     toggleNewClientFields();
   }
   modal.showModal();
@@ -713,7 +750,9 @@ function openTaskModal(taskId = null) {
 
 async function saveTask(e) {
   const btn = e.target, id = document.getElementById("editTaskId").value;
-  const password = document.getElementById("tPassword").value.trim(); 
+  const password = await requestAuthToken(t('msg_auth_save')); 
+  if(!password) return;
+
   const payload = {
     title: document.getElementById("tTitle").value,
     details: document.getElementById("tDetails").value,
@@ -722,21 +761,27 @@ async function saveTask(e) {
     clientId: document.getElementById("tClientSelect").value,
     clientName: document.getElementById("tClientName").value,
     clientPhone: document.getElementById("tClientPhone").value,
+    clientUniversity: document.getElementById("tClientUniversity").value,
     totalValue: Number(document.getElementById("tTotal").value) || 0,
     advancePaid: Number(document.getElementById("tAdvance").value) || 0,
     assignedTo: document.getElementById("tAssignee").value,
     password
   };
-  if(!payload.title) return;
+  
+  if(!payload.title) return alert("Title is required");
   btn.innerText = "...";
   try {
     await handleFetch(id ? `${API}/update-task/${id}` : `${API}/add-task`, { method: id ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-    document.getElementById("taskModal").close(); await bootstrap(); 
-  } catch(err) { alert(err.message); btn.innerText = id ? t('btn_update') : t('btn_deploy'); }
+    document.getElementById("taskModal").close(); 
+    // Restarting from page 1 since data changed
+    currentTaskPage = 1; 
+    await Promise.all([fetchTasks(1, false), fetchClients(), fetchExpenses()]);
+    renderDashboard(); renderTasks(); renderClientsView();
+  } catch(err) { alert(err.message); btn.innerText = t('btn_deploy'); }
 }
 
 function openTxModal() {
-  document.getElementById("txPassword").value = ""; document.getElementById("txAmount").value = ""; document.getElementById("txDescription").value = "";
+  document.getElementById("txAmount").value = ""; document.getElementById("txDescription").value = "";
   document.getElementById("txModal").showModal();
 }
 
@@ -773,13 +818,13 @@ function confirmAuthPrompt() {
 }
 
 async function saveTransaction(e) {
-  const password = document.getElementById("txPassword").value.trim();
+  const password = await requestAuthToken(t('msg_auth_save'));
+  if(!password) return;
+  
   const payload = { category: document.getElementById("txCategory").value, description: document.getElementById("txDescription").value, amount: Number(document.getElementById("txAmount").value), password };
   if(payload.amount <= 0) return;
   try {
-    let res = await fetch(`${API}/add-account`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-    if (res.status === 404) res = await fetch(`${API}/add-transaction`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-    if (!res.ok) { const err = await res.json().catch(()=>({})); throw new Error(err.message || err.error); }
+    await handleFetch(`${API}/add-account`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     document.getElementById("txModal").close(); await bootstrap();
   } catch(err) { alert(err.message); }
 }
@@ -787,21 +832,30 @@ async function saveTransaction(e) {
 async function updateTaskStatus(id, status) {
   const password = await requestAuthToken(t('msg_auth_status'));
   if(!password) return;
-  try { await handleFetch(`${API}/update-task/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status, password }) }); await bootstrap(); } catch(err) { alert(err.message); }
+  try { 
+    await handleFetch(`${API}/update-task/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status, password }) }); 
+    currentTaskPage = 1;
+    await Promise.all([fetchTasks(1, false), fetchClients(), fetchExpenses()]);
+    renderDashboard(); renderTasks(); renderClientsView();
+  } catch(err) { alert(err.message); }
 }
 
 async function deleteTask(id) {
   const password = await requestAuthToken(t('msg_auth_del_task'));
   if(!password) return;
-  try { await handleFetch(`${API}/delete-task/${id}`, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) }); await bootstrap(); } catch (err) { alert(err.message); }
+  try { 
+    await handleFetch(`${API}/delete-task/${id}`, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) }); 
+    currentTaskPage = 1;
+    await Promise.all([fetchTasks(1, false), fetchClients(), fetchExpenses()]);
+    renderDashboard(); renderTasks(); renderClientsView();
+  } catch (err) { alert(err.message); }
 }
 
 async function deleteTx(id) {
   const password = await requestAuthToken(t('msg_auth_del_exp'));
   if(!password) return;
   try {
-    let res = await fetch(`${API}/delete-account/${id}`, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) });
-    if (res.status === 404) res = await fetch(`${API}/delete-transaction/${id}`, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) });
+    await handleFetch(`${API}/delete-account/${id}`, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) });
     await bootstrap();
   } catch(err) { alert(err.message); }
 }
@@ -811,9 +865,8 @@ function openClientAddModal() {
   document.getElementById("editClientId").value = "";
   document.getElementById("cEditName").value = "";
   document.getElementById("cEditPhone").value = "";
-  document.getElementById("cEditPassword").value = "";
+  document.getElementById("cEditUniversity").value = "";
   document.getElementById("clientModalTitle").innerText = t('modal_client_add');
-  document.getElementById("btnSaveClient").innerText = t('btn_save_client');
   document.getElementById("clientEditModal").showModal();
 }
 
@@ -823,25 +876,22 @@ function openClientEditModal(clientId) {
   document.getElementById("editClientId").value = client._id;
   document.getElementById("cEditName").value = client.name;
   document.getElementById("cEditPhone").value = client.phone || "";
-  document.getElementById("cEditPassword").value = "";
+  document.getElementById("cEditUniversity").value = client.university || "";
   document.getElementById("clientModalTitle").innerText = t('modal_client_edit');
-  document.getElementById("btnSaveClient").innerText = t('btn_update');
   document.getElementById("clientEditModal").showModal();
 }
 
 async function saveClient(e) {
   const id = document.getElementById("editClientId").value;
-  const password = document.getElementById("cEditPassword").value.trim();
+  const password = await requestAuthToken(t('msg_auth_save'));
+  if (!password) return;
+
   const payload = {
     name: document.getElementById("cEditName").value,
     phone: document.getElementById("cEditPhone").value,
-    password: password
+    university: document.getElementById("cEditUniversity").value,
+    password
   };
-  
-  if (!password) {
-      alert("Auth Token is required");
-      return;
-  }
   
   try {
     const url = id ? `${API}/update-client/${id}` : `${API}/add-client`;
