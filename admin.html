@@ -269,7 +269,11 @@
         <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_university">University (Optional)</label>
         <input type="text" id="cEditUniversity" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white">
       </div>
-      <button onclick="saveClient(event)" id="btnSaveClient" class="w-full bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg px-4 py-3 font-semibold transition-colors mt-4" data-i18n="btn_update">
+      <div class="space-y-1.5">
+        <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_token">Password</label>
+        <input type="password" id="cEditPassword" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none text-zinc-900 dark:text-white">
+      </div>
+      <button onclick="saveClient(event)" id="btnSaveClient" class="w-full bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg px-4 py-3 font-semibold transition-colors mt-2" data-i18n="btn_update">
         Update Client
       </button>
     </div>
@@ -279,6 +283,27 @@
   <dialog id="clientViewModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 max-w-2xl w-full m-auto text-zinc-900 dark:text-white transition-colors flex flex-col">
     <div class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0"><h2 class="text-lg font-semibold" id="clientViewTitle">Client Overview</h2><button onclick="document.getElementById('clientViewModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
     <div class="p-5 dialog-content"><ul id="clientViewTaskList" class="grid grid-cols-1 gap-4"></ul></div>
+  </dialog>
+
+  <!-- Custom Password Prompt Modal -->
+  <dialog id="authPromptModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 max-w-sm w-full m-auto text-zinc-900 dark:text-white transition-colors">
+    <div class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0">
+      <h2 class="text-lg font-semibold" data-i18n="modal_auth_title">Enter Password</h2>
+      <button onclick="cancelAuthPrompt()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="p-5 space-y-4">
+      <p id="authPromptMessage" class="text-sm text-zinc-500 dark:text-zinc-400"></p>
+      <div class="space-y-1.5">
+        <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_token">Password</label>
+        <input type="password" id="authPromptInput" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-rose-500 text-zinc-900 dark:text-white" autocomplete="new-password">
+      </div>
+      <div class="flex gap-3 mt-2">
+        <button onclick="cancelAuthPrompt()" class="flex-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg px-4 py-3 font-semibold transition-colors" data-i18n="btn_cancel">Cancel</button>
+        <button onclick="confirmAuthPrompt()" class="flex-1 bg-rose-500 text-white hover:bg-rose-600 rounded-lg px-4 py-3 font-semibold transition-colors" data-i18n="btn_confirm">Confirm</button>
+      </div>
+    </div>
   </dialog>
 
 <script>
@@ -432,6 +457,38 @@ function exportAccountsCSV() {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+}
+
+// === CUSTOM PASSWORD PROMPT ===
+let authPromptResolver = null;
+
+function requestAuthToken(message) {
+  return new Promise((resolve) => {
+    const modal = document.getElementById("authPromptModal");
+    document.getElementById("authPromptMessage").innerText = message;
+    const input = document.getElementById("authPromptInput");
+    input.value = "";
+    authPromptResolver = resolve;
+    modal.showModal();
+    input.focus();
+    
+    input.onkeydown = (e) => {
+      if (e.key === 'Enter') confirmAuthPrompt();
+    };
+  });
+}
+
+function cancelAuthPrompt() {
+  document.getElementById("authPromptModal").close();
+  if (authPromptResolver) authPromptResolver(null);
+  authPromptResolver = null;
+}
+
+function confirmAuthPrompt() {
+  const val = document.getElementById("authPromptInput").value.trim();
+  document.getElementById("authPromptModal").close();
+  if (authPromptResolver) authPromptResolver(val || null);
+  authPromptResolver = null;
 }
 
 // === INITIALIZATION ===
@@ -798,7 +855,7 @@ async function saveTransaction(e) {
 }
 
 async function updateTaskStatus(id, status) {
-  const password = prompt(t('msg_auth_status'))?.trim();
+  const password = await requestAuthToken(t('msg_auth_status'));
   if(!password) return;
   try { 
     await handleFetch(`${API}/update-task/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status, password }) }); 
@@ -809,7 +866,7 @@ async function updateTaskStatus(id, status) {
 }
 
 async function deleteTask(id) {
-  const password = prompt(t('msg_auth_del_task'))?.trim();
+  const password = await requestAuthToken(t('msg_auth_del_task'));
   if(!password) return;
   try { 
     await handleFetch(`${API}/delete-task/${id}`, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) }); 
@@ -820,7 +877,7 @@ async function deleteTask(id) {
 }
 
 async function deleteTx(id) {
-  const password = prompt(t('msg_auth_del_exp'))?.trim();
+  const password = await requestAuthToken(t('msg_auth_del_exp'));
   if(!password) return;
   try {
     await handleFetch(`${API}/delete-account/${id}`, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) });
