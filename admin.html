@@ -209,7 +209,8 @@
         <div class="space-y-1.5">
           <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_client">Client</label>
           <input type="text" id="clientSearchInput" oninput="filterClientDropdown()" placeholder="Search clients..." class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-t-lg border-b-0 px-3 py-2 outline-none focus:border-indigo-500 text-sm text-zinc-900 dark:text-white mb-0" data-i18n-placeholder="search_client">
-          <select id="tClientSelect" onchange="toggleNewClientFields()" class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-b-lg px-3 py-2 sm:py-2.5 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white text-sm">
+          <!-- FIX: Added this.size=1 on change to collapse the dropdown naturally after clicking -->
+          <select id="tClientSelect" onchange="this.size=1; toggleNewClientFields()" class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-b-lg px-3 py-2 sm:py-2.5 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white text-sm">
             <option value="new">+ Add New Client / No Client</option>
           </select>
         </div>
@@ -562,9 +563,10 @@ async function fetchExpenses() {
 }
 
 function filterClientDropdown() {
-  const q = document.getElementById("clientSearchInput").value.toLowerCase();
+  const searchInput = document.getElementById("clientSearchInput");
+  const q = searchInput.value.toLowerCase();
   const select = document.getElementById("tClientSelect");
-  const currentVal = select.value; // Remember what is currently selected
+  const currentVal = select.value;
   
   let optionsHTML = `<option value="new">${t('opt_add_client')}</option>`;
   
@@ -592,9 +594,25 @@ function filterClientDropdown() {
   const optionExists = Array.from(select.options).some(opt => opt.value === currentVal);
   select.value = optionExists ? currentVal : 'new';
   
+  // Visually expand dropdown to show matches instantly
+  if (q.length > 0) {
+    select.size = Math.min(filteredClients.length + 2, 6);
+  } else {
+    select.size = 1;
+  }
+  
   // Keep the hidden/visible state of the new client fields in sync
   toggleNewClientFields();
 }
+
+// Collapse the dropdown if clicked outside
+document.addEventListener('click', (e) => {
+  const select = document.getElementById("tClientSelect");
+  const searchInput = document.getElementById("clientSearchInput");
+  if (select && select.size > 1 && e.target !== select && e.target !== searchInput) {
+    select.size = 1;
+  }
+});
 
 // === RENDERING FUNCTIONS ===
 function renderDashboard() {
