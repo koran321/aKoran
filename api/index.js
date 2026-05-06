@@ -31,6 +31,29 @@ async function checkPassword(req, res, next) {
   }
 }
 
+// 📱 VERIFY PHONE REVEAL PASSWORD
+app.post("/api/verify-phone-password", async (req, res) => {
+  try {
+    const { password } = req.body;
+    const client = await clientPromise;
+    const db = client.db("ak_process");
+    const { ObjectId } = await import("mongodb");
+
+    // Fetch specifically the phone-unlock password using its exact ID
+    const sec = await db.collection("security").findOne({ 
+      _id: new ObjectId("69fb5dfa5cb79cf60ceb14e2") 
+    });
+
+    if (!sec || sec.password !== password) {
+      return res.status(401).json({ message: "Invalid phone reveal password!" });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // 📊 DASHBOARD STATS (AGGREGATION → FAST)
 app.get("/api/dashboard-stats", async (req, res) => {
   if (cache.stats) return res.json(cache.stats);
