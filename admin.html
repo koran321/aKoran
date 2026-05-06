@@ -16,6 +16,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   
+  <!-- Lottie Player Script -->
+  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+  
   <style>
     body { font-family: 'Inter', sans-serif; margin: 0; min-height: 100vh; }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -41,7 +44,13 @@
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
-<body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 p-3 sm:p-8 transition-colors duration-300">
+<body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 p-3 sm:p-8 transition-colors duration-300 relative">
+
+  <!-- Fullscreen Lottie Loader -->
+  <div id="catLoader" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-950 transition-opacity duration-500">
+    <lottie-player src="https://tukitaki.vercel.app/src/json/LottieFiles/cat_loader.json" background="transparent" speed="1" style="width: 150px; height: 150px;" loop autoplay></lottie-player>
+    <p class="mt-2 text-sm font-medium text-zinc-500 animate-pulse tracking-wide" data-i18n="loading_text">Loading Agency OS...</p>
+  </div>
 
   <div class="max-w-6xl mx-auto">
     <!-- Header & Navigation -->
@@ -172,8 +181,8 @@
 
   <!-- ==================== MODALS ==================== -->
 
-  <!-- Task Modal -->
-  <dialog id="taskModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95%] sm:w-full m-auto text-zinc-900 dark:text-white transition-colors">
+  <!-- Task Modal (Enter Key bound) -->
+  <dialog id="taskModal" onkeydown="if(event.key === 'Enter' && event.target.tagName !== 'TEXTAREA') { event.preventDefault(); document.getElementById('btnSaveTask').click(); }" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95%] sm:w-full m-auto text-zinc-900 dark:text-white transition-colors">
     <div class="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0">
       <h2 class="text-base sm:text-lg font-semibold" id="taskModalTitle" data-i18n="modal_task_title">Add New Task</h2>
       <button onclick="document.getElementById('taskModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 p-1">
@@ -209,7 +218,6 @@
         <div class="space-y-1.5">
           <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_client">Client</label>
           <input type="text" id="clientSearchInput" oninput="filterClientDropdown()" placeholder="Search clients..." class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-t-lg border-b-0 px-3 py-2 outline-none focus:border-indigo-500 text-sm text-zinc-900 dark:text-white mb-0" data-i18n-placeholder="search_client">
-          <!-- FIX: Added this.size=1 on change to collapse the dropdown naturally after clicking -->
           <select id="tClientSelect" onchange="this.size=1; toggleNewClientFields()" class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-b-lg px-3 py-2 sm:py-2.5 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white text-sm">
             <option value="new">+ Add New Client / No Client</option>
           </select>
@@ -247,8 +255,8 @@
     </div>
   </dialog>
 
-  <!-- Expenses Modal -->
-  <dialog id="txModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95%] sm:w-full max-w-sm m-auto text-zinc-900 dark:text-white transition-colors">
+  <!-- Expenses Modal (Enter Key bound) -->
+  <dialog id="txModal" onkeydown="if(event.key === 'Enter') { event.preventDefault(); document.getElementById('btnSaveTx').click(); }" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95%] sm:w-full max-w-sm m-auto text-zinc-900 dark:text-white transition-colors">
     <div class="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0">
       <h2 class="text-base sm:text-lg font-semibold text-rose-600 dark:text-rose-400" data-i18n="modal_exp_title">Log Expense</h2>
       <button onclick="document.getElementById('txModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 p-1"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
@@ -259,12 +267,12 @@
       <div class="space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_exp_amount">Amount (৳)</label><input type="number" id="txAmount" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-rose-300 dark:border-rose-800 rounded-lg px-3 py-2.5 outline-none focus:border-rose-500 font-medium text-zinc-900 dark:text-white text-sm"></div>
     </div>
     <div class="p-4 sm:p-5 border-t border-zinc-200 dark:border-zinc-800 shrink-0 bg-white dark:bg-zinc-950">
-      <button onclick="saveTransaction(event)" class="w-full bg-rose-500 text-white hover:bg-rose-600 rounded-lg px-4 py-3 font-semibold transition-colors shadow-sm text-sm" data-i18n="btn_deduct">Deduct Funds</button>
+      <button onclick="saveTransaction(event)" id="btnSaveTx" class="w-full bg-rose-500 text-white hover:bg-rose-600 rounded-lg px-4 py-3 font-semibold transition-colors shadow-sm text-sm" data-i18n="btn_deduct">Deduct Funds</button>
     </div>
   </dialog>
 
-  <!-- Client Edit/Add Modal -->
-  <dialog id="clientEditModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95%] sm:w-full max-w-sm m-auto text-zinc-900 dark:text-white transition-colors">
+  <!-- Client Edit/Add Modal (Enter Key bound) -->
+  <dialog id="clientEditModal" onkeydown="if(event.key === 'Enter') { event.preventDefault(); document.getElementById('btnSaveClient').click(); }" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95%] sm:w-full max-w-sm m-auto text-zinc-900 dark:text-white transition-colors">
     <div class="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0">
       <h2 class="text-base sm:text-lg font-semibold" id="clientModalTitle" data-i18n="modal_client_edit">Edit Client</h2>
       <button onclick="document.getElementById('clientEditModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 p-1"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
@@ -300,7 +308,7 @@
     <div class="p-4 sm:p-5 dialog-content"><ul id="clientViewTaskList" class="grid grid-cols-1 gap-3 sm:gap-4"></ul></div>
   </dialog>
 
-  <!-- Custom Password Prompt Modal -->
+  <!-- Custom Password Prompt Modal (Enter Key bound) -->
   <dialog id="authPromptModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95%] sm:w-full max-w-sm m-auto text-zinc-900 dark:text-white transition-colors">
     <div class="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0">
       <h2 class="text-base sm:text-lg font-semibold" data-i18n="modal_auth_title">Enter Password</h2>
@@ -316,7 +324,7 @@
       </div>
       <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4">
         <button onclick="cancelAuthPrompt()" class="w-full sm:flex-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg px-4 py-2.5 sm:py-3 font-semibold transition-colors text-sm" data-i18n="btn_cancel">Cancel</button>
-        <button onclick="confirmAuthPrompt()" class="w-full sm:flex-1 bg-rose-500 text-white hover:bg-rose-600 rounded-lg px-4 py-2.5 sm:py-3 font-semibold transition-colors text-sm" data-i18n="btn_confirm">Confirm</button>
+        <button onclick="confirmAuthPrompt()" id="btnConfirmAuth" class="w-full sm:flex-1 bg-rose-500 text-white hover:bg-rose-600 rounded-lg px-4 py-2.5 sm:py-3 font-semibold transition-colors text-sm" data-i18n="btn_confirm">Confirm</button>
       </div>
     </div>
   </dialog>
@@ -367,6 +375,7 @@ function toggleTheme() {
 const translations = {
   en: {
     title: "Agency OS", subtitle: "Manage tasks, clients, and finances.",
+    loading_text: "Loading Agency OS...",
     nav_overview: "Overview", nav_clients: "Clients", nav_active: "Active Pipeline",
     nav_done: "Completed Works", nav_accounts: "Expenses",
     stat_earned: "Total Earned", stat_expected: "Expected Earnings", stat_expenses: "Expenses",
@@ -392,6 +401,7 @@ const translations = {
   },
   bn: {
     title: "এজেন্সি ওএস", subtitle: "টাস্ক, ক্লায়েন্ট এবং হিসাব পরিচালনা করুন।",
+    loading_text: "এজেন্সি ওএস লোড হচ্ছে...",
     nav_overview: "সারাংশ", nav_clients: "ক্লায়েন্ট", nav_active: "চলমান কাজ",
     nav_done: "সম্পন্ন কাজ", nav_accounts: "খরচ",
     stat_earned: "মোট আয়", stat_expected: "সম্ভাব্য আয়", stat_expenses: "মোট খরচ",
@@ -487,6 +497,7 @@ function requestAuthToken(message) {
     modal.showModal();
     input.focus();
     
+    // Using inline onkeydown instead, but keeping this fallback
     input.onkeydown = (e) => {
       if (e.key === 'Enter') confirmAuthPrompt();
     };
@@ -508,10 +519,19 @@ function confirmAuthPrompt() {
 
 // === INITIALIZATION ===
 async function bootstrap() {
+  // Show Cat Loader
+  const loader = document.getElementById('catLoader');
+  loader.style.display = 'flex';
+  loader.style.opacity = '1';
+
   currentTaskPage = 1;
   await Promise.all([fetchTasks(1, false), fetchClients(), fetchExpenses()]);
   applyTranslations(); 
   switchTab('dashboard');
+
+  // Hide Cat Loader gracefully
+  loader.style.opacity = '0';
+  setTimeout(() => { loader.style.display = 'none'; }, 500);
 }
 
 function switchTab(tabId) {
@@ -865,7 +885,7 @@ function openTaskModal(taskId = null) {
 }
 
 async function saveTask(e) {
-  const btn = e.target, id = document.getElementById("editTaskId").value;
+  const btn = document.getElementById("btnSaveTask"), id = document.getElementById("editTaskId").value;
   const password = await requestAuthToken(t('msg_auth_save')); 
   if(!password) return;
 
