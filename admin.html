@@ -48,7 +48,8 @@
 
   <!-- Fullscreen Lottie Loader -->
   <div id="catLoader" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-950 transition-opacity duration-500">
-    <lottie-player src="https://tukitaki.vercel.app/src/json/LottieFiles/cat_loader.json" background="transparent" speed="1" style="width: 150px; height: 150px;" loop autoplay></lottie-player>
+    <!-- Size slightly reduced to 120px -->
+    <lottie-player src="https://tukitaki.vercel.app/src/json/LottieFiles/cat_loader.json" background="transparent" speed="1" style="width: 120px; height: 120px;" loop autoplay></lottie-player>
     <p class="mt-2 text-sm font-medium text-zinc-500 animate-pulse tracking-wide" data-i18n="loading_text">Loading Agency OS...</p>
   </div>
 
@@ -116,7 +117,7 @@
         <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 rounded-2xl shadow-sm dark:shadow-none flex flex-col min-h-[250px]">
           <h3 class="text-sm font-semibold mb-4 text-zinc-900 dark:text-white uppercase tracking-wider" data-i18n="top_clients">Top Clients (Earnings)</h3>
           <ul id="topClientsList" class="flex-1 space-y-3 overflow-y-auto pr-2">
-             <li class="text-zinc-500 text-sm" data-i18n="calculating">Calculating...</li>
+            <li class="text-zinc-500 text-sm" data-i18n="calculating">Calculating...</li>
           </ul>
         </div>
       </div>
@@ -339,6 +340,9 @@ let expenseChartInstance = null;
 let currentTaskPage = 1;
 let totalTaskPages = 1;
 
+// Visibility state for client phone numbers
+let isPhoneUnlocked = false;
+
 // === LOCALE & THEME SETUP ===
 let currentLang = localStorage.getItem('agencyLang') || 'en';
 let currentTheme = localStorage.getItem('theme') || 'dark';
@@ -397,7 +401,8 @@ const translations = {
     btn_save_client: "Save Client",
     btn_cancel: "Cancel", btn_confirm: "Confirm", modal_auth_title: "Enter Password",
     msg_auth_status: "Enter password to change task status.", msg_auth_del_task: "Enter password to delete task.",
-    msg_auth_del_exp: "Enter password to delete expense.", msg_auth_save: "Enter password to save changes."
+    msg_auth_del_exp: "Enter password to delete expense.", msg_auth_save: "Enter password to save changes.",
+    msg_auth_phone: "Enter password to reveal phone numbers."
   },
   bn: {
     title: "এজেন্সি ওএস", subtitle: "টাস্ক, ক্লায়েন্ট এবং হিসাব পরিচালনা করুন।",
@@ -423,7 +428,8 @@ const translations = {
     btn_save_client: "সেভ করুন",
     btn_cancel: "বাতিল", btn_confirm: "নিশ্চিত করুন", modal_auth_title: "পাসওয়ার্ড দিন",
     msg_auth_status: "স্ট্যাটাস পরিবর্তন করতে পাসওয়ার্ড দিন।", msg_auth_del_task: "কাজ ডিলিট করতে পাসওয়ার্ড দিন।",
-    msg_auth_del_exp: "খরচ ডিলিট করতে পাসওয়ার্ড দিন.", msg_auth_save: "সেভ করতে পাসওয়ার্ড দিন।"
+    msg_auth_del_exp: "খরচ ডিলিট করতে পাসওয়ার্ড দিন.", msg_auth_save: "সেভ করতে পাসওয়ার্ড দিন।",
+    msg_auth_phone: "ফোন নম্বর দেখতে পাসওয়ার্ড দিন।"
   }
 };
 
@@ -528,6 +534,24 @@ function confirmAuthPrompt() {
   }, 10);
 }
 
+// UNLOCK PHONES LOGIC
+async function unlockPhones() {
+  const password = await requestAuthToken(t('msg_auth_phone'));
+  if(!password) return;
+  try {
+    // Sending a dummy delete request to an impossible valid ID ensures the backend 
+    // uses your existing 'checkPassword' logic. If the password matches ANY row in 'security', it succeeds securely.
+    await handleFetch(`${API}/delete-task/000000000000000000000000`, { 
+      method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) 
+    });
+    isPhoneUnlocked = true;
+    renderClientsView();
+    filterClientDropdown();
+  } catch(err) {
+    alert(err.message);
+  }
+}
+
 // === INITIALIZATION ===
 async function bootstrap() {
   // Show Cat Loader
@@ -616,7 +640,8 @@ function filterClientDropdown() {
   });
   
   filteredClients.forEach(c => { 
-    optionsHTML += `<option value="${c._id || c.id}">${c.name} (${c.phone || '-'})</option>`; 
+    const phoneText = isPhoneUnlocked ? (c.phone || '-') : '••• ••• •••';
+    optionsHTML += `<option value="${c._id || c.id}">${c.name} (${phoneText})</option>`; 
   });
 
   select.innerHTML = optionsHTML;
@@ -740,6 +765,13 @@ function renderClientsView() {
       netIncome += earned;
     });
 
+    const phoneDisplay = isPhoneUnlocked 
+      ? (client.phone || '-') 
+      : `<span onclick="unlockPhones()" class="cursor-pointer inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-md bg-white/30 dark:bg-black/30 backdrop-blur-md border border-white/20 dark:border-zinc-700/50 shadow-sm transition-all hover:bg-white/40 dark:hover:bg-black/50" title="${t('msg_auth_phone')}">
+           <span class="blur-[4px] select-none opacity-80 font-mono tracking-widest text-[11px] leading-none mt-0.5">017*******</span>
+           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="opacity-70"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+         </span>`;
+
     grid.innerHTML += `
       <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-none p-4 sm:p-5 rounded-2xl flex flex-col justify-between hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors">
         <div class="mb-4">
@@ -747,7 +779,7 @@ function renderClientsView() {
           <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-2 flex-wrap">
             <span class="flex items-center gap-1">
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-              ${client.phone || '-'}
+              ${phoneDisplay}
             </span>
             ${client.university ? `
             <span class="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[10px] break-all">
@@ -798,8 +830,8 @@ function generateTaskHTML(tk, isDone) {
           <div class="text-zinc-600 dark:text-zinc-300">${t('txt_advance')}: ৳${localNum(advance)}</div>
           <div class="text-rose-600 dark:text-rose-400">${t('txt_due')}: ৳${localNum(total - advance)}</div>
           <div class="text-zinc-500 dark:text-zinc-500 w-full sm:w-auto sm:ml-auto flex items-center gap-1">
-             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-             ${tk.assignedTo || t('txt_unassigned')}
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            ${tk.assignedTo || t('txt_unassigned')}
           </div>
         </div>
       </div>
