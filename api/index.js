@@ -1,264 +1,334 @@
 import express from "express";
-import mongoose from "mongoose";
 import cors from "cors";
+import { ObjectId } from "mongodb";
+import clientPromise from "./db.js";
 
 const app = express();
+
 app.use(express.json());
+app.use(cors());
 
-app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
-}));
+// 🔁 simple in-memory cache
+let cache = {};
+const clearCache = () => (cache = {});
 
-const uri = "mongodb+srv://bsnsone:shihabsolidgets@akcluster0.zax3xwc.mongodb.net/ak_process?retryWrites=true&w=majority";
-
-// --- 🌐 GLOBAL DB CONNECTION CACHE FOR VERCEL ---
-let cachedDb = global.mongoose;
-
-if (!cachedDb) {
-  cachedDb = global.mongoose = { conn: null, promise: null };
-}
-
-async function dbConnect() {
-  if (cachedDb.conn) {
-    return cachedDb.conn; // ⚡ Re-use existing connection
-  }
-
-  if (!cachedDb.promise) {
-    cachedDb.promise = mongoose.connect(uri).then((mongoose) => {
-      console.log("🟢 New MongoDB Connection Established");
-      return mongoose;
-    });
-  }
-  
-  try {
-    cachedDb.conn = await cachedDb.promise;
-  } catch (e) {
-    cachedDb.promise = null;
-    throw e;
-  }
-  
-  return cachedDb.conn;
-}
-
-// Ensure DB is connected before handling ANY request
-app.use(async (req, res, next) => {
-  try {
-    await dbConnect();
-    next();
-  } catch (error) {
-    res.status(500).json({ error: "Failed to connect to database" });
-  }
-});
-
-
-// --- 🚀 SERVER-SIDE DATA CACHE ---
-// Vercel serverless functions keep variables in memory while "warm".
-let appCache = {};
-
-// Clears the cache whenever data is modified
-const clearCache = () => {
-  appCache = {};
-};
-
-// --- SCHEMAS ---
-const securitySchema = new mongoose.Schema({ password: String });
-const Security = mongoose.model("Security", securitySchema, "security");
-
-const clientSchema = new mongoose.Schema({
-  name: String,
-  phone: String,
-  university: { type: String, default: "" } // ✅ NEW FIELD: University
-}, { timestamps: true });
-const Client = mongoose.model("Client", clientSchema, "clients");
-
-const taskSchema = new mongoose.Schema({
-  title: String,
-  details: { type: String, default: "" },
-  workType: { type: String, default: "Assignment" }, 
-  client: { type: mongoose.Schema.Types.ObjectId, ref: 'Client', default: null },
-  deadline: { type: Date, default: null },
-  totalValue: { type: Number, default: 0 },
-  advancePaid: { type: Number, default: 0 },
-  assignedTo: { type: String, default: "Imranul Islam Shihab" },
-  status: { type: String, default: "pending" }
-}, { timestamps: true });
-const Task = mongoose.model("Task", taskSchema, "assignment");
-
-const accountSchema = new mongoose.Schema({
-  category: String, 
-  amount: Number,
-  description: String,
-  date: { type: Date, default: Date.now }
-}, { timestamps: true });
-const Account = mongoose.model("Account", accountSchema, "accounts");
-
-// --- MIDDLEWARE ---
-const checkPassword = async (req, res, next) => {
+// 🔐 PASSWORD CHECK
+async function checkPassword(req, res, next) {
   try {
     const { password } = req.body;
-    const sec = await Security.findOne();
+    const client = await clientPromise;
+    const db = client.db("ak_process");
+
+    const sec = await db.collection("security").findOne();
+
     if (!sec || sec.password !== password) {
-      return res.status(401).json({ message: "Invalid Auth Token / Password" });
+      return res.status(401).json({ message: "Invalid password" });
     }
+
     next();
   } catch (err) {
-    res.status(500).json({ error: "Internal Auth Error" });
+    res.status(500).json({ error: "Auth error" });
   }
-};
+}
 
-// --- API ROUTES (Updated to /api/...) ---
-
-// 📊 STATS
+// 📊 DASHBOARD STATS (AGGREGATION → FAST)
 app.get("/api/dashboard-stats", async (req, res) => {
-  if (appCache.stats) return res.json(appCache.stats); // ⚡ Cache Hit
+  if (cache.stats) return res.json(cache.stats);
 
   try {
-    const tasks = await Task.find();
-    const txs = await Account.find();
-    let totalTaskValue = 0, totalAdvance = 0, totalExp = 0, expectedEarnings = 0;
+    const client = await clientPromise;
+    const db = client.db("ak_process");
 
-    tasks.forEach(t => { 
-      totalTaskValue += (t.totalValue || 0); 
-      totalAdvance += (t.advancePaid || 0); 
-      if (t.status !== 'done') expectedEarnings += ((t.totalValue || 0) - (t.advancePaid || 0));
-    });
-    txs.forEach(tx => totalExp += (tx.amount || 0));
-    
-    const stats = { 
-      totalIn: totalAdvance, 
-      expectedEarnings,
-      totalExpenses: totalExp, 
-      netBalance: totalAdvance - totalExp, 
-      pendingTasks: tasks.filter(t => t.status !== 'done').length 
+    const [taskStats] = await db.collection("assignment").aggregate([
+      {
+        $group: {
+          _id: null,
+          totalTaskValue: { $sum: { $toDouble: "$totalValue" } },
+          totalAdvance: { $sum: { $toDouble: "$advancePaid" } },
+          pendingTasks: {
+            $sum: { $cond: [{ $ne: ["$status", "done"] }, 1, 0] }
+          },
+          expectedEarnings: {
+            $sum: {
+              $cond: [
+                { $ne: ["$status", "done"] },
+                { $subtract: [{ $toDouble: "$totalValue" }, { $toDouble: "$advancePaid" }] },
+                0
+              ]
+            }
+          }
+        }
+      }
+    ]).toArray();
+
+    const [expenseStats] = await db.collection("accounts").aggregate([
+      {
+        $group: {
+          _id: null,
+          totalExpenses: { $sum: { $toDouble: "$amount" } }
+        }
+      }
+    ]).toArray();
+
+    const stats = {
+      totalIn: taskStats?.totalAdvance || 0,
+      expectedEarnings: taskStats?.expectedEarnings || 0,
+      totalExpenses: expenseStats?.totalExpenses || 0,
+      netBalance: (taskStats?.totalAdvance || 0) - (expenseStats?.totalExpenses || 0),
+      pendingTasks: taskStats?.pendingTasks || 0
     };
 
-    appCache.stats = stats; // ⚡ Cache Save
+    cache.stats = stats;
     res.json(stats);
-  } catch (error) { res.status(500).json({ error: error.message }); }
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// 📌 TASKS (With Pagination)
+// 📌 TASKS (PAGINATED + $LOOKUP POPULATE)
 app.get("/api/tasks", async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 30; // 30 tasks per page
-    const cacheKey = `tasks_${page}_${limit}`;
+    const limit = parseInt(req.query.limit) || 30;
 
-    if (appCache[cacheKey]) return res.json(appCache[cacheKey]); // ⚡ Cache Hit
+    const key = `tasks_${page}_${limit}`;
+    if (cache[key]) return res.json(cache[key]);
+
+    const client = await clientPromise;
+    const db = client.db("ak_process");
 
     const skip = (page - 1) * limit;
-    const total = await Task.countDocuments();
-    const tasks = await Task.find().populate('client').sort({ createdAt: -1 }).skip(skip).limit(limit);
-    
-    const result = { data: tasks, total, page, totalPages: Math.ceil(total / limit) };
-    appCache[cacheKey] = result; // ⚡ Cache Save
-    
+
+    // Use Aggregation to mimic Mongoose's .populate('client')
+    const tasks = await db.collection("assignment").aggregate([
+      { $sort: { createdAt: -1 } },
+      { $skip: skip },
+      { $limit: limit },
+      {
+        $lookup: {
+          from: "clients",
+          localField: "client",
+          foreignField: "_id",
+          as: "clientData"
+        }
+      },
+      {
+        $addFields: {
+          client: { $arrayElemAt: ["$clientData", 0] } // Convert array to object
+        }
+      },
+      { $project: { clientData: 0 } } // Clean up the temporary array
+    ]).toArray();
+
+    const total = await db.collection("assignment").countDocuments();
+
+    const result = {
+      data: tasks,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    };
+
+    cache[key] = result;
     res.json(result);
-  } catch (error) { res.status(500).json({ error: error.message }); }
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
+// ➕ ADD TASK
 app.post("/api/add-task", checkPassword, async (req, res) => {
   try {
     const { title, details, workType, clientId, clientName, clientPhone, clientUniversity, deadline, totalValue, advancePaid, assignedTo } = req.body;
-    let finalClientId = clientId;
+    const client = await clientPromise;
+    const db = client.db("ak_process");
 
+    let finalClientId = clientId && clientId !== 'new' ? new ObjectId(clientId) : null;
+
+    // Dynamically create client if "new" is selected
     if (clientId === 'new' && (clientName || clientPhone)) {
-      const newClient = await Client.create({ name: clientName || "Unnamed Client", phone: clientPhone || "", university: clientUniversity || "" });
-      finalClientId = newClient._id;
-    } else if (clientId === 'new') { finalClientId = null; }
+      const newClient = await db.collection("clients").insertOne({ 
+        name: clientName || "Unnamed Client", 
+        phone: clientPhone || "", 
+        university: clientUniversity || "",
+        createdAt: new Date(), updatedAt: new Date()
+      });
+      finalClientId = newClient.insertedId;
+    }
 
-    const task = await Task.create({
+    const task = await db.collection("assignment").insertOne({
       title, details: details || "", workType, client: finalClientId, 
-      deadline: deadline || null, totalValue: totalValue || 0, 
-      advancePaid: advancePaid || 0, assignedTo
+      deadline: deadline || null, totalValue: Number(totalValue) || 0, 
+      advancePaid: Number(advancePaid) || 0, assignedTo, status: 'pending',
+      createdAt: new Date(),
+      updatedAt: new Date()
     });
 
-    clearCache(); // 🧹 Clear Cache on update
+    clearCache();
     res.json(task);
-  } catch (error) { res.status(500).json({ error: error.message }); }
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
+// ✏️ UPDATE TASK
 app.put("/api/update-task/:id", checkPassword, async (req, res) => {
   try {
+    const client = await clientPromise;
+    const db = client.db("ak_process");
+
     const updates = { ...req.body };
-    delete updates.password;
+    delete updates.password; // Do not save the auth token to the db
     if (updates.deadline === "") updates.deadline = null;
 
     let finalClientId = updates.clientId;
     if (finalClientId === 'new') {
-      if ((updates.clientName && updates.clientName.trim() !== "") || (updates.clientPhone && updates.clientPhone.trim() !== "")) {
-        const newClient = await Client.create({ name: updates.clientName || "Unnamed Client", phone: updates.clientPhone || "", university: updates.clientUniversity || "" });
-        finalClientId = newClient._id;
+      if (updates.clientName || updates.clientPhone) {
+        const newClient = await db.collection("clients").insertOne({ 
+          name: updates.clientName || "Unnamed Client", 
+          phone: updates.clientPhone || "", 
+          university: updates.clientUniversity || "",
+          createdAt: new Date(), updatedAt: new Date()
+        });
+        finalClientId = newClient.insertedId;
       } else { finalClientId = null; }
+    } else if (finalClientId) {
+      finalClientId = new ObjectId(finalClientId);
     }
 
     if (finalClientId !== undefined) updates.client = finalClientId || null;
     delete updates.clientId; delete updates.clientName; delete updates.clientPhone; delete updates.clientUniversity;
+    
+    // Ensure numbers are cast properly
+    if (updates.totalValue !== undefined) updates.totalValue = Number(updates.totalValue);
+    if (updates.advancePaid !== undefined) updates.advancePaid = Number(updates.advancePaid);
 
-    const task = await Task.findByIdAndUpdate(req.params.id, updates, { new: true });
-    clearCache(); // 🧹 Clear Cache
-    res.json(task);
-  } catch (error) { res.status(500).json({ error: error.message }); }
+    const result = await db.collection("assignment").updateOne(
+      { _id: new ObjectId(req.params.id) },
+      { $set: { ...updates, updatedAt: new Date() } }
+    );
+
+    clearCache();
+    res.json(result);
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
+// ❌ DELETE TASK
 app.delete("/api/delete-task/:id", checkPassword, async (req, res) => {
   try {
-    await Task.findByIdAndDelete(req.params.id);
-    clearCache(); // 🧹 Clear Cache
+    const client = await clientPromise;
+    const db = client.db("ak_process");
+
+    await db.collection("assignment").deleteOne({ _id: new ObjectId(req.params.id) });
+
+    clearCache();
     res.json({ message: "Deleted" });
-  } catch (error) { res.status(500).json({ error: error.message }); }
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // 👥 CLIENTS
 app.get("/api/clients", async (req, res) => {
-  if (appCache.clients) return res.json(appCache.clients);
+  if (cache.clients) return res.json(cache.clients);
+
   try {
-    const clients = await Client.find().sort({ name: 1 });
-    appCache.clients = clients;
+    const client = await clientPromise;
+    const db = client.db("ak_process");
+
+    const clients = await db.collection("clients")
+      .find({})
+      .sort({ name: 1 })
+      .toArray();
+
+    cache.clients = clients;
     res.json(clients);
-  } catch (error) { res.status(500).json({ error: error.message }); }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.post("/api/add-client", checkPassword, async (req, res) => {
   try {
-    const client = await Client.create(req.body);
-    clearCache(); // 🧹 Clear Cache
-    res.json(client);
+    const client = await clientPromise;
+    const db = client.db("ak_process");
+    
+    const { name, phone, university } = req.body;
+    const result = await db.collection("clients").insertOne({
+      name, phone, university, createdAt: new Date(), updatedAt: new Date()
+    });
+
+    clearCache();
+    res.json(result);
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
 app.put("/api/update-client/:id", checkPassword, async (req, res) => {
   try {
-    const client = await Client.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    clearCache(); // 🧹 Clear Cache
-    res.json(client);
+    const client = await clientPromise;
+    const db = client.db("ak_process");
+    
+    const { name, phone, university } = req.body;
+    const result = await db.collection("clients").updateOne(
+      { _id: new ObjectId(req.params.id) },
+      { $set: { name, phone, university, updatedAt: new Date() } }
+    );
+
+    clearCache();
+    res.json(result);
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
 // 💰 ACCOUNTS (Expenses)
 app.get("/api/accounts", async (req, res) => {
-  if (appCache.accounts) return res.json(appCache.accounts);
+  if (cache.accounts) return res.json(cache.accounts);
+
   try {
-    const expenses = await Account.find().sort({ date: -1 });
-    appCache.accounts = expenses;
-    res.json(expenses);
-  } catch (error) { res.status(500).json({ error: error.message }); }
+    const client = await clientPromise;
+    const db = client.db("ak_process");
+
+    const data = await db.collection("accounts")
+      .find({})
+      .sort({ date: -1 })
+      .toArray();
+
+    cache.accounts = data;
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.post("/api/add-account", checkPassword, async (req, res) => {
   try {
-    const expense = await Account.create(req.body);
-    clearCache(); // 🧹 Clear Cache
-    res.json(expense);
+    const client = await clientPromise;
+    const db = client.db("ak_process");
+    
+    const { category, amount, description } = req.body;
+    const result = await db.collection("accounts").insertOne({
+      category, amount: Number(amount), description, date: new Date(), createdAt: new Date()
+    });
+
+    clearCache();
+    res.json(result);
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
 app.delete("/api/delete-account/:id", checkPassword, async (req, res) => {
   try {
-    await Account.findByIdAndDelete(req.params.id);
-    clearCache(); // 🧹 Clear Cache
+    const client = await clientPromise;
+    const db = client.db("ak_process");
+    
+    await db.collection("accounts").deleteOne({ _id: new ObjectId(req.params.id) });
+
+    clearCache();
     res.json({ message: "Deleted" });
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
