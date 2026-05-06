@@ -181,8 +181,8 @@
 
   <!-- ==================== MODALS ==================== -->
 
-  <!-- Task Modal (Enter Key bound) -->
-  <dialog id="taskModal" onkeydown="if(event.key === 'Enter' && event.target.tagName !== 'TEXTAREA') { event.preventDefault(); document.getElementById('btnSaveTask').click(); }" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95%] sm:w-full m-auto text-zinc-900 dark:text-white transition-colors">
+  <!-- Task Modal (Enter Key bound safely) -->
+  <dialog id="taskModal" onkeydown="if(event.key === 'Enter' && event.target.tagName !== 'TEXTAREA') { event.preventDefault(); event.stopPropagation(); document.getElementById('btnSaveTask').click(); }" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95%] sm:w-full m-auto text-zinc-900 dark:text-white transition-colors">
     <div class="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0">
       <h2 class="text-base sm:text-lg font-semibold" id="taskModalTitle" data-i18n="modal_task_title">Add New Task</h2>
       <button onclick="document.getElementById('taskModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 p-1">
@@ -255,8 +255,8 @@
     </div>
   </dialog>
 
-  <!-- Expenses Modal (Enter Key bound) -->
-  <dialog id="txModal" onkeydown="if(event.key === 'Enter') { event.preventDefault(); document.getElementById('btnSaveTx').click(); }" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95%] sm:w-full max-w-sm m-auto text-zinc-900 dark:text-white transition-colors">
+  <!-- Expenses Modal (Enter Key bound safely) -->
+  <dialog id="txModal" onkeydown="if(event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); document.getElementById('btnSaveTx').click(); }" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95%] sm:w-full max-w-sm m-auto text-zinc-900 dark:text-white transition-colors">
     <div class="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0">
       <h2 class="text-base sm:text-lg font-semibold text-rose-600 dark:text-rose-400" data-i18n="modal_exp_title">Log Expense</h2>
       <button onclick="document.getElementById('txModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 p-1"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
@@ -271,8 +271,8 @@
     </div>
   </dialog>
 
-  <!-- Client Edit/Add Modal (Enter Key bound) -->
-  <dialog id="clientEditModal" onkeydown="if(event.key === 'Enter') { event.preventDefault(); document.getElementById('btnSaveClient').click(); }" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95%] sm:w-full max-w-sm m-auto text-zinc-900 dark:text-white transition-colors">
+  <!-- Client Edit/Add Modal (Enter Key bound safely) -->
+  <dialog id="clientEditModal" onkeydown="if(event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); document.getElementById('btnSaveClient').click(); }" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95%] sm:w-full max-w-sm m-auto text-zinc-900 dark:text-white transition-colors">
     <div class="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0">
       <h2 class="text-base sm:text-lg font-semibold" id="clientModalTitle" data-i18n="modal_client_edit">Edit Client</h2>
       <button onclick="document.getElementById('clientEditModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 p-1"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
@@ -308,8 +308,8 @@
     <div class="p-4 sm:p-5 dialog-content"><ul id="clientViewTaskList" class="grid grid-cols-1 gap-3 sm:gap-4"></ul></div>
   </dialog>
 
-  <!-- Custom Password Prompt Modal (Enter Key bound) -->
-  <dialog id="authPromptModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95%] sm:w-full max-w-sm m-auto text-zinc-900 dark:text-white transition-colors">
+  <!-- Custom Password Prompt Modal (Ghost Click fully prevented) -->
+  <dialog id="authPromptModal" onkeydown="if(event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); confirmAuthPrompt(); }" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95%] sm:w-full max-w-sm m-auto text-zinc-900 dark:text-white transition-colors">
     <div class="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0">
       <h2 class="text-base sm:text-lg font-semibold" data-i18n="modal_auth_title">Enter Password</h2>
       <button onclick="cancelAuthPrompt()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 p-1">
@@ -497,9 +497,13 @@ function requestAuthToken(message) {
     modal.showModal();
     input.focus();
     
-    // Using inline onkeydown instead, but keeping this fallback
+    // Safety fallback (main keydown logic is directly on the dialog element)
     input.onkeydown = (e) => {
-      if (e.key === 'Enter') confirmAuthPrompt();
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        e.stopPropagation();
+        confirmAuthPrompt();
+      }
     };
   });
 }
@@ -513,8 +517,15 @@ function cancelAuthPrompt() {
 function confirmAuthPrompt() {
   const val = document.getElementById("authPromptInput").value.trim();
   document.getElementById("authPromptModal").close();
-  if (authPromptResolver) authPromptResolver(val || null);
+  
+  const resolver = authPromptResolver;
   authPromptResolver = null;
+  
+  // CRITICAL FIX: Delaying resolution by 10ms ensures the browser completely clears 
+  // the "Enter" keyboard event before handing focus back to the Save button.
+  setTimeout(() => {
+    if (resolver) resolver(val || null);
+  }, 10);
 }
 
 // === INITIALIZATION ===
@@ -885,9 +896,12 @@ function openTaskModal(taskId = null) {
 }
 
 async function saveTask(e) {
-  const btn = document.getElementById("btnSaveTask"), id = document.getElementById("editTaskId").value;
+  const btn = document.getElementById("btnSaveTask");
+  const id = document.getElementById("editTaskId").value;
+  btn.disabled = true; // Disable instantly to prevent physical double-clicks
+  
   const password = await requestAuthToken(t('msg_auth_save')); 
-  if(!password) return;
+  if(!password) { btn.disabled = false; return; }
 
   const payload = {
     title: document.getElementById("tTitle").value,
@@ -904,17 +918,17 @@ async function saveTask(e) {
     password
   };
   
-  if(!payload.title) return alert("Title is required");
+  if(!payload.title) { alert("Title is required"); btn.disabled = false; return; }
   btn.innerText = "...";
   try {
     await handleFetch(id ? `${API}/update-task/${id}` : `${API}/add-task`, { method: id ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     document.getElementById("taskModal").close(); 
-    // Restarting from page 1 since data changed
     currentTaskPage = 1; 
     await Promise.all([fetchTasks(1, false), fetchClients(), fetchExpenses()]);
     renderDashboard(); renderTasks(); renderClientsView();
     btn.innerText = id ? t('btn_update') : t('btn_deploy');
-  } catch(err) { alert(err.message); btn.innerText = id ? t('btn_update') : t('btn_deploy'); }
+    btn.disabled = false;
+  } catch(err) { alert(err.message); btn.innerText = id ? t('btn_update') : t('btn_deploy'); btn.disabled = false; }
 }
 
 function openTxModal() {
@@ -923,15 +937,19 @@ function openTxModal() {
 }
 
 async function saveTransaction(e) {
+  const btn = document.getElementById("btnSaveTx");
+  btn.disabled = true;
   const password = await requestAuthToken(t('msg_auth_save'));
-  if(!password) return;
+  if(!password) { btn.disabled = false; return; }
   
   const payload = { category: document.getElementById("txCategory").value, description: document.getElementById("txDescription").value, amount: Number(document.getElementById("txAmount").value), password };
-  if(payload.amount <= 0) return;
+  if(payload.amount <= 0) { btn.disabled = false; return; }
+  
   try {
     await handleFetch(`${API}/add-account`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     document.getElementById("txModal").close(); await bootstrap();
-  } catch(err) { alert(err.message); }
+    btn.disabled = false;
+  } catch(err) { alert(err.message); btn.disabled = false; }
 }
 
 async function updateTaskStatus(id, status) {
@@ -987,9 +1005,11 @@ function openClientEditModal(clientId) {
 }
 
 async function saveClient(e) {
+  const btn = document.getElementById("btnSaveClient");
   const id = document.getElementById("editClientId").value;
+  btn.disabled = true;
   const password = await requestAuthToken(t('msg_auth_save'));
-  if (!password) return;
+  if (!password) { btn.disabled = false; return; }
 
   const payload = {
     name: document.getElementById("cEditName").value,
@@ -1004,7 +1024,8 @@ async function saveClient(e) {
     await handleFetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     document.getElementById("clientEditModal").close();
     await bootstrap();
-  } catch(err) { alert(err.message); }
+    btn.disabled = false;
+  } catch(err) { alert(err.message); btn.disabled = false; }
 }
 
 function openClientViewModal(clientId) {
