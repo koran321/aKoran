@@ -2,7 +2,7 @@
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Agency OS - Minimalist</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
@@ -18,7 +18,7 @@
   
   <style>
     body { font-family: 'Inter', sans-serif; margin: 0; min-height: 100vh; }
-    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 4px; }
     .dark ::-webkit-scrollbar-thumb { background: #27272a; }
@@ -27,80 +27,84 @@
     dialog::backdrop { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); }
     .dark dialog::backdrop { background: rgba(0, 0, 0, 0.8); }
     
-    /* FIX: Only apply flex when the dialog is explicitly open */
+    /* Only apply flex when the dialog is explicitly open */
     dialog:not([open]) { display: none; }
-    dialog[open] { display: flex; flex-direction: column; max-height: 90vh; overflow: hidden; }
+    dialog[open] { display: flex; flex-direction: column; max-height: 90vh; overflow: hidden; width: 95%; max-width: 32rem; }
     
-    .dialog-content { overflow-y: auto; flex: 1; }
+    .dialog-content { overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
     
-    .tab-active { border-bottom: 2px solid; }
+    .tab-active { border-bottom: 2px solid; color: currentColor; }
     .tab-inactive { border-bottom: 2px solid transparent; }
+    
+    /* Hide scrollbar for tabs on mobile but allow scroll */
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
-<body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 p-4 sm:p-8 transition-colors duration-300">
+<body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 p-3 sm:p-8 transition-colors duration-300">
 
   <div class="max-w-6xl mx-auto">
     <!-- Header & Navigation -->
-    <header class="mb-8 border-b border-zinc-200 dark:border-zinc-800">
-      <div class="flex flex-col sm:flex-row sm:items-end justify-between pb-6 gap-4">
-        <div>
-          <h1 class="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white" data-i18n="title">Agency OS</h1>
-          <p class="text-zinc-500 dark:text-zinc-400 mt-1 text-sm font-medium" data-i18n="subtitle">Manage tasks, clients, and finances.</p>
+    <header class="mb-6 sm:mb-8 border-b border-zinc-200 dark:border-zinc-800">
+      <div class="flex flex-row items-center justify-between pb-4 sm:pb-6 gap-2">
+        <div class="flex-1">
+          <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 dark:text-white" data-i18n="title">Agency OS</h1>
+          <p class="text-zinc-500 dark:text-zinc-400 mt-1 text-xs sm:text-sm font-medium truncate" data-i18n="subtitle">Manage tasks, clients, and finances.</p>
         </div>
 
-        <div class="flex items-center gap-3 shrink-0">
-          <button onclick="toggleLang()" id="langBtn" class="px-3 py-1.5 text-xs font-bold uppercase tracking-wider border rounded-full border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shadow-sm dark:shadow-none text-indigo-600 dark:text-indigo-400">
+        <div class="flex items-center gap-2 shrink-0">
+          <button onclick="toggleLang()" id="langBtn" class="px-2.5 sm:px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider border rounded-full border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shadow-sm dark:shadow-none text-indigo-600 dark:text-indigo-400">
             বাং/EN
           </button>
-          <button onclick="toggleTheme()" class="p-2 border rounded-full border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shadow-sm dark:shadow-none text-zinc-600 dark:text-zinc-400">
+          <button onclick="toggleTheme()" class="p-1.5 sm:p-2 border rounded-full border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shadow-sm dark:shadow-none text-zinc-600 dark:text-zinc-400">
             <svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
           </button>
         </div>
       </div>
       
-      <!-- Tabs -->
-      <nav class="flex gap-6 text-sm font-medium overflow-x-auto whitespace-nowrap hide-scrollbar border-zinc-900 dark:border-white">
-        <button onclick="switchTab('dashboard')" id="tab-dashboard" class="pb-3 tab-active text-zinc-900 dark:text-white border-zinc-900 dark:border-white transition-colors" data-i18n="nav_overview">Overview</button>
-        <button onclick="switchTab('clients-view')" id="tab-clients-view" class="pb-3 tab-inactive text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors" data-i18n="nav_clients">Clients</button>
-        <button onclick="switchTab('tasks')" id="tab-tasks" class="pb-3 tab-inactive text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors" data-i18n="nav_active">Active Pipeline</button>
-        <button onclick="switchTab('done')" id="tab-done" class="pb-3 tab-inactive text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors" data-i18n="nav_done">Completed Works</button>
-        <button onclick="switchTab('accounts')" id="tab-accounts" class="pb-3 tab-inactive text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors" data-i18n="nav_accounts">Expenses</button>
+      <!-- Tabs (Swipeable on Mobile) -->
+      <nav class="flex gap-4 sm:gap-6 text-sm font-medium overflow-x-auto whitespace-nowrap hide-scrollbar border-zinc-900 dark:border-white">
+        <button onclick="switchTab('dashboard')" id="tab-dashboard" class="pb-3 px-1 tab-active text-zinc-900 dark:text-white border-zinc-900 dark:border-white transition-colors" data-i18n="nav_overview">Overview</button>
+        <button onclick="switchTab('clients-view')" id="tab-clients-view" class="pb-3 px-1 tab-inactive text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors" data-i18n="nav_clients">Clients</button>
+        <button onclick="switchTab('tasks')" id="tab-tasks" class="pb-3 px-1 tab-inactive text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors" data-i18n="nav_active">Active Pipeline</button>
+        <button onclick="switchTab('done')" id="tab-done" class="pb-3 px-1 tab-inactive text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors" data-i18n="nav_done">Completed Works</button>
+        <button onclick="switchTab('accounts')" id="tab-accounts" class="pb-3 px-1 tab-inactive text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors" data-i18n="nav_accounts">Expenses</button>
       </nav>
     </header>
 
     <!-- ==================== VIEW: DASHBOARD ==================== -->
-    <main id="view-dashboard" class="block space-y-6 pb-24">
-      <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-2xl shadow-sm dark:shadow-none">
-          <p class="text-zinc-500 dark:text-zinc-400 text-xs uppercase tracking-wider font-semibold mb-1" data-i18n="stat_earned">Total Earned</p>
-          <h3 class="text-2xl font-bold text-emerald-600 dark:text-emerald-400" id="stat-in">৳0</h3>
+    <main id="view-dashboard" class="block space-y-4 sm:space-y-6 pb-24">
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-none col-span-2 sm:col-span-1">
+          <p class="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs uppercase tracking-wider font-semibold mb-1" data-i18n="stat_earned">Total Earned</p>
+          <h3 class="text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400" id="stat-in">৳0</h3>
         </div>
-        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-2xl shadow-sm dark:shadow-none relative overflow-hidden">
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-none relative overflow-hidden">
           <div class="absolute -right-4 -bottom-4 opacity-5 dark:opacity-10 text-zinc-900 dark:text-white"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></div>
-          <p class="text-zinc-500 dark:text-zinc-400 text-xs uppercase tracking-wider font-semibold mb-1" data-i18n="stat_expected">Expected Earnings</p>
-          <h3 class="text-2xl font-bold text-yellow-600 dark:text-yellow-400" id="stat-expected">৳0</h3>
+          <p class="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs uppercase tracking-wider font-semibold mb-1" data-i18n="stat_expected">Expected Earnings</p>
+          <h3 class="text-xl sm:text-2xl font-bold text-yellow-600 dark:text-yellow-400" id="stat-expected">৳0</h3>
         </div>
-        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-2xl shadow-sm dark:shadow-none">
-          <p class="text-zinc-500 dark:text-zinc-400 text-xs uppercase tracking-wider font-semibold mb-1" data-i18n="stat_expenses">Expenses</p>
-          <h3 class="text-2xl font-bold text-rose-600 dark:text-rose-400" id="stat-out">৳0</h3>
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-none">
+          <p class="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs uppercase tracking-wider font-semibold mb-1" data-i18n="stat_expenses">Expenses</p>
+          <h3 class="text-xl sm:text-2xl font-bold text-rose-600 dark:text-rose-400" id="stat-out">৳0</h3>
         </div>
-        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-2xl shadow-sm dark:shadow-none">
-          <p class="text-zinc-500 dark:text-zinc-400 text-xs uppercase tracking-wider font-semibold mb-1" data-i18n="stat_net">Net Balance</p>
-          <h3 class="text-2xl font-bold text-zinc-900 dark:text-white" id="stat-net">৳0</h3>
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-none">
+          <p class="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs uppercase tracking-wider font-semibold mb-1" data-i18n="stat_net">Net Balance</p>
+          <h3 class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white" id="stat-net">৳0</h3>
         </div>
-        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-5 rounded-2xl shadow-sm dark:shadow-none">
-          <p class="text-zinc-500 dark:text-zinc-400 text-xs uppercase tracking-wider font-semibold mb-1" data-i18n="stat_pending">Active Pipeline</p>
-          <h3 class="text-2xl font-bold text-indigo-600 dark:text-indigo-400" id="stat-pending">0 Tasks</h3>
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-none">
+          <p class="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs uppercase tracking-wider font-semibold mb-1" data-i18n="stat_pending">Active Pipeline</p>
+          <h3 class="text-xl sm:text-2xl font-bold text-indigo-600 dark:text-indigo-400" id="stat-pending">0 Tasks</h3>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-        <div class="lg:col-span-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 rounded-2xl shadow-sm dark:shadow-none">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mt-4 sm:mt-6">
+        <div class="lg:col-span-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 rounded-2xl shadow-sm dark:shadow-none">
           <h3 class="text-sm font-semibold mb-4 text-zinc-900 dark:text-white uppercase tracking-wider" data-i18n="chart_title">Expense Breakdown</h3>
-          <div class="w-full h-[300px] flex items-center justify-center"><canvas id="expenseChart"></canvas></div>
+          <div class="w-full h-[220px] sm:h-[300px] flex items-center justify-center"><canvas id="expenseChart"></canvas></div>
         </div>
         
-        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 rounded-2xl shadow-sm dark:shadow-none flex flex-col">
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 rounded-2xl shadow-sm dark:shadow-none flex flex-col min-h-[250px]">
           <h3 class="text-sm font-semibold mb-4 text-zinc-900 dark:text-white uppercase tracking-wider" data-i18n="top_clients">Top Clients (Earnings)</h3>
           <ul id="topClientsList" class="flex-1 space-y-3 overflow-y-auto pr-2">
              <li class="text-zinc-500 text-sm" data-i18n="calculating">Calculating...</li>
@@ -111,51 +115,51 @@
 
     <!-- ==================== VIEW: CLIENTS ==================== -->
     <main id="view-clients-view" class="hidden pb-24">
-      <div class="flex justify-between items-center mb-6">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
         <div>
-          <h2 class="text-xl font-semibold text-zinc-900 dark:text-white" data-i18n="nav_clients">Clients</h2>
-          <p class="text-sm text-zinc-500 dark:text-zinc-400"><span data-i18n="total_clients">Total Clients:</span> <span id="clientCount" class="font-bold text-zinc-900 dark:text-white">0</span></p>
+          <h2 class="text-lg sm:text-xl font-semibold text-zinc-900 dark:text-white" data-i18n="nav_clients">Clients</h2>
+          <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400"><span data-i18n="total_clients">Total Clients:</span> <span id="clientCount" class="font-bold text-zinc-900 dark:text-white">0</span></p>
         </div>
-        <button onclick="openClientAddModal()" class="bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-200 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-sm" data-i18n="btn_new_client">
+        <button onclick="openClientAddModal()" class="w-full sm:w-auto justify-center bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-200 px-4 py-2 sm:py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-sm" data-i18n="btn_new_client">
           + Add Client
         </button>
       </div>
-      <div id="clientsGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+      <div id="clientsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4"></div>
     </main>
 
     <!-- ==================== VIEW: TASKS (ACTIVE) ==================== -->
     <main id="view-tasks" class="hidden pb-24">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-xl font-semibold text-zinc-900 dark:text-white" data-i18n="nav_active">Active Pipeline</h2>
-        <button onclick="openTaskModal()" class="bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-200 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-sm" data-i18n="btn_new_task">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+        <h2 class="text-lg sm:text-xl font-semibold text-zinc-900 dark:text-white" data-i18n="nav_active">Active Pipeline</h2>
+        <button onclick="openTaskModal()" class="w-full sm:w-auto justify-center bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-200 px-4 py-2 sm:py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-sm" data-i18n="btn_new_task">
           + New Task
         </button>
       </div>
-      <ul id="taskList" class="grid grid-cols-1 gap-4"></ul>
-      <div id="taskPaginationControls" class="mt-8 flex justify-center hidden">
-        <button onclick="loadMoreTasks()" class="px-6 py-2 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg text-sm font-medium transition-colors" data-i18n="btn_load_more">Load More</button>
+      <ul id="taskList" class="grid grid-cols-1 gap-3 sm:gap-4"></ul>
+      <div id="taskPaginationControls" class="mt-6 sm:mt-8 flex justify-center hidden">
+        <button onclick="loadMoreTasks()" class="px-6 py-2.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg text-sm font-medium transition-colors w-full sm:w-auto shadow-sm" data-i18n="btn_load_more">Load More</button>
       </div>
     </main>
 
     <!-- ==================== VIEW: DONE TASKS ==================== -->
     <main id="view-done" class="hidden pb-24">
       <div class="flex justify-between items-center mb-6">
-        <h2 class="text-xl font-semibold text-zinc-900 dark:text-white" data-i18n="nav_done">Completed Works</h2>
+        <h2 class="text-lg sm:text-xl font-semibold text-zinc-900 dark:text-white" data-i18n="nav_done">Completed Works</h2>
       </div>
-      <ul id="doneTaskList" class="grid grid-cols-1 gap-4 opacity-80"></ul>
+      <ul id="doneTaskList" class="grid grid-cols-1 gap-3 sm:gap-4 opacity-80"></ul>
     </main>
 
     <!-- ==================== VIEW: EXPENSES ==================== -->
     <main id="view-accounts" class="hidden pb-24">
-      <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
-        <h2 class="text-xl font-semibold text-zinc-900 dark:text-white" data-i18n="nav_accounts">Expenses</h2>
-        <div class="flex items-center gap-3">
+      <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-6">
+        <h2 class="text-lg sm:text-xl font-semibold text-zinc-900 dark:text-white" data-i18n="nav_accounts">Expenses</h2>
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
           <!-- 📊 DATA EXPORT BUTTON -->
-          <button onclick="exportAccountsCSV()" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-sm">
+          <button onclick="exportAccountsCSV()" class="justify-center bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 px-4 py-2 sm:py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-sm">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             <span data-i18n="btn_export">Export CSV</span>
           </button>
-          <button onclick="openTxModal()" class="bg-rose-500 text-white hover:bg-rose-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-sm" data-i18n="btn_log_expense">
+          <button onclick="openTxModal()" class="justify-center bg-rose-500 text-white hover:bg-rose-600 px-4 py-2 sm:py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-sm" data-i18n="btn_log_expense">
             Log Expense
           </button>
         </div>
@@ -169,139 +173,149 @@
   <!-- ==================== MODALS ==================== -->
 
   <!-- Task Modal -->
-  <dialog id="taskModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 max-w-lg w-full m-auto text-zinc-900 dark:text-white transition-colors">
-    <div class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0">
-      <h2 class="text-lg font-semibold" id="taskModalTitle" data-i18n="modal_task_title">Add New Task</h2>
-      <button onclick="document.getElementById('taskModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300">
+  <dialog id="taskModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95%] sm:w-full m-auto text-zinc-900 dark:text-white transition-colors">
+    <div class="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0">
+      <h2 class="text-base sm:text-lg font-semibold" id="taskModalTitle" data-i18n="modal_task_title">Add New Task</h2>
+      <button onclick="document.getElementById('taskModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 p-1">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
     </div>
     
-    <div class="p-5 space-y-4 dialog-content">
+    <div class="p-4 sm:p-5 space-y-4 dialog-content">
       <input type="hidden" id="editTaskId">
       
-      <div class="grid grid-cols-2 gap-4">
-        <div class="col-span-2 space-y-1.5">
-          <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_desc">Description / Title</label>
-          <input type="text" id="tTitle" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-indigo-500 dark:focus:border-indigo-500">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+        <div class="col-span-1 sm:col-span-2 space-y-1.5">
+          <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_desc">Description / Title</label>
+          <input type="text" id="tTitle" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none focus:border-indigo-500 dark:focus:border-indigo-500 text-sm">
         </div>
-        <div class="col-span-2 space-y-1.5">
-          <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_details">Details (Optional)</label>
-          <textarea id="tDetails" rows="2" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-indigo-500 dark:focus:border-indigo-500 text-sm" data-i18n-placeholder="plc_details" placeholder="Enter specific requirements, links, or notes..."></textarea>
+        <div class="col-span-1 sm:col-span-2 space-y-1.5">
+          <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_details">Details (Optional)</label>
+          <textarea id="tDetails" rows="2" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none focus:border-indigo-500 dark:focus:border-indigo-500 text-sm" data-i18n-placeholder="plc_details" placeholder="Enter specific requirements, links, or notes..."></textarea>
         </div>
         <div class="space-y-1.5">
-          <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_type">Type of Work</label>
-          <select id="tType" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white">
+          <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_type">Type of Work</label>
+          <select id="tType" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white text-sm">
             <option value="Assignment">Assignment</option><option value="Thesis">Thesis</option><option value="Presentation">Presentation</option><option value="Lab Project">Lab Project</option><option value="Other">Other</option>
           </select>
         </div>
         <div class="space-y-1.5">
-          <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_deadline">Deadline</label>
-          <input type="date" id="tDeadline" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-indigo-500 dark:[color-scheme:dark]">
+          <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_deadline">Deadline</label>
+          <input type="date" id="tDeadline" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none focus:border-indigo-500 dark:[color-scheme:dark] text-sm">
         </div>
       </div>
 
-      <div class="p-4 bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-xl space-y-3">
+      <div class="p-3 sm:p-4 bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-xl space-y-3">
         <div class="space-y-1.5">
-          <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_client">Client</label>
-          <input type="text" id="clientSearchInput" oninput="filterClientDropdown()" placeholder="Search clients..." class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-t-lg border-b-0 px-3 py-1.5 outline-none focus:border-indigo-500 text-sm text-zinc-900 dark:text-white mb-0" data-i18n-placeholder="search_client">
-          <select id="tClientSelect" onchange="toggleNewClientFields()" class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-b-lg px-3 py-2 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white">
+          <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_client">Client</label>
+          <input type="text" id="clientSearchInput" oninput="filterClientDropdown()" placeholder="Search clients..." class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-t-lg border-b-0 px-3 py-2 outline-none focus:border-indigo-500 text-sm text-zinc-900 dark:text-white mb-0" data-i18n-placeholder="search_client">
+          <select id="tClientSelect" onchange="toggleNewClientFields()" class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-b-lg px-3 py-2 sm:py-2.5 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white text-sm">
             <option value="new">+ Add New Client / No Client</option>
           </select>
         </div>
         <div id="newClientFields" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <input type="text" id="tClientName" placeholder="Client Name" class="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-sm outline-none">
-          <input type="text" id="tClientPhone" placeholder="Phone Number" class="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-sm outline-none">
-          <input type="text" id="tClientUniversity" placeholder="University (Optional)" class="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-sm outline-none">
+          <input type="text" id="tClientName" placeholder="Client Name" class="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500">
+          <input type="text" id="tClientPhone" placeholder="Phone Number" class="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500">
+          <input type="text" id="tClientUniversity" placeholder="University (Optional)" class="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500">
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div class="space-y-1.5">
-          <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_total">Total Value (৳)</label>
-          <input type="number" id="tTotal" value="0" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-emerald-500 text-emerald-600 dark:text-emerald-400 font-medium">
+          <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_total">Total Value (৳)</label>
+          <input type="number" id="tTotal" value="0" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none focus:border-emerald-500 text-emerald-600 dark:text-emerald-400 font-medium text-sm">
         </div>
         <div class="space-y-1.5">
-          <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_advance">Advance Paid (৳)</label>
-          <input type="number" id="tAdvance" value="0" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-emerald-500">
+          <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_advance">Advance Paid (৳)</label>
+          <input type="number" id="tAdvance" value="0" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none focus:border-emerald-500 text-sm">
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 gap-3 sm:gap-4">
         <div class="space-y-1.5">
-          <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_assign">Assign To</label>
-          <select id="tAssignee" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none text-zinc-900 dark:text-white">
+          <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_assign">Assign To</label>
+          <select id="tAssignee" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none text-zinc-900 dark:text-white text-sm">
             <option value="Imranul Islam Shihab">Imranul Islam Shihab</option><option value="Siyam Bhuiyan">Siyam Bhuiyan</option>
           </select>
-        </div>
-        <div class="space-y-1.5">
-          <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_token">Password</label>
-          <input type="password" id="tPassword" placeholder="••••••••" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-rose-500">
         </div>
       </div>
     </div>
     
-    <div class="p-5 border-t border-zinc-200 dark:border-zinc-800 shrink-0">
-      <button onclick="saveTask(event)" id="btnSaveTask" class="w-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-200 rounded-lg px-4 py-3 font-semibold transition-colors mt-2 shadow-sm" data-i18n="btn_deploy">Deploy Task</button>
+    <div class="p-4 sm:p-5 border-t border-zinc-200 dark:border-zinc-800 shrink-0 bg-white dark:bg-zinc-950">
+      <button onclick="saveTask(event)" id="btnSaveTask" class="w-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-200 rounded-lg px-4 py-3 sm:py-3 font-semibold transition-colors shadow-sm text-sm" data-i18n="btn_deploy">Deploy Task</button>
     </div>
   </dialog>
 
   <!-- Expenses Modal -->
-  <dialog id="txModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 max-w-sm w-full m-auto text-zinc-900 dark:text-white transition-colors">
-    <div class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center"><h2 class="text-lg font-semibold text-rose-600 dark:text-rose-400" data-i18n="modal_exp_title">Log Expense</h2><button onclick="document.getElementById('txModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
-    <div class="p-5 space-y-4"><div class="space-y-1.5"><label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_exp_cat">Expense Category</label><select id="txCategory" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none text-zinc-900 dark:text-white"><option value="Facebook Ads">Facebook Ads</option><option value="Supplements">Supplements</option><option value="Withdraws">Withdraws</option><option value="Others">Others</option></select></div><div class="space-y-1.5"><label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_exp_desc">Description (Optional)</label><input type="text" id="txDescription" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none text-zinc-900 dark:text-white"></div><div class="space-y-1.5"><label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_exp_amount">Amount (৳)</label><input type="number" id="txAmount" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-rose-300 dark:border-rose-800 rounded-lg px-3 py-2 outline-none focus:border-rose-500 font-medium text-zinc-900 dark:text-white"></div><div class="space-y-1.5"><label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_token">Password</label><input type="password" id="txPassword" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none text-zinc-900 dark:text-white"></div><button onclick="saveTransaction(event)" class="w-full bg-rose-500 text-white hover:bg-rose-600 rounded-lg px-4 py-3 font-semibold transition-colors mt-2" data-i18n="btn_deduct">Deduct Funds</button></div>
+  <dialog id="txModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95%] sm:w-full max-w-sm m-auto text-zinc-900 dark:text-white transition-colors">
+    <div class="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0">
+      <h2 class="text-base sm:text-lg font-semibold text-rose-600 dark:text-rose-400" data-i18n="modal_exp_title">Log Expense</h2>
+      <button onclick="document.getElementById('txModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 p-1"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+    </div>
+    <div class="p-4 sm:p-5 space-y-4 dialog-content">
+      <div class="space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_exp_cat">Expense Category</label><select id="txCategory" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2.5 outline-none text-zinc-900 dark:text-white text-sm"><option value="Facebook Ads">Facebook Ads</option><option value="Supplements">Supplements</option><option value="Withdraws">Withdraws</option><option value="Others">Others</option></select></div>
+      <div class="space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_exp_desc">Description (Optional)</label><input type="text" id="txDescription" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2.5 outline-none text-zinc-900 dark:text-white text-sm focus:border-rose-500"></div>
+      <div class="space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_exp_amount">Amount (৳)</label><input type="number" id="txAmount" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-rose-300 dark:border-rose-800 rounded-lg px-3 py-2.5 outline-none focus:border-rose-500 font-medium text-zinc-900 dark:text-white text-sm"></div>
+    </div>
+    <div class="p-4 sm:p-5 border-t border-zinc-200 dark:border-zinc-800 shrink-0 bg-white dark:bg-zinc-950">
+      <button onclick="saveTransaction(event)" class="w-full bg-rose-500 text-white hover:bg-rose-600 rounded-lg px-4 py-3 font-semibold transition-colors shadow-sm text-sm" data-i18n="btn_deduct">Deduct Funds</button>
+    </div>
   </dialog>
 
   <!-- Client Edit/Add Modal -->
-  <dialog id="clientEditModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 max-w-sm w-full m-auto text-zinc-900 dark:text-white transition-colors">
-    <div class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center"><h2 class="text-lg font-semibold" id="clientModalTitle" data-i18n="modal_client_edit">Edit Client</h2><button onclick="document.getElementById('clientEditModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
-    <div class="p-5 space-y-4">
+  <dialog id="clientEditModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95%] sm:w-full max-w-sm m-auto text-zinc-900 dark:text-white transition-colors">
+    <div class="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0">
+      <h2 class="text-base sm:text-lg font-semibold" id="clientModalTitle" data-i18n="modal_client_edit">Edit Client</h2>
+      <button onclick="document.getElementById('clientEditModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 p-1"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+    </div>
+    <div class="p-4 sm:p-5 space-y-4 dialog-content">
       <input type="hidden" id="editClientId">
       <div class="space-y-1.5">
-        <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Client Name</label>
-        <input type="text" id="cEditName" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white">
+        <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Client Name</label>
+        <input type="text" id="cEditName" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2.5 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white text-sm">
       </div>
       <div class="space-y-1.5">
-        <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Phone Number</label>
-        <input type="text" id="cEditPhone" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white">
+        <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Phone Number</label>
+        <input type="text" id="cEditPhone" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2.5 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white text-sm">
       </div>
       <div class="space-y-1.5">
-        <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_university">University (Optional)</label>
-        <input type="text" id="cEditUniversity" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white">
+        <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_university">University (Optional)</label>
+        <input type="text" id="cEditUniversity" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2.5 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white text-sm">
       </div>
-      <div class="space-y-1.5">
-        <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_token">Password</label>
-        <input type="password" id="cEditPassword" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none text-zinc-900 dark:text-white">
-      </div>
-      <button onclick="saveClient(event)" id="btnSaveClient" class="w-full bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg px-4 py-3 font-semibold transition-colors mt-2" data-i18n="btn_update">
+    </div>
+    <div class="p-4 sm:p-5 border-t border-zinc-200 dark:border-zinc-800 shrink-0 bg-white dark:bg-zinc-950">
+      <button onclick="saveClient(event)" id="btnSaveClient" class="w-full bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg px-4 py-3 font-semibold transition-colors shadow-sm text-sm" data-i18n="btn_update">
         Update Client
       </button>
     </div>
   </dialog>
 
   <!-- Client View Tasks Modal -->
-  <dialog id="clientViewModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 max-w-2xl w-full m-auto text-zinc-900 dark:text-white transition-colors flex flex-col">
-    <div class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0"><h2 class="text-lg font-semibold" id="clientViewTitle">Client Overview</h2><button onclick="document.getElementById('clientViewModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
-    <div class="p-5 dialog-content"><ul id="clientViewTaskList" class="grid grid-cols-1 gap-4"></ul></div>
+  <dialog id="clientViewModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95%] sm:w-full max-w-2xl m-auto text-zinc-900 dark:text-white transition-colors flex flex-col">
+    <div class="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0">
+      <h2 class="text-base sm:text-lg font-semibold" id="clientViewTitle">Client Overview</h2>
+      <button onclick="document.getElementById('clientViewModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 p-1"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+    </div>
+    <div class="p-4 sm:p-5 dialog-content"><ul id="clientViewTaskList" class="grid grid-cols-1 gap-3 sm:gap-4"></ul></div>
   </dialog>
 
   <!-- Custom Password Prompt Modal -->
-  <dialog id="authPromptModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 max-w-sm w-full m-auto text-zinc-900 dark:text-white transition-colors">
-    <div class="p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0">
-      <h2 class="text-lg font-semibold" data-i18n="modal_auth_title">Enter Password</h2>
-      <button onclick="cancelAuthPrompt()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300">
+  <dialog id="authPromptModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95%] sm:w-full max-w-sm m-auto text-zinc-900 dark:text-white transition-colors">
+    <div class="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0">
+      <h2 class="text-base sm:text-lg font-semibold" data-i18n="modal_auth_title">Enter Password</h2>
+      <button onclick="cancelAuthPrompt()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 p-1">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
     </div>
-    <div class="p-5 space-y-4">
-      <p id="authPromptMessage" class="text-sm text-zinc-500 dark:text-zinc-400"></p>
+    <div class="p-4 sm:p-5 space-y-4 dialog-content">
+      <p id="authPromptMessage" class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400"></p>
       <div class="space-y-1.5">
-        <label class="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_token">Password</label>
-        <input type="password" id="authPromptInput" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 outline-none focus:border-rose-500 text-zinc-900 dark:text-white" autocomplete="new-password">
+        <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_token">Password</label>
+        <input type="password" id="authPromptInput" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2.5 outline-none focus:border-rose-500 text-zinc-900 dark:text-white text-sm" autocomplete="new-password">
       </div>
-      <div class="flex gap-3 mt-2">
-        <button onclick="cancelAuthPrompt()" class="flex-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg px-4 py-3 font-semibold transition-colors" data-i18n="btn_cancel">Cancel</button>
-        <button onclick="confirmAuthPrompt()" class="flex-1 bg-rose-500 text-white hover:bg-rose-600 rounded-lg px-4 py-3 font-semibold transition-colors" data-i18n="btn_confirm">Confirm</button>
+      <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4">
+        <button onclick="cancelAuthPrompt()" class="w-full sm:flex-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg px-4 py-2.5 sm:py-3 font-semibold transition-colors text-sm" data-i18n="btn_cancel">Cancel</button>
+        <button onclick="confirmAuthPrompt()" class="w-full sm:flex-1 bg-rose-500 text-white hover:bg-rose-600 rounded-lg px-4 py-2.5 sm:py-3 font-semibold transition-colors text-sm" data-i18n="btn_confirm">Confirm</button>
       </div>
     </div>
   </dialog>
@@ -502,10 +516,10 @@ async function bootstrap() {
 function switchTab(tabId) {
   ['dashboard', 'clients-view', 'tasks', 'done', 'accounts'].forEach(id => {
     document.getElementById(`view-${id}`).classList.add('hidden');
-    document.getElementById(`tab-${id}`).className = 'pb-3 tab-inactive text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors';
+    document.getElementById(`tab-${id}`).className = 'pb-3 px-1 tab-inactive text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors';
   });
   document.getElementById(`view-${tabId}`).classList.remove('hidden');
-  document.getElementById(`tab-${tabId}`).className = 'pb-3 tab-active text-zinc-900 dark:text-white border-zinc-900 dark:border-white transition-colors';
+  document.getElementById(`tab-${tabId}`).className = 'pb-3 px-1 tab-active text-zinc-900 dark:text-white border-zinc-900 dark:border-white transition-colors';
 }
 
 async function handleFetch(url, options) {
@@ -550,11 +564,36 @@ async function fetchExpenses() {
 function filterClientDropdown() {
   const q = document.getElementById("clientSearchInput").value.toLowerCase();
   const select = document.getElementById("tClientSelect");
-  select.innerHTML = `<option value="new">${t('opt_add_client')}</option>`;
+  const currentVal = select.value; // Remember what is currently selected
   
-  allClients.filter(c => (c.name || "").toLowerCase().includes(q) || (c.phone || "").includes(q)).forEach(c => { 
-    select.innerHTML += `<option value="${c._id || c.id}">${c.name} (${c.phone || '-'})</option>`; 
+  let optionsHTML = `<option value="new">${t('opt_add_client')}</option>`;
+  
+  let filteredClients = allClients.filter(c => 
+    (c.name || "").toLowerCase().includes(q) || 
+    (c.phone || "").includes(q)
+  );
+
+  // Prioritize names that START with the searched letter(s)
+  filteredClients.sort((a, b) => {
+    const aStarts = (a.name || "").toLowerCase().startsWith(q);
+    const bStarts = (b.name || "").toLowerCase().startsWith(q);
+    if (aStarts && !bStarts) return -1;
+    if (!aStarts && bStarts) return 1;
+    return 0;
   });
+  
+  filteredClients.forEach(c => { 
+    optionsHTML += `<option value="${c._id || c.id}">${c.name} (${c.phone || '-'})</option>`; 
+  });
+
+  select.innerHTML = optionsHTML;
+
+  // Restore the selected value if it's still in the filtered list
+  const optionExists = Array.from(select.options).some(opt => opt.value === currentVal);
+  select.value = optionExists ? currentVal : 'new';
+  
+  // Keep the hidden/visible state of the new client fields in sync
+  toggleNewClientFields();
 }
 
 // === RENDERING FUNCTIONS ===
@@ -653,7 +692,7 @@ function renderClientsView() {
     });
 
     grid.innerHTML += `
-      <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-none p-5 rounded-2xl flex flex-col justify-between hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors">
+      <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-none p-4 sm:p-5 rounded-2xl flex flex-col justify-between hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors">
         <div class="mb-4">
           <h3 class="font-semibold text-zinc-900 dark:text-white text-lg">${client.name}</h3>
           <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-2 flex-wrap">
@@ -662,8 +701,8 @@ function renderClientsView() {
               ${client.phone || '-'}
             </span>
             ${client.university ? `
-            <span class="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[10px]">
-              <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+            <span class="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[10px] break-all">
+              <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
               ${client.university}
             </span>` : ''}
           </p>
@@ -672,8 +711,8 @@ function renderClientsView() {
           </div>
         </div>
         <div class="grid grid-cols-2 gap-2 mt-auto pt-4 border-t border-zinc-100 dark:border-zinc-800">
-          <button onclick="openClientViewModal('${client._id}')" class="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded text-xs font-medium transition-colors">${t('btn_view_tasks')} (${localNum(cTasks.length)})</button>
-          <button onclick="openClientEditModal('${client._id}')" class="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded text-xs font-medium transition-colors">${t('btn_edit_client')}</button>
+          <button onclick="openClientViewModal('${client._id}')" class="px-3 py-2 sm:py-1.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded text-xs font-medium transition-colors">${t('btn_view_tasks')} (${localNum(cTasks.length)})</button>
+          <button onclick="openClientEditModal('${client._id}')" class="px-3 py-2 sm:py-1.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded text-xs font-medium transition-colors">${t('btn_edit_client')}</button>
         </div>
       </div>
     `;
@@ -690,12 +729,12 @@ function generateTaskHTML(tk, isDone) {
   const detailsHTML = tk.details ? `<p class="text-xs text-zinc-500 mt-1 italic">${tk.details}</p>` : '';
 
   return `
-    <li class="border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-none rounded-2xl p-5 bg-white dark:bg-zinc-900/50 flex flex-col md:flex-row gap-4 justify-between transition-all hover:border-zinc-300 dark:hover:border-zinc-700">
+    <li class="border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-none rounded-2xl p-4 sm:p-5 bg-white dark:bg-zinc-900/50 flex flex-col md:flex-row gap-4 justify-between transition-all hover:border-zinc-300 dark:hover:border-zinc-700">
       <div class="flex-1 space-y-3">
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
           <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${isDone ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500' : 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300'}">${t(isDone ? 'btn_done' : 'nav_active')}</span>
           <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${colorClass}">${displayType}</span>
-          <span class="text-xs text-zinc-500 dark:text-zinc-400 font-medium ml-2">${t('txt_due')}: ${customFormatDate(tk.deadline)}</span>
+          <span class="text-xs text-zinc-500 dark:text-zinc-400 font-medium ml-1 sm:ml-2">${t('txt_due')}: ${customFormatDate(tk.deadline)}</span>
         </div>
         <div>
           <h3 class="text-lg font-semibold text-zinc-900 dark:text-white ${isDone ? 'line-through text-zinc-500 dark:text-zinc-500' : ''}">${tk.title}</h3>
@@ -705,11 +744,11 @@ function generateTaskHTML(tk, isDone) {
             ${clientName}
           </p>
         </div>
-        <div class="flex flex-wrap gap-4 text-xs font-medium border-t border-zinc-100 dark:border-zinc-800/50 pt-3">
+        <div class="flex flex-wrap gap-3 sm:gap-4 text-xs font-medium border-t border-zinc-100 dark:border-zinc-800/50 pt-3">
           <div class="text-emerald-600 dark:text-emerald-400">${t('txt_total')}: ৳${localNum(total)}</div>
           <div class="text-zinc-600 dark:text-zinc-300">${t('txt_advance')}: ৳${localNum(advance)}</div>
           <div class="text-rose-600 dark:text-rose-400">${t('txt_due')}: ৳${localNum(total - advance)}</div>
-          <div class="text-zinc-500 dark:text-zinc-500 ml-auto flex items-center gap-1">
+          <div class="text-zinc-500 dark:text-zinc-500 w-full sm:w-auto sm:ml-auto flex items-center gap-1">
              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
              ${tk.assignedTo || t('txt_unassigned')}
           </div>
@@ -717,12 +756,12 @@ function generateTaskHTML(tk, isDone) {
       </div>
       
       <div class="flex flex-col gap-2 shrink-0 items-stretch justify-center w-full md:w-32 border-t md:border-t-0 md:border-l border-zinc-100 dark:border-zinc-800/50 pt-3 md:pt-0 md:pl-4">
-        <button onclick="openTaskModal('${tk._id}')" class="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-300 rounded text-xs font-medium transition-colors text-center">${t('btn_edit')}</button>
+        <button onclick="openTaskModal('${tk._id}')" class="px-3 py-2 sm:py-1.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-300 rounded text-xs font-medium transition-colors text-center w-full">${t('btn_edit')}</button>
         ${!isDone 
-          ? `<button onclick="updateTaskStatus('${tk._id}', 'done')" class="px-3 py-1.5 bg-emerald-100 dark:bg-emerald-500/10 hover:bg-emerald-200 dark:hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded text-xs font-medium transition-colors text-center">${t('btn_done')}</button>`
-          : `<button onclick="updateTaskStatus('${tk._id}', 'pending')" class="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded text-xs font-medium text-center transition-colors">${t('btn_undo')}</button>`
+          ? `<button onclick="updateTaskStatus('${tk._id}', 'done')" class="px-3 py-2 sm:py-1.5 bg-emerald-100 dark:bg-emerald-500/10 hover:bg-emerald-200 dark:hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded text-xs font-medium transition-colors text-center w-full">${t('btn_done')}</button>`
+          : `<button onclick="updateTaskStatus('${tk._id}', 'pending')" class="px-3 py-2 sm:py-1.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded text-xs font-medium text-center transition-colors w-full">${t('btn_undo')}</button>`
         }
-        <button onclick="deleteTask('${tk._id}')" class="px-3 py-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded text-xs font-medium transition-colors text-center flex items-center justify-center gap-1">
+        <button onclick="deleteTask('${tk._id}')" class="px-3 py-2 sm:py-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded text-xs font-medium transition-colors text-center flex items-center justify-center gap-1 w-full">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
           ${t('btn_delete')}
         </button>
@@ -754,16 +793,16 @@ function renderExpenses() {
 
     list.innerHTML += `
       <li class="p-4 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3 sm:gap-4">
           <div class="p-2 rounded-full bg-rose-100 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg></div>
           <div>
             <p class="font-medium text-zinc-900 dark:text-white text-sm">${displayCat}</p>
             <p class="text-xs text-zinc-500">${customFormatDate(tx.date)} ${tx.description ? `• ${tx.description}` : ''}</p>
           </div>
         </div>
-        <div class="flex items-center gap-4">
-          <span class="font-semibold text-rose-600 dark:text-rose-400">-৳${localNum(tx.amount)}</span>
-          <button onclick="deleteTx('${tx._id}')" class="text-zinc-400 hover:text-rose-600 dark:text-zinc-600 dark:hover:text-rose-400"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+        <div class="flex items-center gap-3 sm:gap-4 shrink-0">
+          <span class="font-semibold text-rose-600 dark:text-rose-400 text-sm sm:text-base">-৳${localNum(tx.amount)}</span>
+          <button onclick="deleteTx('${tx._id}')" class="text-zinc-400 hover:text-rose-600 dark:text-zinc-600 dark:hover:text-rose-400 p-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
         </div>
       </li>
     `;
@@ -809,7 +848,8 @@ function openTaskModal(taskId = null) {
 
 async function saveTask(e) {
   const btn = e.target, id = document.getElementById("editTaskId").value;
-  const password = document.getElementById("tPassword").value.trim();
+  const password = await requestAuthToken(t('msg_auth_save')); 
+  if(!password) return;
 
   const payload = {
     title: document.getElementById("tTitle").value,
@@ -835,6 +875,7 @@ async function saveTask(e) {
     currentTaskPage = 1; 
     await Promise.all([fetchTasks(1, false), fetchClients(), fetchExpenses()]);
     renderDashboard(); renderTasks(); renderClientsView();
+    btn.innerText = id ? t('btn_update') : t('btn_deploy');
   } catch(err) { alert(err.message); btn.innerText = id ? t('btn_update') : t('btn_deploy'); }
 }
 
@@ -844,7 +885,8 @@ function openTxModal() {
 }
 
 async function saveTransaction(e) {
-  const password = document.getElementById("txPassword").value.trim();
+  const password = await requestAuthToken(t('msg_auth_save'));
+  if(!password) return;
   
   const payload = { category: document.getElementById("txCategory").value, description: document.getElementById("txDescription").value, amount: Number(document.getElementById("txAmount").value), password };
   if(payload.amount <= 0) return;
@@ -908,8 +950,8 @@ function openClientEditModal(clientId) {
 
 async function saveClient(e) {
   const id = document.getElementById("editClientId").value;
-  const password = document.getElementById("cEditPassword").value.trim();
-  if (!password) return alert("Password is required");
+  const password = await requestAuthToken(t('msg_auth_save'));
+  if (!password) return;
 
   const payload = {
     name: document.getElementById("cEditName").value,
