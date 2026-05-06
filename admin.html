@@ -117,7 +117,7 @@
         <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 rounded-2xl shadow-sm dark:shadow-none flex flex-col min-h-[250px]">
           <h3 class="text-sm font-semibold mb-4 text-zinc-900 dark:text-white uppercase tracking-wider" data-i18n="top_clients">Top Clients (Earnings)</h3>
           <ul id="topClientsList" class="flex-1 space-y-3 overflow-y-auto pr-2">
-            <li class="text-zinc-500 text-sm" data-i18n="calculating">Calculating...</li>
+             <li class="text-zinc-500 text-sm" data-i18n="calculating">Calculating...</li>
           </ul>
         </div>
       </div>
@@ -539,10 +539,8 @@ async function unlockPhones() {
   const password = await requestAuthToken(t('msg_auth_phone'));
   if(!password) return;
   try {
-    // Sending a dummy delete request to an impossible valid ID ensures the backend 
-    // uses your existing 'checkPassword' logic. If the password matches ANY row in 'security', it succeeds securely.
-    await handleFetch(`${API}/delete-task/000000000000000000000000`, { 
-      method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) 
+    await handleFetch(`${API}/verify-phone-password`, { 
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) 
     });
     isPhoneUnlocked = true;
     renderClientsView();
