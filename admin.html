@@ -43,9 +43,11 @@
 <body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 p-3 sm:p-8 transition-colors duration-300 relative">
 
   <!-- Fullscreen Lottie Loader -->
-  <div id="catLoader" class="fixed inset-0 z-[100] hidden flex-col items-center justify-center bg-zinc-50/90 dark:bg-zinc-950/90 backdrop-blur-sm transition-opacity duration-300 opacity-0">
-    <lottie-player src="https://tukitaki.vercel.app/src/json/LottieFiles/cat_loader.json" background="transparent" speed="1" style="width: 120px; height: 120px;" loop autoplay></lottie-player>
-    <p class="mt-2 text-sm font-medium text-zinc-500 animate-pulse tracking-wide" data-i18n="loading_text">Loading Agency OS...</p>
+  <div id="catLoader" class="fixed top-0 left-0 w-full h-full z-[9999] flex flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-950 transition-opacity duration-500 m-0 p-0">
+    <div class="flex flex-col items-center justify-center m-auto">
+      <lottie-player src="https://tukitaki.vercel.app/src/json/LottieFiles/cat_loader.json" background="transparent" speed="1" style="width: 120px; height: 120px; display: block; margin: 0 auto;" loop autoplay></lottie-player>
+      <p class="mt-3 text-sm font-medium text-zinc-500 animate-pulse tracking-wide text-center" data-i18n="loading_text">Loading Agency OS...</p>
+    </div>
   </div>
 
   <div class="max-w-6xl mx-auto">
@@ -337,17 +339,6 @@ const tagColors = {
   "Other": "bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
 };
 
-function toggleLoader(show) {
-  const loader = document.getElementById('catLoader');
-  if (show) {
-    loader.classList.remove('hidden');
-    setTimeout(() => { loader.style.opacity = '1'; }, 10);
-  } else {
-    loader.style.opacity = '0';
-    setTimeout(() => { loader.classList.add('hidden'); }, 300);
-  }
-}
-
 function applyTheme() {
   const html = document.documentElement;
   const icon = document.getElementById('themeIcon');
@@ -428,6 +419,7 @@ function customFormatDate(isoStr) {
   return formatted;
 }
 
+// === EXPORT CSV ===
 function exportAccountsCSV() {
   if (!allExpenses.length) return alert(t('no_expenses'));
   let csvContent = "data:text/csv;charset=utf-8,Date,Category,Description,Amount (Tk)\n";
@@ -444,6 +436,7 @@ function exportAccountsCSV() {
   document.body.removeChild(link);
 }
 
+// === CUSTOM PASSWORD PROMPT ===
 let authPromptResolver = null;
 
 function requestAuthToken(message) {
@@ -479,10 +472,10 @@ function confirmAuthPrompt() {
   setTimeout(() => { if (resolver) resolver(val || null); }, 10);
 }
 
+// UNLOCK PHONES LOGIC
 async function unlockPhones() {
   const password = await requestAuthToken(t('msg_auth_phone'));
   if(!password) return;
-  toggleLoader(true);
   try {
     await handleFetch(`${API}/verify-phone-password`, { 
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) 
@@ -491,12 +484,15 @@ async function unlockPhones() {
     renderClientsView();
     filterClientDropdown();
   } catch(err) { alert(err.message); }
-  toggleLoader(false);
 }
 
+// === INITIALIZATION ===
 async function bootstrap() {
-  toggleLoader(true);
+  const loader = document.getElementById('catLoader');
+  loader.style.display = 'flex';
+  loader.style.opacity = '1';
   currentTaskPage = 1;
+  
   try {
     await Promise.all([fetchTasks(1, false), fetchClients(), fetchExpenses()]);
     applyTranslations(); 
@@ -505,7 +501,8 @@ async function bootstrap() {
     console.error(error);
     alert("Error connecting to the backend! Please check the API configuration.\nDetails: " + error.message);
   } finally {
-    toggleLoader(false);
+    loader.style.opacity = '0';
+    setTimeout(() => { loader.style.display = 'none'; }, 500);
   }
 }
 
@@ -525,6 +522,7 @@ async function handleFetch(url, options) {
   throw new Error(errData.message || errData.error || `Server Error (${res.status})`);
 }
 
+// Data fetching
 async function fetchTasks(page = 1, append = false) { 
   const res = await handleFetch(`${API}/tasks?page=${page}&limit=30`); 
   if (append) { allTasks = [...allTasks, ...res.data]; } 
@@ -535,10 +533,8 @@ async function fetchTasks(page = 1, append = false) {
 
 async function loadMoreTasks() {
   if (currentTaskPage >= totalTaskPages) return;
-  toggleLoader(true);
   await fetchTasks(currentTaskPage + 1, true);
   renderTasks();
-  toggleLoader(false);
 }
 
 async function fetchClients() {
@@ -620,6 +616,7 @@ function renderDashboard() {
     else { expectedEarnings += balance; pendingTasksCount++; }
     totalEarned += taskEarned;
 
+    // Income breakdown mapping
     const type = tk.workType || "Other";
     incomeBreakdown[type] = (incomeBreakdown[type] || 0) + taskEarned;
 
@@ -671,24 +668,36 @@ function renderCharts(expenseBreakdown, incomeBreakdown) {
   Chart.defaults.color = currentTheme === 'dark' ? '#a1a1aa' : '#52525b'; 
   Chart.defaults.font.family = 'Inter';
 
+  // --- EXPENSE CHART ---
   const ctxExp = document.getElementById('expenseChart').getContext('2d');
   if (expenseChartInstance) expenseChartInstance.destroy();
+  
   const mapCat = { "Facebook Ads": "ফেসবুক অ্যাড", "Supplements": "সাপ্লিমেন্ট", "Withdraws": "উত্তোলন", "Others": "অন্যান্য" };
   const expLabels = Object.keys(expenseBreakdown).map(k => currentLang === 'bn' ? (mapCat[k] || k) : k);
+
   expenseChartInstance = new Chart(ctxExp, {
     type: 'bar',
-    data: { labels: expLabels, datasets: [{ label: t('stat_expenses'), data: Object.values(expenseBreakdown), backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'], borderRadius: 4 }] },
+    data: {
+      labels: expLabels,
+      datasets: [{ label: t('stat_expenses'), data: Object.values(expenseBreakdown), backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'], borderRadius: 4 }]
+    },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: currentTheme === 'dark' ? '#27272a' : '#e4e4e7' } }, x: { grid: { display: false } } } }
   });
 
+  // --- INCOME CHART ---
   const ctxInc = document.getElementById('incomeChart').getContext('2d');
   if (incomeChartInstance) incomeChartInstance.destroy();
+  
   const typeMap = { "Assignment": "অ্যাসাইনমেন্ট", "Thesis": "থিসিস", "Presentation": "প্রেজেন্টেশন", "Lab Project": "ল্যাব", "Other": "অন্যান্য" };
   const incKeys = Object.keys(incomeBreakdown);
   const incLabels = incKeys.map(k => currentLang === 'bn' ? (typeMap[k] || k) : k);
+
   incomeChartInstance = new Chart(ctxInc, {
     type: 'bar',
-    data: { labels: incLabels, datasets: [{ label: t('stat_earned'), data: Object.values(incomeBreakdown), backgroundColor: ['#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e'], borderRadius: 4 }] },
+    data: {
+      labels: incLabels,
+      datasets: [{ label: t('stat_earned'), data: Object.values(incomeBreakdown), backgroundColor: ['#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e'], borderRadius: 4 }]
+    },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: currentTheme === 'dark' ? '#27272a' : '#e4e4e7' } }, x: { grid: { display: false } } } }
   });
 }
@@ -724,8 +733,15 @@ function renderClientsView() {
         <div class="mb-4">
           <h3 class="font-semibold text-zinc-900 dark:text-white text-lg">${client.name}</h3>
           <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-2 flex-wrap">
-            <span class="flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg> ${phoneDisplay}</span>
-            ${client.university ? `<span class="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[10px] break-all"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg> ${client.university}</span>` : ''}
+            <span class="flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+              ${phoneDisplay}
+            </span>
+            ${client.university ? `
+            <span class="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[10px] break-all">
+              <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+              ${client.university}
+            </span>` : ''}
           </p>
           <div class="mt-3 inline-block bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 px-2 py-1 rounded text-xs font-semibold">
             ${t('txt_net_income')}: ৳${localNum(netIncome)}
@@ -842,7 +858,25 @@ function renderExpenses() {
   });
 }
 
-// Kanban Sortable Logic
+// Fallback Native HTML5 Drag and Drop Handlers
+let dragId = null;
+function dragTask(ev, id) { dragId = id; }
+function allowDrop(ev) { ev.preventDefault(); }
+async function dropTask(ev, newStatus) {
+  ev.preventDefault();
+  if(!dragId) return;
+  const tk = allTasks.find(t => t._id === dragId);
+  if(tk && tk.status !== newStatus) {
+    tk.status = newStatus;
+    renderTasks();
+    try { 
+      await fetch(`${API}/update-task/${dragId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: newStatus, password: "none_req_for_dnd" }) }); 
+    } catch(err) { console.log("DnD Update failed."); }
+  }
+  dragId = null;
+}
+
+// Modern SortableJS implementation for Kanban
 let kanbanInstances = [];
 function initKanbanBoards() {
   kanbanInstances.forEach(inst => inst.destroy());
@@ -864,19 +898,14 @@ function initKanbanBoards() {
           const itemEl = evt.item;
           const taskId = itemEl.getAttribute('data-id');
           const newStatus = evt.to.getAttribute('data-status');
+          
           if (!taskId || !newStatus) return;
 
           const tk = allTasks.find(t => t._id === taskId);
           if (tk && tk.status !== newStatus) {
             tk.status = newStatus;
-            let payload = { status: newStatus, password: "none_req_for_dnd" };
-            if (newStatus === 'done') {
-                tk.advancePaid = tk.totalValue;
-                payload.advancePaid = tk.totalValue;
-            }
-            renderTasks();
             try { 
-              await fetch(`${API}/update-task/${taskId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); 
+              await fetch(`${API}/update-task/${taskId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: newStatus, password: "none_req_for_dnd" }) }); 
             } catch(err) { console.log("DnD Update failed."); }
           }
         }
@@ -892,11 +921,13 @@ function generatePDFInvoice(taskId) {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   
+  // Calculate balances
   const total = tk.totalValue || 0;
   const advance = tk.advancePaid || 0;
   const balance = total - advance;
   const isPaid = balance <= 0;
   
+  // Header: Branding
   doc.setFontSize(24); doc.setTextColor(30, 41, 59); doc.setFont(undefined, 'bold');
   doc.text("Assignment Koran", 20, 20);
   
@@ -905,16 +936,18 @@ function generatePDFInvoice(taskId) {
   doc.text(`Date Issued: ${new Date().toLocaleDateString()}`, 20, 36);
   doc.text(`Delivery Date: ${tk.deadline ? new Date(tk.deadline).toLocaleDateString() : 'N/A'}`, 20, 42);
   
+  // The PAID / DUE Seal
   const sealText = isPaid ? "PAID" : "DUE";
-  const sealColor = isPaid ? [22, 163, 74] : [220, 38, 38]; 
+  const sealColor = isPaid ? [22, 163, 74] : [220, 38, 38]; // Emerald Green vs Red
   
   doc.setDrawColor(sealColor[0], sealColor[1], sealColor[2]);
   doc.setLineWidth(1.2);
-  doc.roundedRect(160, 12, 35, 14, 2, 2); 
+  doc.roundedRect(160, 12, 35, 14, 2, 2); // x, y, width, height, rx, ry
   doc.setTextColor(sealColor[0], sealColor[1], sealColor[2]);
   doc.setFontSize(14); doc.setFont(undefined, 'bold');
   doc.text(sealText, 177.5, 22, null, null, "center");
 
+  // Client Details
   doc.setFontSize(12); doc.setTextColor(30, 41, 59); doc.text("Billed To:", 20, 52);
   doc.setFont(undefined, 'bold'); const cName = tk.client?.name || "Internal Agency Task"; doc.text(cName, 20, 59);
   doc.setFont(undefined, 'normal'); 
@@ -922,13 +955,16 @@ function generatePDFInvoice(taskId) {
   if(tk.client?.phone) { doc.text(tk.client.phone, 20, currentY); currentY += 6; }
   if(tk.client?.university) { doc.text(tk.client.university, 20, currentY); currentY += 6; }
   
+  // Table Lines
   doc.setDrawColor(228, 228, 231); doc.line(20, 80, 190, 80);
   doc.setFontSize(11); doc.setFont(undefined, 'bold'); doc.text("Description", 20, 87); doc.text("Amount", 170, 87);
   doc.line(20, 92, 190, 92);
   
+  // Task Details
   doc.setFont(undefined, 'normal'); const taskTitle = doc.splitTextToSize(tk.title, 130);
   doc.text(taskTitle, 20, 102); doc.text(`Tk ${total}`, 170, 102);
   
+  // Totals
   doc.line(130, 130, 190, 130);
   doc.text(`Subtotal:`, 130, 140); doc.text(`Tk ${total}`, 170, 140);
   doc.text(`Advance Paid:`, 130, 148); doc.setTextColor(225, 29, 72); doc.text(`-Tk ${advance}`, 170, 148);
@@ -936,8 +972,11 @@ function generatePDFInvoice(taskId) {
   doc.line(130, 153, 190, 153); doc.setFont(undefined, 'bold'); doc.setTextColor(sealColor[0], sealColor[1], sealColor[2]);
   doc.text(`Balance Due:`, 130, 163); doc.text(`Tk ${Math.max(0, balance)}`, 170, 163);
   
+  // Footer text
   doc.setFont(undefined, 'normal'); doc.setFontSize(10); doc.setTextColor(161, 161, 170);
   doc.text("Thank you for choosing Assignment Koran.", 105, 270, null, null, "center");
+  
+  // Footer Links
   doc.setTextColor(59, 130, 246);
   doc.text("facebook.com/assignmentKoran", 105, 276, null, null, "center");
   doc.text("a-koran.vercel.app/ak.html", 105, 282, null, null, "center");
@@ -1011,17 +1050,16 @@ async function saveTask(e) {
   };
   
   if(!payload.title) { alert("Title is required"); btn.disabled = false; return; }
-  
-  toggleLoader(true);
+  btn.innerText = "...";
   try {
     await handleFetch(id ? `${API}/update-task/${id}` : `${API}/add-task`, { method: id ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     document.getElementById("taskModal").close(); 
     currentTaskPage = 1; 
     await Promise.all([fetchTasks(1, false), fetchClients(), fetchExpenses()]);
     renderDashboard(); renderTasks(); renderClientsView();
-  } catch(err) { alert(err.message); }
-  toggleLoader(false);
-  btn.disabled = false;
+    btn.innerText = id ? t('btn_update') : t('btn_deploy');
+    btn.disabled = false;
+  } catch(err) { alert(err.message); btn.innerText = id ? t('btn_update') : t('btn_deploy'); btn.disabled = false; }
 }
 
 function openTxModal() {
@@ -1038,62 +1076,45 @@ async function saveTransaction(e) {
   const payload = { category: document.getElementById("txCategory").value, description: document.getElementById("txDescription").value, amount: Number(document.getElementById("txAmount").value), password };
   if(payload.amount <= 0) { btn.disabled = false; return; }
   
-  toggleLoader(true);
   try {
     await handleFetch(`${API}/add-account`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     document.getElementById("txModal").close(); 
     await Promise.all([fetchExpenses()]);
     renderDashboard(); renderExpenses();
-  } catch(err) { alert(err.message); }
-  toggleLoader(false);
-  btn.disabled = false;
+    btn.disabled = false;
+  } catch(err) { alert(err.message); btn.disabled = false; }
 }
 
 async function updateTaskStatus(id, status) {
   const password = await requestAuthToken(t('msg_auth_status'));
   if(!password) return;
-  
-  toggleLoader(true);
   try { 
-    const tk = allTasks.find(t => t._id === id);
-    let payload = { status, password };
-    if (status === 'done' && tk) {
-        payload.advancePaid = tk.totalValue;
-    }
-
-    await handleFetch(`${API}/update-task/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); 
+    await handleFetch(`${API}/update-task/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status, password }) }); 
     currentTaskPage = 1;
     await Promise.all([fetchTasks(1, false), fetchClients(), fetchExpenses()]);
     renderDashboard(); renderTasks(); renderClientsView();
   } catch(err) { alert(err.message); }
-  toggleLoader(false);
 }
 
 async function deleteTask(id) {
   const password = await requestAuthToken(t('msg_auth_del_task'));
   if(!password) return;
-  
-  toggleLoader(true);
   try { 
     await handleFetch(`${API}/delete-task/${id}`, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) }); 
     currentTaskPage = 1;
     await Promise.all([fetchTasks(1, false), fetchClients(), fetchExpenses()]);
     renderDashboard(); renderTasks(); renderClientsView();
   } catch (err) { alert(err.message); }
-  toggleLoader(false);
 }
 
 async function deleteTx(id) {
   const password = await requestAuthToken(t('msg_auth_del_exp'));
   if(!password) return;
-  
-  toggleLoader(true);
   try {
     await handleFetch(`${API}/delete-account/${id}`, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) });
     await Promise.all([fetchExpenses()]);
     renderDashboard(); renderExpenses();
   } catch(err) { alert(err.message); }
-  toggleLoader(false);
 }
 
 function openClientAddModal() {
@@ -1125,7 +1146,6 @@ async function saveClient(e) {
 
   const payload = { name: document.getElementById("cEditName").value, phone: document.getElementById("cEditPhone").value, university: document.getElementById("cEditUniversity").value, password };
   
-  toggleLoader(true);
   try {
     const url = id ? `${API}/update-client/${id}` : `${API}/add-client`;
     const method = id ? "PUT" : "POST";
@@ -1133,9 +1153,8 @@ async function saveClient(e) {
     document.getElementById("clientEditModal").close();
     await Promise.all([fetchClients()]);
     renderClientsView();
-  } catch(err) { alert(err.message); }
-  toggleLoader(false);
-  btn.disabled = false;
+    btn.disabled = false;
+  } catch(err) { alert(err.message); btn.disabled = false; }
 }
 
 function openClientViewModal(clientId) {
