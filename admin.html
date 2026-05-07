@@ -30,11 +30,11 @@
     dialog::backdrop { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); }
     .dark dialog::backdrop { background: rgba(0, 0, 0, 0.8); }
     
-    /* Only apply flex when the dialog is explicitly open */
+    /* Only apply flex when the dialog is explicitly open. Replaced hardcoded width with dynamic viewport height. */
     dialog:not([open]) { display: none; }
-    dialog[open] { display: flex; flex-direction: column; max-height: 90vh; overflow: hidden; width: 95%; max-width: 32rem; }
+    dialog[open] { display: flex; flex-direction: column; max-height: 90dvh; overflow: hidden; }
     
-    .dialog-content { overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
+    .dialog-content { overflow-y: auto; flex: 1 1 auto; -webkit-overflow-scrolling: touch; }
     
     .tab-active { border-bottom: 2px solid; color: currentColor; }
     .tab-inactive { border-bottom: 2px solid transparent; }
@@ -48,7 +48,6 @@
 
   <!-- Fullscreen Lottie Loader -->
   <div id="catLoader" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-950 transition-opacity duration-500">
-    <!-- Size slightly reduced to 120px -->
     <lottie-player src="https://tukitaki.vercel.app/src/json/LottieFiles/cat_loader.json" background="transparent" speed="1" style="width: 120px; height: 120px;" loop autoplay></lottie-player>
     <p class="mt-2 text-sm font-medium text-zinc-500 animate-pulse tracking-wide" data-i18n="loading_text">Loading Agency OS...</p>
   </div>
@@ -182,8 +181,8 @@
 
   <!-- ==================== MODALS ==================== -->
 
-  <!-- Task Modal (Enter Key bound safely) -->
-  <dialog id="taskModal" onkeydown="if(event.key === 'Enter' && event.target.tagName !== 'TEXTAREA') { event.preventDefault(); event.stopPropagation(); document.getElementById('btnSaveTask').click(); }" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95%] sm:w-full m-auto text-zinc-900 dark:text-white transition-colors">
+  <!-- Task Modal (Enter Key bound safely, Full width on mobile) -->
+  <dialog id="taskModal" onkeydown="if(event.key === 'Enter' && event.target.tagName !== 'TEXTAREA') { event.preventDefault(); event.stopPropagation(); document.getElementById('btnSaveTask').click(); }" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95vw] sm:w-full max-w-lg m-auto text-zinc-900 dark:text-white transition-colors">
     <div class="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0">
       <h2 class="text-base sm:text-lg font-semibold" id="taskModalTitle" data-i18n="modal_task_title">Add New Task</h2>
       <button onclick="document.getElementById('taskModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 p-1">
@@ -256,8 +255,8 @@
     </div>
   </dialog>
 
-  <!-- Expenses Modal (Enter Key bound safely) -->
-  <dialog id="txModal" onkeydown="if(event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); document.getElementById('btnSaveTx').click(); }" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95%] sm:w-full max-w-sm m-auto text-zinc-900 dark:text-white transition-colors">
+  <!-- Expenses Modal -->
+  <dialog id="txModal" onkeydown="if(event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); document.getElementById('btnSaveTx').click(); }" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95vw] sm:w-full max-w-sm m-auto text-zinc-900 dark:text-white transition-colors">
     <div class="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0">
       <h2 class="text-base sm:text-lg font-semibold text-rose-600 dark:text-rose-400" data-i18n="modal_exp_title">Log Expense</h2>
       <button onclick="document.getElementById('txModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 p-1"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
@@ -272,8 +271,8 @@
     </div>
   </dialog>
 
-  <!-- Client Edit/Add Modal (Enter Key bound safely) -->
-  <dialog id="clientEditModal" onkeydown="if(event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); document.getElementById('btnSaveClient').click(); }" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95%] sm:w-full max-w-sm m-auto text-zinc-900 dark:text-white transition-colors">
+  <!-- Client Edit/Add Modal -->
+  <dialog id="clientEditModal" onkeydown="if(event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); document.getElementById('btnSaveClient').click(); }" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95vw] sm:w-full max-w-sm m-auto text-zinc-900 dark:text-white transition-colors">
     <div class="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0">
       <h2 class="text-base sm:text-lg font-semibold" id="clientModalTitle" data-i18n="modal_client_edit">Edit Client</h2>
       <button onclick="document.getElementById('clientEditModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 p-1"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
@@ -301,7 +300,7 @@
   </dialog>
 
   <!-- Client View Tasks Modal -->
-  <dialog id="clientViewModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95%] sm:w-full max-w-2xl m-auto text-zinc-900 dark:text-white transition-colors flex flex-col">
+  <dialog id="clientViewModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95vw] sm:w-full max-w-2xl m-auto text-zinc-900 dark:text-white transition-colors flex flex-col">
     <div class="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0">
       <h2 class="text-base sm:text-lg font-semibold" id="clientViewTitle">Client Overview</h2>
       <button onclick="document.getElementById('clientViewModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 p-1"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
@@ -309,8 +308,8 @@
     <div class="p-4 sm:p-5 dialog-content"><ul id="clientViewTaskList" class="grid grid-cols-1 gap-3 sm:gap-4"></ul></div>
   </dialog>
 
-  <!-- Custom Password Prompt Modal (Ghost Click fully prevented) -->
-  <dialog id="authPromptModal" onkeydown="if(event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); confirmAuthPrompt(); }" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95%] sm:w-full max-w-sm m-auto text-zinc-900 dark:text-white transition-colors">
+  <!-- Custom Password Prompt Modal -->
+  <dialog id="authPromptModal" onkeydown="if(event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); confirmAuthPrompt(); }" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95vw] sm:w-full max-w-sm m-auto text-zinc-900 dark:text-white transition-colors">
     <div class="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0">
       <h2 class="text-base sm:text-lg font-semibold" data-i18n="modal_auth_title">Enter Password</h2>
       <button onclick="cancelAuthPrompt()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 p-1">
