@@ -874,76 +874,72 @@ async function dropTask(ev, newStatus) {
   dragId = null;
 }
 
-// Modern SortableJS implementation for Kanban
-let kanbanInstances = [];
-function initKanbanBoards() {
-  kanbanInstances.forEach(inst => inst.destroy());
-  kanbanInstances = [];
-  
-  const columns = ['col-pending', 'col-in_progress', 'col-review'];
-  
-  columns.forEach(colId => {
-    const el = document.getElementById(colId);
-    if(el) {
-      const inst = Sortable.create(el, {
-        group: 'tasks',
-        animation: 150,
-        delay: 150,
-        delayOnTouchOnly: true,
-        ghostClass: 'opacity-40',
-        dragClass: 'scale-105',
-        onEnd: async function (evt) {
-          const itemEl = evt.item;
-          const taskId = itemEl.getAttribute('data-id');
-          const newStatus = evt.to.getAttribute('data-status');
-          
-          if (!taskId || !newStatus) return;
-
-          const tk = allTasks.find(t => t._id === taskId);
-          if (tk && tk.status !== newStatus) {
-            tk.status = newStatus;
-            try { 
-              await fetch(`${API}/update-task/${taskId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: newStatus, password: "none_req_for_dnd" }) }); 
-            } catch(err) { console.log("DnD Update failed."); }
-          }
-        }
-      });
-      kanbanInstances.push(inst);
-    }
-  });
-}
-
 function generatePDFInvoice(taskId) {
   const tk = allTasks.find(t => t._id === taskId);
   if(!tk) return;
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   
-  doc.setFontSize(22); doc.setTextColor(30, 41, 59); doc.text("INVOICE", 20, 20);
-  doc.setFontSize(10); doc.setTextColor(113, 113, 122);
+  // Calculate balances
+  const total = tk.totalValue || 0;
+  const advance = tk.advancePaid || 0;
+  const balance = total - advance;
+  const isPaid = balance <= 0;
+  
+  // Header: Branding
+  doc.setFontSize(24); doc.setTextColor(30, 41, 59); doc.setFont(undefined, 'bold');
+  doc.text("Assignment Koran", 20, 20);
+  
+  doc.setFontSize(10); doc.setTextColor(113, 113, 122); doc.setFont(undefined, 'normal');
   doc.text(`Invoice Ref: #${tk._id.substring(tk._id.length - 8).toUpperCase()}`, 20, 30);
   doc.text(`Date Issued: ${new Date().toLocaleDateString()}`, 20, 36);
+  doc.text(`Delivery Date: ${tk.deadline ? new Date(tk.deadline).toLocaleDateString() : 'N/A'}`, 20, 42);
   
+  // The PAID / DUE Seal
+  const sealText = isPaid ? "PAID" : "DUE";
+  const sealColor = isPaid ? [22, 163, 74] : [220, 38, 38]; // Emerald Green vs Red
+  
+  doc.setDrawColor(sealColor[0], sealColor[1], sealColor[2]);
+  doc.setLineWidth(1.2);
+  doc.roundedRect(160, 12, 35, 14, 2, 2); // x, y, width, height, rx, ry
+  doc.setTextColor(sealColor[0], sealColor[1], sealColor[2]);
+  doc.setFontSize(14); doc.setFont(undefined, 'bold');
+  doc.text(sealText, 177.5, 22, null, null, "center");
+
+  // Client Details
   doc.setFontSize(12); doc.setTextColor(30, 41, 59); doc.text("Billed To:", 20, 52);
   doc.setFont(undefined, 'bold'); const cName = tk.client?.name || "Internal Agency Task"; doc.text(cName, 20, 59);
-  doc.setFont(undefined, 'normal'); if(tk.client?.phone) doc.text(tk.client.phone, 20, 65);
+  doc.setFont(undefined, 'normal'); 
+  let currentY = 65;
+  if(tk.client?.phone) { doc.text(tk.client.phone, 20, currentY); currentY += 6; }
+  if(tk.client?.university) { doc.text(tk.client.university, 20, currentY); currentY += 6; }
   
+  // Table Lines
   doc.setDrawColor(228, 228, 231); doc.line(20, 80, 190, 80);
   doc.setFontSize(11); doc.setFont(undefined, 'bold'); doc.text("Description", 20, 87); doc.text("Amount", 170, 87);
   doc.line(20, 92, 190, 92);
   
+  // Task Details
   doc.setFont(undefined, 'normal'); const taskTitle = doc.splitTextToSize(tk.title, 130);
-  doc.text(taskTitle, 20, 102); doc.text(`Tk ${tk.totalValue}`, 170, 102);
+  doc.text(taskTitle, 20, 102); doc.text(`Tk ${total}`, 170, 102);
   
+  // Totals
   doc.line(130, 130, 190, 130);
-  doc.text(`Subtotal:`, 130, 140); doc.text(`Tk ${tk.totalValue}`, 170, 140);
-  doc.text(`Advance Paid:`, 130, 148); doc.setTextColor(225, 29, 72); doc.text(`-Tk ${tk.advancePaid}`, 170, 148);
+  doc.text(`Subtotal:`, 130, 140); doc.text(`Tk ${total}`, 170, 140);
+  doc.text(`Advance Paid:`, 130, 148); doc.setTextColor(225, 29, 72); doc.text(`-Tk ${advance}`, 170, 148);
   
-  doc.line(130, 153, 190, 153); doc.setFont(undefined, 'bold'); doc.setTextColor(16, 185, 129);
-  doc.text(`Balance Due:`, 130, 163); doc.text(`Tk ${tk.totalValue - tk.advancePaid}`, 170, 163);
+  doc.line(130, 153, 190, 153); doc.setFont(undefined, 'bold'); doc.setTextColor(sealColor[0], sealColor[1], sealColor[2]);
+  doc.text(`Balance Due:`, 130, 163); doc.text(`Tk ${Math.max(0, balance)}`, 170, 163);
   
+  // Footer text
   doc.setFont(undefined, 'normal'); doc.setFontSize(10); doc.setTextColor(161, 161, 170);
-  doc.text("Thank you for choosing Agency OS.", 105, 280, null, null, "center");
+  doc.text("Thank you for choosing Assignment Koran.", 105, 270, null, null, "center");
+  
+  // Footer Links (Standard PDF viewers will make these clickable automatically)
+  doc.setTextColor(59, 130, 246); // Blue color for links
+  doc.text("facebook.com/assignmentKoran", 105, 276, null, null, "center");
+  doc.text("a-koran.vercel.app/ak.html", 105, 282, null, null, "center");
+
   doc.save(`Invoice_${cName.substring(0,10)}_${tk.title.substring(0,10)}.pdf`);
 }
 
