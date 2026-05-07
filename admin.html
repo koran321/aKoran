@@ -832,36 +832,36 @@ function renderTasks() {
   else pagControl.classList.add('hidden');
 }
 
-// === KANBAN SORTABLEJS LOGIC ===
-let kanbanInstances = [];
+function renderExpenses() {
+  const list = document.getElementById("txList");
+  list.innerHTML = "";
+  if(allExpenses.length === 0) return list.innerHTML = `<li class="p-6 text-center text-zinc-500 text-sm">${t('no_expenses')}</li>`;
 
-function initKanbanBoards() {
-  // Destroy existing instances to prevent duplicates if toggled back and forth
-  kanbanInstances.forEach(inst => inst.destroy());
-  kanbanInstances = [];
+  allExpenses.forEach(tx => {
+    const mapCat = { "Facebook Ads": "ফেসবুক অ্যাড", "Supplements": "সাপ্লিমেন্ট", "Withdraws": "উত্তোলন", "Others": "অন্যান্য" };
+    const displayCat = currentLang === 'bn' ? (mapCat[tx.category] || tx.category) : tx.category;
 
-  const columns = ['col-pending', 'col-in_progress', 'col-review'];
-  
-  columns.forEach(colId => {
-    const el = document.getElementById(colId);
-    if(el) {
-      const inst = Sortable.create(el, {
-        group: 'tasks', // Allows dragging between columns
-        animation: 150, // Smooth slide animation
-        delay: 150, // Require a 150ms hold on mobile to start dragging
-        delayOnTouchOnly: true, // Only apply delay on touch screens so user can still scroll normally
-        ghostClass: 'opacity-40', // Makes the dragged item slightly transparent
-        dragClass: 'scale-105', // Slightly enlarge item while dragging
-        onEnd: async function (evt) {
-          const itemEl = evt.item;
-          const taskId = itemEl.getAttribute('data-id');
-          const newStatus = evt.to.getAttribute('data-status');
-          
-          if (!taskId || !newStatus) return;
+    list.innerHTML += `
+      <li class="p-4 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+        <div class="flex items-center gap-3 sm:gap-4">
+          <div class="p-2 rounded-full bg-rose-100 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg></div>
+          <div>
+            <p class="font-medium text-zinc-900 dark:text-white text-sm">${displayCat}</p>
+            <p class="text-xs text-zinc-500">${customFormatDate(tx.date)} ${tx.description ? '• ' + tx.description : ''}</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 sm:gap-4 shrink-0">
+          <span class="font-semibold text-rose-600 dark:text-rose-400 text-sm sm:text-base">-৳${localNum(tx.amount)}</span>
+          <button onclick="deleteTx('${tx._id}')" class="text-zinc-400 hover:text-rose-600 dark:text-zinc-600 dark:hover:text-rose-400 p-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+        </div>
+      </li>
+    `;
+  });
+}
 
-          const tk = allTasks.find(t => t._id === taskId);
-          if (tk && tk.status !== newStatus) {
-            // Optimistic UI Update locally
+let dragId = null;
+function dragTask(ev, id) { dragId = id; }
+function allowDrop(ev) { ev.preventDefault(); }
             tk.status = newStatus;
             
             // Background update to backend
