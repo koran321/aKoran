@@ -18,6 +18,9 @@
   <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   
+  <!-- Add SortableJS for buttery smooth Mobile & Desktop Drag and Drop -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+  
   <style>
     body { font-family: 'Inter', sans-serif; margin: 0; min-height: 100vh; }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -161,18 +164,19 @@
 
       <ul id="taskList" class="grid grid-cols-1 gap-3 sm:gap-4"></ul>
       
-      <div id="taskBoard" class="hidden grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 items-start">
-        <div class="bg-zinc-100 dark:bg-zinc-900/50 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 min-h-[300px]" ondrop="dropTask(event, 'pending')" ondragover="allowDrop(event)">
+      <!-- Kanban Board Container (Updated for SortableJS) -->
+      <div id="taskBoard" class="hidden grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 items-stretch">
+        <div class="bg-zinc-100 dark:bg-zinc-900/50 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col">
           <h3 class="font-bold text-sm text-zinc-500 uppercase tracking-wider mb-4 px-1" data-i18n="status_pending">Pending</h3>
-          <div id="col-pending" class="space-y-3"></div>
+          <div id="col-pending" data-status="pending" class="flex-1 space-y-3 min-h-[150px]"></div>
         </div>
-        <div class="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-2xl border border-blue-200 dark:border-blue-900/30 min-h-[300px]" ondrop="dropTask(event, 'in_progress')" ondragover="allowDrop(event)">
+        <div class="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-2xl border border-blue-200 dark:border-blue-900/30 flex flex-col">
           <h3 class="font-bold text-sm text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-4 px-1" data-i18n="status_in_progress">In Progress</h3>
-          <div id="col-in_progress" class="space-y-3"></div>
+          <div id="col-in_progress" data-status="in_progress" class="flex-1 space-y-3 min-h-[150px]"></div>
         </div>
-        <div class="bg-orange-50 dark:bg-orange-900/10 p-4 rounded-2xl border border-orange-200 dark:border-orange-900/30 min-h-[300px]" ondrop="dropTask(event, 'review')" ondragover="allowDrop(event)">
+        <div class="bg-orange-50 dark:bg-orange-900/10 p-4 rounded-2xl border border-orange-200 dark:border-orange-900/30 flex flex-col">
           <h3 class="font-bold text-sm text-orange-600 dark:text-orange-400 uppercase tracking-wider mb-4 px-1" data-i18n="status_review">Under Review</h3>
-          <div id="col-review" class="space-y-3"></div>
+          <div id="col-review" data-status="review" class="flex-1 space-y-3 min-h-[150px]"></div>
         </div>
       </div>
 
@@ -775,7 +779,8 @@ function generateTaskHTML(tk, isDone, isKanbanCard = false) {
   }
 
   if (isKanbanCard) {
-    return `<div draggable="true" ondragstart="dragTask(event, '${tk._id}')" class="bg-white dark:bg-zinc-950 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm cursor-grab active:cursor-grabbing hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors"><div class="flex items-center justify-between mb-2"><span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${colorClass}">${displayType}</span><span class="text-[10px] text-zinc-500 font-medium">${customFormatDate(tk.deadline)}</span></div><h4 class="text-sm font-semibold text-zinc-900 dark:text-white leading-tight">${tk.title}</h4><p class="text-[11px] text-zinc-500 mt-1 truncate">${clientName}</p>${linkHTML}<div class="mt-3 flex justify-between items-center border-t border-zinc-100 dark:border-zinc-800 pt-2"><span class="text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 px-1.5 rounded">${tk.assignedTo?.split(' ')[0] || '-'}</span><span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">৳${localNum(total - advance)}</span></div></div>`;
+    // Removed native draggable="true" and ondragstart, added data-id for SortableJS tracking
+    return `<div data-id="${tk._id}" class="bg-white dark:bg-zinc-950 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm cursor-grab active:cursor-grabbing hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors"><div class="flex items-center justify-between mb-2"><span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${colorClass}">${displayType}</span><span class="text-[10px] text-zinc-500 font-medium">${customFormatDate(tk.deadline)}</span></div><h4 class="text-sm font-semibold text-zinc-900 dark:text-white leading-tight">${tk.title}</h4><p class="text-[11px] text-zinc-500 mt-1 truncate">${clientName}</p>${linkHTML}<div class="mt-3 flex justify-between items-center border-t border-zinc-100 dark:border-zinc-800 pt-2"><span class="text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 px-1.5 rounded">${tk.assignedTo?.split(' ')[0] || '-'}</span><span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">৳${localNum(total - advance)}</span></div></div>`;
   }
 
   return `<li class="border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-none rounded-2xl p-4 sm:p-5 bg-white dark:bg-zinc-900/50 flex flex-col md:flex-row gap-4 justify-between transition-all hover:border-zinc-300 dark:hover:border-zinc-700"><div class="flex-1 space-y-3"><div class="flex items-center gap-2 flex-wrap"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${isDone ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500' : 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300'}">${t(isDone ? 'btn_done' : 'nav_active')}</span><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${colorClass}">${displayType}</span><span class="text-xs text-zinc-500 dark:text-zinc-400 font-medium ml-1 sm:ml-2">${t('txt_due')}: ${customFormatDate(tk.deadline)}</span></div><div><h3 class="text-lg font-semibold text-zinc-900 dark:text-white ${isDone ? 'line-through text-zinc-500 dark:text-zinc-500' : ''}">${tk.title}</h3>${detailsHTML}${linkHTML}<p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-1.5"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>${clientName}</p></div><div class="flex flex-wrap gap-3 sm:gap-4 text-xs font-medium border-t border-zinc-100 dark:border-zinc-800/50 pt-3"><div class="text-emerald-600 dark:text-emerald-400">${t('txt_total')}: ৳${localNum(total)}</div><div class="text-zinc-600 dark:text-zinc-300">${t('txt_advance')}: ৳${localNum(advance)}</div><div class="text-rose-600 dark:text-rose-400">${t('txt_due')}: ৳${localNum(total - advance)}</div><div class="text-zinc-500 dark:text-zinc-500 w-full sm:w-auto sm:ml-auto flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>${tk.assignedTo || t('txt_unassigned')}</div></div></div><div class="flex flex-col gap-2 shrink-0 items-stretch justify-center w-full md:w-32 border-t md:border-t-0 md:border-l border-zinc-100 dark:border-zinc-800/50 pt-3 md:pt-0 md:pl-4">${actionButtons}</div></li>`;
@@ -819,53 +824,63 @@ function renderTasks() {
     document.getElementById("col-pending").innerHTML = pendingTasks.map(t => generateTaskHTML(t, false, true)).join('');
     document.getElementById("col-in_progress").innerHTML = inProgressTasks.map(t => generateTaskHTML(t, false, true)).join('');
     document.getElementById("col-review").innerHTML = reviewTasks.map(t => generateTaskHTML(t, false, true)).join('');
+    
+    initKanbanBoards(); // Initialize SortableJS when switching to board view
   }
   
   if (currentTaskPage < totalTaskPages && currentTaskViewMode === 'list') pagControl.classList.remove('hidden');
   else pagControl.classList.add('hidden');
 }
 
-function renderExpenses() {
-  const list = document.getElementById("txList");
-  list.innerHTML = "";
-  if(allExpenses.length === 0) return list.innerHTML = `<li class="p-6 text-center text-zinc-500 text-sm">${t('no_expenses')}</li>`;
+// === KANBAN SORTABLEJS LOGIC ===
+let kanbanInstances = [];
 
-  allExpenses.forEach(tx => {
-    const mapCat = { "Facebook Ads": "ফেসবুক অ্যাড", "Supplements": "সাপ্লিমেন্ট", "Withdraws": "উত্তোলন", "Others": "অন্যান্য" };
-    const displayCat = currentLang === 'bn' ? (mapCat[tx.category] || tx.category) : tx.category;
+function initKanbanBoards() {
+  // Destroy existing instances to prevent duplicates if toggled back and forth
+  kanbanInstances.forEach(inst => inst.destroy());
+  kanbanInstances = [];
 
-    list.innerHTML += `
-      <li class="p-4 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
-        <div class="flex items-center gap-3 sm:gap-4">
-          <div class="p-2 rounded-full bg-rose-100 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg></div>
-          <div>
-            <p class="font-medium text-zinc-900 dark:text-white text-sm">${displayCat}</p>
-            <p class="text-xs text-zinc-500">${customFormatDate(tx.date)} ${tx.description ? `• ${tx.description}` : ''}</p>
-          </div>
-        </div>
-        <div class="flex items-center gap-3 sm:gap-4 shrink-0">
-          <span class="font-semibold text-rose-600 dark:text-rose-400 text-sm sm:text-base">-৳${localNum(tx.amount)}</span>
-          <button onclick="deleteTx('${tx._id}')" class="text-zinc-400 hover:text-rose-600 dark:text-zinc-600 dark:hover:text-rose-400 p-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
-        </div>
-      </li>
-    `;
+  const columns = ['col-pending', 'col-in_progress', 'col-review'];
+  
+  columns.forEach(colId => {
+    const el = document.getElementById(colId);
+    if(el) {
+      const inst = Sortable.create(el, {
+        group: 'tasks', // Allows dragging between columns
+        animation: 150, // Smooth slide animation
+        delay: 150, // Require a 150ms hold on mobile to start dragging
+        delayOnTouchOnly: true, // Only apply delay on touch screens so user can still scroll normally
+        ghostClass: 'opacity-40', // Makes the dragged item slightly transparent
+        dragClass: 'scale-105', // Slightly enlarge item while dragging
+        onEnd: async function (evt) {
+          const itemEl = evt.item;
+          const taskId = itemEl.getAttribute('data-id');
+          const newStatus = evt.to.getAttribute('data-status');
+          
+          if (!taskId || !newStatus) return;
+
+          const tk = allTasks.find(t => t._id === taskId);
+          if (tk && tk.status !== newStatus) {
+            // Optimistic UI Update locally
+            tk.status = newStatus;
+            
+            // Background update to backend
+            try { 
+              await fetch(`${API}/update-task/${taskId}`, { 
+                method: "PUT", 
+                headers: { "Content-Type": "application/json" }, 
+                body: JSON.stringify({ status: newStatus, password: "none_req_for_dnd" }) 
+              }); 
+            } catch(err) { 
+              console.log("DnD Update failed."); 
+              // Consider refetching here if needed
+            }
+          }
+        }
+      });
+      kanbanInstances.push(inst);
+    }
   });
-}
-
-let dragId = null;
-function dragTask(ev, id) { dragId = id; }
-function allowDrop(ev) { ev.preventDefault(); }
-async function dropTask(ev, newStatus) {
-  ev.preventDefault();
-  if(!dragId) return;
-  const tk = allTasks.find(t => t._id === dragId);
-  if(tk && tk.status !== newStatus) {
-    tk.status = newStatus;
-    renderTasks();
-    try { await fetch(`${API}/update-task/${dragId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: newStatus, password: "none_req_for_dnd" }) }); } 
-    catch(err) { console.log("DnD Update failed."); }
-  }
-  dragId = null;
 }
 
 function generatePDFInvoice(taskId) {
