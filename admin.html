@@ -111,7 +111,11 @@
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mt-4 sm:mt-6">
-        <div class="lg:col-span-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 rounded-2xl shadow-sm dark:shadow-none">
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 rounded-2xl shadow-sm dark:shadow-none">
+          <h3 class="text-sm font-semibold mb-4 text-zinc-900 dark:text-white uppercase tracking-wider" data-i18n="chart_income_title">Income Breakdown</h3>
+          <div class="w-full h-[220px] sm:h-[300px] flex items-center justify-center"><canvas id="incomeChart"></canvas></div>
+        </div>
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 rounded-2xl shadow-sm dark:shadow-none">
           <h3 class="text-sm font-semibold mb-4 text-zinc-900 dark:text-white uppercase tracking-wider" data-i18n="chart_title">Expense Breakdown</h3>
           <div class="w-full h-[220px] sm:h-[300px] flex items-center justify-center"><canvas id="expenseChart"></canvas></div>
         </div>
@@ -311,6 +315,7 @@
 const API = "/api"; 
 let allClients = [], allTasks = [], allExpenses = [];
 let expenseChartInstance = null;
+let incomeChartInstance = null;
 
 let currentTaskPage = 1;
 let totalTaskPages = 1;
@@ -353,7 +358,7 @@ const translations = {
     title: "Agency OS", subtitle: "Manage tasks, clients, and finances.", loading_text: "Loading Agency OS...",
     nav_overview: "Overview", nav_clients: "Clients", nav_active: "Active Pipeline", nav_done: "Completed Works", nav_accounts: "Expenses",
     stat_earned: "Total Earned", stat_expected: "Expected Earnings", stat_expenses: "Expenses", stat_net: "Net Balance", stat_pending: "Active Pipeline", stat_total_tasks: "Total Tasks", stat_completed_tasks: "Completed Tasks",
-    chart_title: "Expense Breakdown", top_clients: "Top Clients (Earnings)", filter_all_time: "All Time", filter_this_month: "This Month", filter_last_month: "Last Month", filter_this_year: "This Year",
+    chart_title: "Expense Breakdown", chart_income_title: "Income Breakdown", top_clients: "Top Clients (Earnings)", filter_all_time: "All Time", filter_this_month: "This Month", filter_last_month: "Last Month", filter_this_year: "This Year",
     total_clients: "Total Clients:", btn_new_task: "+ New Task", btn_new_client: "+ Add Client", btn_log_expense: "Log Expense",
     calculating: "Calculating...", no_tasks: "No tasks in pipeline.", no_done: "No completed works yet.", no_clients: "No clients registered.", no_expenses: "No expenses logged yet.",
     modal_task_title: "Add New Task", lbl_desc: "Description / Title", lbl_details: "Details (Optional)", plc_details: "Enter specific requirements, links, or notes...", lbl_type: "Type of Work", lbl_deadline: "Deadline", lbl_client: "Client", search_client: "Search clients...", lbl_total: "Total Value (৳)", lbl_advance: "Advance Paid (৳)", lbl_assign: "Assign To", lbl_token: "Password", lbl_university: "University", lbl_link: "Project Link (Optional)", btn_deploy: "Deploy Task", btn_load_more: "Load More",
@@ -365,7 +370,7 @@ const translations = {
     title: "এজেন্সি ওএস", subtitle: "টাস্ক, ক্লায়েন্ট এবং হিসাব পরিচালনা করুন।", loading_text: "এজেন্সি ওএস লোড হচ্ছে...",
     nav_overview: "সারাংশ", nav_clients: "ক্লায়েন্ট", nav_active: "চলমান কাজ", nav_done: "সম্পন্ন কাজ", nav_accounts: "খরচ",
     stat_earned: "মোট আয়", stat_expected: "সম্ভাব্য আয়", stat_expenses: "মোট খরচ", stat_net: "নিট ব্যালেন্স", stat_pending: "চলমান কাজ", stat_total_tasks: "মোট কাজ", stat_completed_tasks: "সম্পন্ন কাজ",
-    chart_title: "খরচের বিবরণ", top_clients: "শীর্ষ ক্লায়েন্ট (আয়)", filter_all_time: "সব সময়", filter_this_month: "এই মাস", filter_last_month: "গত মাস", filter_this_year: "এই বছর",
+    chart_title: "খরচের বিবরণ", chart_income_title: "আয়ের বিবরণ", top_clients: "শীর্ষ ক্লায়েন্ট (আয়)", filter_all_time: "সব সময়", filter_this_month: "এই মাস", filter_last_month: "গত মাস", filter_this_year: "এই বছর",
     total_clients: "মোট ক্লায়েন্ট:", btn_new_task: "+ নতুন কাজ", btn_new_client: "+ ক্লায়েন্ট যোগ করুন", btn_log_expense: "খরচ যোগ করুন",
     calculating: "হিসাব করা হচ্ছে...", no_tasks: "কোনো কাজ নেই।", no_done: "কোনো কাজ সম্পন্ন হয়নি।", no_clients: "কোনো ক্লায়েন্ট নেই।", no_expenses: "কোনো খরচের রেকর্ড নেই।",
     modal_task_title: "নতুন কাজ যোগ করুন", lbl_desc: "কাজের নাম / বিবরণ", lbl_details: "বিস্তারিত (ঐচ্ছিক)", plc_details: "নির্দিষ্ট প্রয়োজনীয়তা, লিঙ্ক বা নোট লিখুন...", lbl_type: "কাজের ধরন", lbl_deadline: "শেষ সময় (Deadline)", lbl_client: "ক্লায়েন্ট", search_client: "ক্লায়েন্ট খুঁজুন...", lbl_total: "মোট মূল্য (৳)", lbl_advance: "অগ্রিম পেমেন্ট (৳)", lbl_assign: "দায়িত্বপ্রাপ্ত ব্যক্তি", lbl_token: "পাসওয়ার্ড", lbl_university: "বিশ্ববিদ্যালয়", lbl_link: "প্রজেক্ট লিঙ্ক (ঐচ্ছিক)", btn_deploy: "সেভ করুন", btn_load_more: "আরও দেখুন",
@@ -593,6 +598,7 @@ function isDateInRange(dateStr, filterType) {
 function renderDashboard() {
   let totalEarned = 0, expectedEarnings = 0, totalExpenses = 0, pendingTasksCount = 0, completedTasksCount = 0;
   const clientEarningsMap = {};
+  const incomeBreakdown = {};
   const filterType = document.getElementById("dashboardDateFilter").value;
 
   allTasks.forEach(tk => {
@@ -605,6 +611,10 @@ function renderDashboard() {
     if (isDone) { taskEarned += balance; completedTasksCount++; } 
     else { expectedEarnings += balance; pendingTasksCount++; }
     totalEarned += taskEarned;
+
+    // Income breakdown mapping
+    const type = tk.workType || "Other";
+    incomeBreakdown[type] = (incomeBreakdown[type] || 0) + taskEarned;
 
     const cid = (tk.client && tk.client._id) ? tk.client._id : tk.client;
     const cname = (tk.client && tk.client.name) ? tk.client.name : null;
@@ -647,24 +657,42 @@ function renderDashboard() {
     `;
   });
 
-  renderChart(expenseBreakdown);
+  renderCharts(expenseBreakdown, incomeBreakdown);
 }
 
-function renderChart(expenseBreakdown) {
-  const ctx = document.getElementById('expenseChart').getContext('2d');
-  if (expenseChartInstance) expenseChartInstance.destroy();
-  
+function renderCharts(expenseBreakdown, incomeBreakdown) {
   Chart.defaults.color = currentTheme === 'dark' ? '#a1a1aa' : '#52525b'; 
   Chart.defaults.font.family = 'Inter';
 
+  // --- EXPENSE CHART ---
+  const ctxExp = document.getElementById('expenseChart').getContext('2d');
+  if (expenseChartInstance) expenseChartInstance.destroy();
+  
   const mapCat = { "Facebook Ads": "ফেসবুক অ্যাড", "Supplements": "সাপ্লিমেন্ট", "Withdraws": "উত্তোলন", "Others": "অন্যান্য" };
-  const labels = Object.keys(expenseBreakdown).map(k => currentLang === 'bn' ? (mapCat[k] || k) : k);
+  const expLabels = Object.keys(expenseBreakdown).map(k => currentLang === 'bn' ? (mapCat[k] || k) : k);
 
-  expenseChartInstance = new Chart(ctx, {
+  expenseChartInstance = new Chart(ctxExp, {
     type: 'bar',
     data: {
-      labels: labels,
+      labels: expLabels,
       datasets: [{ label: t('stat_expenses'), data: Object.values(expenseBreakdown), backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'], borderRadius: 4 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: currentTheme === 'dark' ? '#27272a' : '#e4e4e7' } }, x: { grid: { display: false } } } }
+  });
+
+  // --- INCOME CHART ---
+  const ctxInc = document.getElementById('incomeChart').getContext('2d');
+  if (incomeChartInstance) incomeChartInstance.destroy();
+  
+  const typeMap = { "Assignment": "অ্যাসাইনমেন্ট", "Thesis": "থিসিস", "Presentation": "প্রেজেন্টেশন", "Lab Project": "ল্যাব", "Other": "অন্যান্য" };
+  const incKeys = Object.keys(incomeBreakdown);
+  const incLabels = incKeys.map(k => currentLang === 'bn' ? (typeMap[k] || k) : k);
+
+  incomeChartInstance = new Chart(ctxInc, {
+    type: 'bar',
+    data: {
+      labels: incLabels,
+      datasets: [{ label: t('stat_earned'), data: Object.values(incomeBreakdown), backgroundColor: ['#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e'], borderRadius: 4 }]
     },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: currentTheme === 'dark' ? '#27272a' : '#e4e4e7' } }, x: { grid: { display: false } } } }
   });
@@ -845,6 +873,12 @@ function generatePDFInvoice(taskId) {
   doc.setFont(undefined, 'normal'); doc.setFontSize(10); doc.setTextColor(161, 161, 170);
   doc.text("Thank you for choosing Agency OS.", 105, 280, null, null, "center");
   doc.save(`Invoice_${cName.substring(0,10)}_${tk.title.substring(0,10)}.pdf`);
+}
+
+// THIS WAS THE MISSING FUNCTION CAUSING THE CRASH!
+function toggleNewClientFields() { 
+  const fields = document.getElementById("newClientFields");
+  if (fields) fields.style.display = document.getElementById("tClientSelect").value === 'new' ? 'grid' : 'none'; 
 }
 
 function openTaskModal(taskId = null) {
