@@ -492,12 +492,10 @@ async function bootstrap() {
   currentTaskPage = 1;
   
   try {
-    // Attempt to load everything
     await Promise.all([fetchTasks(1, false), fetchClients(), fetchExpenses()]);
     applyTranslations(); 
     switchTab('dashboard');
   } catch (error) {
-    // If it fails (like a 404 or DB error), alert the user and stop the infinite spinner!
     console.error(error);
     alert("Error connecting to the backend! Please check the API configuration.\nDetails: " + error.message);
   } finally {
@@ -779,7 +777,6 @@ function generateTaskHTML(tk, isDone, isKanbanCard = false) {
   }
 
   if (isKanbanCard) {
-    // Removed native draggable="true" and ondragstart, added data-id for SortableJS tracking
     return `<div data-id="${tk._id}" class="bg-white dark:bg-zinc-950 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm cursor-grab active:cursor-grabbing hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors"><div class="flex items-center justify-between mb-2"><span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${colorClass}">${displayType}</span><span class="text-[10px] text-zinc-500 font-medium">${customFormatDate(tk.deadline)}</span></div><h4 class="text-sm font-semibold text-zinc-900 dark:text-white leading-tight">${tk.title}</h4><p class="text-[11px] text-zinc-500 mt-1 truncate">${clientName}</p>${linkHTML}<div class="mt-3 flex justify-between items-center border-t border-zinc-100 dark:border-zinc-800 pt-2"><span class="text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 px-1.5 rounded">${tk.assignedTo?.split(' ')[0] || '-'}</span><span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">৳${localNum(total - advance)}</span></div></div>`;
   }
 
@@ -825,7 +822,7 @@ function renderTasks() {
     document.getElementById("col-in_progress").innerHTML = inProgressTasks.map(t => generateTaskHTML(t, false, true)).join('');
     document.getElementById("col-review").innerHTML = reviewTasks.map(t => generateTaskHTML(t, false, true)).join('');
     
-    initKanbanBoards(); // Initialize SortableJS when switching to board view
+    initKanbanBoards();
   }
   
   if (currentTaskPage < totalTaskPages && currentTaskViewMode === 'list') pagControl.classList.remove('hidden');
@@ -859,22 +856,55 @@ function renderExpenses() {
   });
 }
 
+// Fallback Native HTML5 Drag and Drop Handlers (if SortableJS fails to load)
 let dragId = null;
 function dragTask(ev, id) { dragId = id; }
 function allowDrop(ev) { ev.preventDefault(); }
+async function dropTask(ev, newStatus) {
+  ev.preventDefault();
+  if(!dragId) return;
+  const tk = allTasks.find(t => t._id === dragId);
+  if(tk && tk.status !== newStatus) {
+    tk.status = newStatus;
+    renderTasks();
+    try { 
+      await fetch(`${API}/update-task/${dragId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: newStatus, password: "none_req_for_dnd" }) }); 
+    } catch(err) { console.log("DnD Update failed."); }
+  }
+  dragId = null;
+}
+
+// Modern SortableJS implementation for Kanban
+let kanbanInstances = [];
+function initKanbanBoards() {
+  kanbanInstances.forEach(inst => inst.destroy());
+  kanbanInstances = [];
+  
+  const columns = ['col-pending', 'col-in_progress', 'col-review'];
+  
+  columns.forEach(colId => {
+    const el = document.getElementById(colId);
+    if(el) {
+      const inst = Sortable.create(el, {
+        group: 'tasks',
+        animation: 150,
+        delay: 150,
+        delayOnTouchOnly: true,
+        ghostClass: 'opacity-40',
+        dragClass: 'scale-105',
+        onEnd: async function (evt) {
+          const itemEl = evt.item;
+          const taskId = itemEl.getAttribute('data-id');
+          const newStatus = evt.to.getAttribute('data-status');
+          
+          if (!taskId || !newStatus) return;
+
+          const tk = allTasks.find(t => t._id === taskId);
+          if (tk && tk.status !== newStatus) {
             tk.status = newStatus;
-            
-            // Background update to backend
             try { 
-              await fetch(`${API}/update-task/${taskId}`, { 
-                method: "PUT", 
-                headers: { "Content-Type": "application/json" }, 
-                body: JSON.stringify({ status: newStatus, password: "none_req_for_dnd" }) 
-              }); 
-            } catch(err) { 
-              console.log("DnD Update failed."); 
-              // Consider refetching here if needed
-            }
+              await fetch(`${API}/update-task/${taskId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: newStatus, password: "none_req_for_dnd" }) }); 
+            } catch(err) { console.log("DnD Update failed."); }
           }
         }
       });
@@ -917,7 +947,6 @@ function generatePDFInvoice(taskId) {
   doc.save(`Invoice_${cName.substring(0,10)}_${tk.title.substring(0,10)}.pdf`);
 }
 
-// THIS WAS THE MISSING FUNCTION CAUSING THE CRASH!
 function toggleNewClientFields() { 
   const fields = document.getElementById("newClientFields");
   if (fields) fields.style.display = document.getElementById("tClientSelect").value === 'new' ? 'grid' : 'none'; 
