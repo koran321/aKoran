@@ -12,14 +12,21 @@ app.use(cors());
 let cache = {};
 const clearCache = () => (cache = {});
 
-// 🔐 PASSWORD CHECK
+// 🔐 PASSWORD CHECK MIDDLEWARE
 async function checkPassword(req, res, next) {
   try {
     const { password } = req.body;
+    
+    // Bypass password check for silent drag & drop status updates
+    if (password === "none_req_for_dnd") return next();
+
     const client = await clientPromise;
     const db = client.db("ak_process");
 
-    const sec = await db.collection("security").findOne();
+    // Authenticate specifically against the MAIN password ID ("1is2")
+    const sec = await db.collection("security").findOne({ 
+      _id: new ObjectId("69f9a082ac09e7d644f93655") 
+    });
 
     if (!sec || sec.password !== password) {
       return res.status(401).json({ message: "Invalid password" });
@@ -31,15 +38,14 @@ async function checkPassword(req, res, next) {
   }
 }
 
-// 📱 VERIFY PHONE REVEAL PASSWORD
+// 📱 VERIFY PHONE REVEAL PASSWORD ENDPOINT
 app.post("/api/verify-phone-password", async (req, res) => {
   try {
     const { password } = req.body;
     const client = await clientPromise;
     const db = client.db("ak_process");
-    const { ObjectId } = await import("mongodb");
 
-    // Fetch specifically the phone-unlock password using its exact ID
+    // Authenticate specifically against the PHONE unlock password ID ("cl11")
     const sec = await db.collection("security").findOne({ 
       _id: new ObjectId("69fb5dfa5cb79cf60ceb14e2") 
     });
@@ -164,7 +170,7 @@ app.get("/api/tasks", async (req, res) => {
 // ➕ ADD TASK
 app.post("/api/add-task", checkPassword, async (req, res) => {
   try {
-    const { title, details, workType, clientId, clientName, clientPhone, clientUniversity, deadline, totalValue, advancePaid, assignedTo } = req.body;
+    const { title, details, link, workType, clientId, clientName, clientPhone, clientUniversity, deadline, totalValue, advancePaid, assignedTo } = req.body;
     const client = await clientPromise;
     const db = client.db("ak_process");
 
@@ -182,7 +188,7 @@ app.post("/api/add-task", checkPassword, async (req, res) => {
     }
 
     const task = await db.collection("assignment").insertOne({
-      title, details: details || "", workType, client: finalClientId, 
+      title, details: details || "", link: link || "", workType, client: finalClientId, 
       deadline: deadline || null, totalValue: Number(totalValue) || 0, 
       advancePaid: Number(advancePaid) || 0, assignedTo, status: 'pending',
       createdAt: new Date(),
