@@ -28,8 +28,8 @@
     ::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 4px; }
     .dark ::-webkit-scrollbar-thumb { background: #27272a; }
     
-    dialog::backdrop { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); }
-    .dark dialog::backdrop { background: rgba(0, 0, 0, 0.8); }
+    dialog::backdrop { background: rgba(0, 0, 0, 0.7); }
+    .dark dialog::backdrop { background: rgba(0, 0, 0, 0.85); }
     dialog:not([open]) { display: none; }
     dialog[open] { display: flex; flex-direction: column; max-height: 90dvh; overflow: hidden; width: 95%; max-width: 32rem; }
     
@@ -38,12 +38,62 @@
     .tab-inactive { border-bottom: 2px solid transparent; }
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Glassmorphism */
+    .glass {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    .dark .glass {
+      background: rgba(24, 24, 27, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    * { transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease; }
+    
+    main { animation: fadeIn 0.4s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    
+    #activityList::-webkit-scrollbar { width: 3px; }
+    #activityList::-webkit-scrollbar-thumb { background: #e4e4e7; border-radius: 10px; }
+    .dark #activityList::-webkit-scrollbar-thumb { background: #27272a; }
+
+    /* Toast System */
+    #toast-container {
+      position: fixed; top: 1.5rem; right: 1.5rem; left: auto; bottom: auto;
+      margin: 0; padding: 0; border: none; background: transparent;
+      z-index: 100000; display: flex; flex-direction: column; gap: 0.75rem;
+      pointer-events: none; overflow: visible;
+    }
+    .toast {
+      pointer-events: auto;
+      min-width: 280px;
+      padding: 1rem 1.25rem;
+      border-radius: 1rem;
+      background: #fff;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      transform: translateX(120%);
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
+      opacity: 0;
+    }
+    .dark .toast { background: #18181b; color: #fff; border: 1px solid #27272a; }
+    .toast.show { transform: translateX(0); opacity: 1; }
+    .toast-success { border-left: 4px solid #10b981; }
+    .toast-error { border-left: 4px solid #ef4444; }
+    .toast-info { border-left: 4px solid #3b82f6; }
   </style>
 </head>
 <body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 p-3 sm:p-8 transition-colors duration-300 relative">
 
   <!-- Fullscreen Lottie Loader -->
-  <div id="catLoader" class="fixed top-0 left-0 w-full h-full z-[9999] flex flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-950 transition-opacity duration-500 m-0 p-0">
+  <div id="catLoader" class="fixed top-0 left-0 w-full h-full z-[50] flex flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-950 transition-opacity duration-500 m-0 p-0">
     <div class="flex flex-col items-center justify-center m-auto">
       <lottie-player src="https://tukitaki.vercel.app/src/json/LottieFiles/cat_loader.json" background="transparent" speed="1" style="width: 120px; height: 120px; display: block; margin: 0 auto;" loop autoplay></lottie-player>
       <p class="mt-3 text-sm font-medium text-zinc-500 animate-pulse tracking-wide text-center" data-i18n="loading_text">Loading Agency OS...</p>
@@ -53,12 +103,16 @@
   <div class="max-w-6xl mx-auto">
     <!-- Header -->
     <header class="mb-6 sm:mb-8 border-b border-zinc-200 dark:border-zinc-800">
-      <div class="flex flex-row items-center justify-between pb-4 sm:pb-6 gap-2">
-        <div class="flex-1">
-          <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 dark:text-white" data-i18n="title">Agency OS</h1>
+      <div class="flex flex-col sm:flex-row justify-between items-center pb-4 sm:pb-6 gap-4">
+        <div class="flex-1 w-full sm:w-auto">
+          <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2" data-i18n="title">Agency OS <span class="text-[10px] bg-indigo-500 text-white px-2 py-0.5 rounded-full uppercase tracking-tighter">Pro</span></h1>
           <p class="text-zinc-500 dark:text-zinc-400 mt-1 text-xs sm:text-sm font-medium truncate" data-i18n="subtitle">Manage tasks, clients, and finances.</p>
         </div>
-        <div class="flex items-center gap-2 shrink-0">
+        <div class="flex items-center gap-3 w-full sm:w-auto">
+          <div class="relative flex-1 sm:w-64">
+            <input type="text" id="globalSearch" oninput="handleGlobalSearch()" placeholder="Search anything..." class="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent rounded-xl px-10 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all">
+            <svg class="absolute left-3 top-2.5 text-zinc-400" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </div>
           <button onclick="toggleLang()" id="langBtn" class="px-2.5 sm:px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider border rounded-full border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shadow-sm dark:shadow-none text-indigo-600 dark:text-indigo-400">বাং/EN</button>
           <button onclick="toggleTheme()" class="p-1.5 sm:p-2 border rounded-full border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shadow-sm dark:shadow-none text-zinc-600 dark:text-zinc-400"><svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg></button>
         </div>
@@ -69,9 +123,49 @@
         <button onclick="switchTab('clients-view')" id="tab-clients-view" class="pb-3 px-1 tab-inactive text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors" data-i18n="nav_clients">Clients</button>
         <button onclick="switchTab('tasks')" id="tab-tasks" class="pb-3 px-1 tab-inactive text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors" data-i18n="nav_active">Active Pipeline</button>
         <button onclick="switchTab('done')" id="tab-done" class="pb-3 px-1 tab-inactive text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors" data-i18n="nav_done">Completed Works</button>
+        <button onclick="switchTab('invoices')" id="tab-invoices" class="pb-3 px-1 tab-inactive text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors" data-i18n="nav_invoices">Invoices</button>
+        <button onclick="switchTab('writers')" id="tab-writers" class="pb-3 px-1 tab-inactive text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors" data-i18n="nav_writers">Writers</button>
         <button onclick="switchTab('accounts')" id="tab-accounts" class="pb-3 px-1 tab-inactive text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors" data-i18n="nav_accounts">Expenses</button>
       </nav>
     </header>
+
+    <!-- WRITERS MODAL -->
+  <dialog id="writerModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95vw] sm:w-full max-w-lg m-auto text-zinc-900 dark:text-white transition-colors">
+    <div class="flex justify-between items-center p-4 sm:p-5 border-b border-zinc-100 dark:border-zinc-800">
+      <h2 class="text-base sm:text-lg font-semibold" id="writerModalTitle" data-i18n="modal_writer_add">Add New Writer</h2>
+      <button onclick="document.getElementById('writerModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 p-1"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+    </div>
+    <form id="writerForm" class="p-4 sm:p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+      <input type="hidden" id="editWriterId">
+      <div class="grid grid-cols-2 gap-4">
+        <div class="col-span-2">
+          <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5" data-i18n="lbl_w_name">Full Name*</label>
+          <input type="text" id="wName" required class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5" data-i18n="lbl_w_phone">Phone*</label>
+          <input type="text" id="wPhone" required class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500 transition-all">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5" data-i18n="lbl_w_email">Email</label>
+          <input type="email" id="wEmail" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500 transition-all">
+        </div>
+        <div class="col-span-2">
+          <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5" data-i18n="lbl_w_image">Image Link</label>
+          <input type="text" id="wImage" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500 transition-all">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5" data-i18n="lbl_w_dob">Date of Birth</label>
+          <input type="date" id="wDob" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500 transition-all">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5" data-i18n="lbl_w_nid">NID Details</label>
+          <input type="text" id="wNid" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500 transition-all">
+        </div>
+      </div>
+      <button type="button" onclick="saveWriter()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-indigo-500/20 mt-2" data-i18n="btn_save_writer">Save Writer</button>
+    </form>
+  </dialog>
 
     <!-- DASHBOARD VIEW -->
     <main id="view-dashboard" class="block space-y-4 sm:space-y-6 pb-24">
@@ -85,49 +179,70 @@
         </select>
       </div>
       <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-none col-span-2 sm:col-span-1">
+        <div class="bg-white dark:bg-zinc-900 glass border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-none col-span-2 sm:col-span-1">
           <p class="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs uppercase tracking-wider font-semibold mb-1" data-i18n="stat_earned">Total Earned</p>
           <h3 class="text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400" id="stat-in">৳0</h3>
         </div>
-        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-none relative overflow-hidden">
+        <div class="bg-white dark:bg-zinc-900 glass border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-none relative overflow-hidden">
           <p class="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs uppercase tracking-wider font-semibold mb-1" data-i18n="stat_expected">Expected Earnings</p>
           <h3 class="text-xl sm:text-2xl font-bold text-yellow-600 dark:text-yellow-400" id="stat-expected">৳0</h3>
         </div>
-        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-none">
+        <div class="bg-white dark:bg-zinc-900 glass border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-none">
           <p class="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs uppercase tracking-wider font-semibold mb-1" data-i18n="stat_expenses">Expenses</p>
           <h3 class="text-xl sm:text-2xl font-bold text-rose-600 dark:text-rose-400" id="stat-out">৳0</h3>
         </div>
-        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-none">
+        <div class="bg-white dark:bg-zinc-900 glass border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-none">
           <p class="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs uppercase tracking-wider font-semibold mb-1" data-i18n="stat_net">Net Balance</p>
           <h3 class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white" id="stat-net">৳0</h3>
         </div>
-        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-none">
+        <div class="bg-white dark:bg-zinc-900 glass border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-none">
           <p class="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs uppercase tracking-wider font-semibold mb-1" data-i18n="stat_total_tasks">Total Tasks</p>
           <h3 class="text-xl sm:text-2xl font-bold text-indigo-600 dark:text-indigo-400" id="stat-total-tasks">0</h3>
         </div>
-        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-none">
+        <div class="bg-white dark:bg-zinc-900 glass border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-none">
           <p class="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs uppercase tracking-wider font-semibold mb-1" data-i18n="stat_pending">Active Pipeline</p>
           <h3 class="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400" id="stat-pending">0 Tasks</h3>
         </div>
-        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-none col-span-2 sm:col-span-1 lg:col-span-2">
+        <div class="bg-white dark:bg-zinc-900 glass border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-none col-span-2 sm:col-span-1 lg:col-span-2">
           <p class="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs uppercase tracking-wider font-semibold mb-1" data-i18n="stat_completed_tasks">Completed Tasks</p>
           <h3 class="text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400" id="stat-completed-tasks">0</h3>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mt-4 sm:mt-6">
-        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 rounded-2xl shadow-sm dark:shadow-none">
-          <h3 class="text-sm font-semibold mb-4 text-zinc-900 dark:text-white uppercase tracking-wider" data-i18n="chart_income_title">Income Breakdown</h3>
-          <div class="w-full h-[220px] sm:h-[300px] flex items-center justify-center"><canvas id="incomeChart"></canvas></div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mt-4 sm:mt-6">
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-none">
+          <h3 class="text-[10px] font-bold mb-3 text-zinc-500 uppercase tracking-widest" data-i18n="chart_income_title">Income Breakdown</h3>
+          <div class="w-full h-[180px] flex items-center justify-center"><canvas id="incomeChart"></canvas></div>
         </div>
-        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 rounded-2xl shadow-sm dark:shadow-none">
-          <h3 class="text-sm font-semibold mb-4 text-zinc-900 dark:text-white uppercase tracking-wider" data-i18n="chart_title">Expense Breakdown</h3>
-          <div class="w-full h-[220px] sm:h-[300px] flex items-center justify-center"><canvas id="expenseChart"></canvas></div>
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-none">
+          <h3 class="text-[10px] font-bold mb-3 text-zinc-500 uppercase tracking-widest" data-i18n="chart_title">Expense Breakdown</h3>
+          <div class="w-full h-[180px] flex items-center justify-center"><canvas id="expenseChart"></canvas></div>
         </div>
         <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 rounded-2xl shadow-sm dark:shadow-none flex flex-col min-h-[250px]">
-          <h3 class="text-sm font-semibold mb-4 text-zinc-900 dark:text-white uppercase tracking-wider" data-i18n="top_clients">Top Clients (Earnings)</h3>
+          <h3 class="text-[10px] font-bold mb-3 text-zinc-500 uppercase tracking-widest" data-i18n="top_clients">Top Clients (Earnings)</h3>
           <ul id="topClientsList" class="flex-1 space-y-3 overflow-y-auto pr-2"><li class="text-zinc-500 text-sm" data-i18n="calculating">Calculating...</li></ul>
         </div>
+        <div id="activityCard" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 rounded-2xl shadow-sm dark:shadow-none flex flex-col min-h-[250px]">
+          <h3 class="text-[10px] font-bold mb-3 text-zinc-500 uppercase tracking-widest" data-i18n="recent_activity">Recent Activity</h3>
+          <ul id="activityList" class="flex-1 space-y-4 overflow-y-auto pr-2 scrollbar-thin"></ul>
+        </div>
+      </div>
+    </main>
+
+    <!-- WRITERS VIEW -->
+    <main id="view-writers" class="hidden space-y-4 sm:space-y-6 pb-24">
+      <div class="flex justify-between items-center mb-4">
+        <div>
+          <h2 class="text-xl font-bold text-zinc-900 dark:text-white" data-i18n="nav_writers">Writers</h2>
+          <p class="text-xs text-zinc-500" data-i18n="total_writers">Total Writers: 0</p>
+        </div>
+        <button onclick="openWriterModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-lg shadow-indigo-500/20 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <span data-i18n="btn_new_writer">+ Add Writer</span>
+        </button>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="writerList">
+        <!-- Writers loaded here -->
       </div>
     </main>
 
@@ -173,7 +288,7 @@
           <div id="col-pending" data-status="pending" class="flex-1 space-y-3 min-h-[150px]"></div>
         </div>
         <div class="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-2xl border border-blue-200 dark:border-blue-900/30 flex flex-col">
-          <h3 class="font-bold text-sm text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-4 px-1" data-i18n="status_in_progress">In Progress</h3>
+          <h3 class="font-bold text-sm text-blue-600 dark:blue-400 uppercase tracking-wider mb-4 px-1" data-i18n="status_in_progress">In Progress</h3>
           <div id="col-in_progress" data-status="in_progress" class="flex-1 space-y-3 min-h-[150px]"></div>
         </div>
         <div class="bg-orange-50 dark:bg-orange-900/10 p-4 rounded-2xl border border-orange-200 dark:border-orange-900/30 flex flex-col">
@@ -193,6 +308,16 @@
         <h2 class="text-lg sm:text-xl font-semibold text-zinc-900 dark:text-white" data-i18n="nav_done">Completed Works</h2>
       </div>
       <ul id="doneTaskList" class="grid grid-cols-1 gap-3 sm:gap-4 opacity-80"></ul>
+    </main>
+
+    <!-- INVOICES VIEW -->
+    <main id="view-invoices" class="hidden pb-24">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-lg sm:text-xl font-semibold text-zinc-900 dark:text-white" data-i18n="nav_invoices">Invoices</h2>
+      </div>
+      <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-none rounded-2xl overflow-hidden">
+        <ul id="invoiceList" class="divide-y divide-zinc-200 dark:divide-zinc-800"></ul>
+      </div>
     </main>
 
     <!-- EXPENSES VIEW -->
@@ -239,7 +364,22 @@
         <div class="space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_advance">Advance Paid (৳)</label><input type="number" id="tAdvance" value="0" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none focus:border-emerald-500 text-sm"></div>
         <div class="space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-indigo-500 dark:text-indigo-400 uppercase tracking-wider" data-i18n="lbl_bonus">Bonus (৳)</label><input type="number" id="tBonus" value="0" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-indigo-200 dark:border-indigo-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none focus:border-indigo-500 text-indigo-600 dark:text-indigo-400 font-medium text-sm"></div>
       </div>
-      <div class="grid grid-cols-1 gap-3 sm:gap-4"><div class="space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_assign">Assign To</label><select id="tAssignee" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none text-zinc-900 dark:text-white text-sm"><option value="Imranul Islam Shihab">Imranul Islam Shihab</option><option value="Siyam Bhuiyan">Siyam Bhuiyan</option></select></div></div>
+      <div class="grid grid-cols-2 gap-3 sm:gap-4">
+        <div class="space-y-1.5">
+          <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_assign">Assign To</label>
+          <select id="tAssign" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none text-zinc-900 dark:text-white text-sm">
+            <option value="Unassigned" data-i18n="txt_unassigned">Unassigned</option>
+          </select>
+        </div>
+        <div class="space-y-1.5">
+          <label class="block text-[10px] sm:text-xs font-medium text-rose-500 dark:text-rose-400 uppercase tracking-wider" data-i18n="lbl_writer_pay">Writer Pay (৳)</label>
+          <input type="number" id="tWriterPay" value="0" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-rose-100 dark:border-rose-900/30 rounded-lg px-3 py-2 sm:py-2.5 outline-none focus:border-rose-500 text-rose-600 dark:text-rose-400 font-bold text-sm">
+        </div>
+      </div>
+      <div class="space-y-1.5">
+        <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_links">Reference Files / Links</label>
+        <textarea id="tLink" rows="2" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none focus:border-indigo-500 text-sm" placeholder="Paste multiple links or file paths..."></textarea>
+      </div>
     </div>
     <div class="p-4 sm:p-5 border-t border-zinc-200 dark:border-zinc-800 shrink-0 bg-white dark:bg-zinc-950"><button onclick="saveTask(event)" id="btnSaveTask" class="w-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-200 rounded-lg px-4 py-3 sm:py-3 font-semibold transition-colors shadow-sm text-sm" data-i18n="btn_deploy">Deploy Task</button></div>
   </dialog>
@@ -251,6 +391,12 @@
       <button onclick="document.getElementById('txModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 p-1"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
     </div>
     <div class="p-4 sm:p-5 space-y-4 dialog-content">
+      <div class="space-y-1.5">
+        <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_rel_task">Associated Task (Optional)</label>
+        <select id="txTaskId" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2.5 outline-none text-zinc-900 dark:text-white text-sm">
+          <option value="" data-i18n="opt_no_task">No Task / General Expense</option>
+        </select>
+      </div>
       <div class="space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_exp_cat">Expense Category</label><select id="txCategory" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2.5 outline-none text-zinc-900 dark:text-white text-sm"><option value="Facebook Ads">Facebook Ads</option><option value="Supplements">Supplements</option><option value="Withdraws">Withdraws</option><option value="Others">Others</option></select></div>
       <div class="space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_exp_desc">Description (Optional)</label><input type="text" id="txDescription" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2.5 outline-none text-zinc-900 dark:text-white text-sm focus:border-rose-500"></div>
       <div class="space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_exp_amount">Amount (৳)</label><input type="number" id="txAmount" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-rose-300 dark:border-rose-800 rounded-lg px-3 py-2.5 outline-none focus:border-rose-500 font-medium text-zinc-900 dark:text-white text-sm"></div>
@@ -320,8 +466,9 @@
 
 <script>
 const API = "/api"; 
-let allClients = [], allTasks = [], allExpenses = [];
+let allTasks = [], allClients = [], allExpenses = [], allInvoices = [], allWriters = [], writerStats = [];
 let expenseChartInstance = null;
+let editingTxId = null;
 let incomeChartInstance = null;
 
 let currentTaskPage = 1;
@@ -363,27 +510,33 @@ function toggleTheme() {
 const translations = {
   en: {
     title: "Agency OS", subtitle: "Manage tasks, clients, and finances.", loading_text: "Loading Agency OS...",
-    nav_overview: "Overview", nav_clients: "Clients", nav_active: "Active Pipeline", nav_done: "Completed Works", nav_accounts: "Expenses",
+    nav_overview: "Overview", nav_clients: "Clients", nav_active: "Active Pipeline", nav_done: "Completed Works", nav_invoices: "Invoices", nav_writers: "Writers", nav_accounts: "Expenses",
     stat_earned: "Total Earned", stat_expected: "Expected Earnings", stat_expenses: "Expenses", stat_net: "Net Balance", stat_pending: "Active Pipeline", stat_total_tasks: "Total Tasks", stat_completed_tasks: "Completed Tasks",
     chart_title: "Expense Breakdown", chart_income_title: "Income Breakdown", top_clients: "Top Clients (Earnings)", filter_all_time: "All Time", filter_this_month: "This Month", filter_last_month: "Last Month", filter_this_year: "This Year",
-    total_clients: "Total Clients:", btn_new_task: "+ New Task", btn_new_client: "+ Add Client", btn_log_expense: "Log Expense",
+    total_clients: "Total Clients:", total_writers: "Total Writers:", btn_new_task: "+ New Task", btn_new_client: "+ Add Client", btn_new_writer: "+ Add Writer", btn_log_expense: "Log Expense",
     calculating: "Calculating...", no_tasks: "No tasks in pipeline.", no_done: "No completed works yet.", no_clients: "No clients registered.", no_expenses: "No expenses logged yet.",
+    lbl_rel_task: "Associated Task (Optional)", opt_no_task: "No Task / General Expense", modal_exp_edit: "Edit Expense",
     modal_task_title: "Add New Task", lbl_desc: "Description / Title", lbl_details: "Details (Optional)", plc_details: "Enter specific requirements, links, or notes...", lbl_type: "Type of Work", lbl_deadline: "Deadline", lbl_client: "Client", search_client: "Search clients...", lbl_total: "Total Value (৳)", lbl_advance: "Advance Paid (৳)", lbl_bonus: "Bonus (৳)", lbl_assign: "Assign To", lbl_token: "Password", lbl_university: "University", lbl_link: "Project Link (Optional)", btn_deploy: "Deploy Task", btn_load_more: "Load More",
     modal_exp_title: "Log Expense", lbl_exp_cat: "Expense Category", lbl_exp_desc: "Description (Optional)", lbl_exp_amount: "Amount (৳)", btn_deduct: "Deduct Funds", btn_update: "Update", btn_export: "Export CSV", btn_invoice: "PDF Invoice",
     word_tasks: "Tasks", txt_internal: "Internal/No Client", txt_due: "Due", txt_total: "Total", txt_advance: "Advance", txt_bonus: "Bonus", txt_net_income: "Net Income", txt_logged: "Logged", txt_duration: "Duration", txt_open_ended: "Open-ended", txt_overdue: "Overdue", txt_days: "days", txt_unassigned: "Unassigned", txt_university: "University",
-    btn_edit: "Edit", btn_done: "Done", btn_undo: "Undo", opt_add_client: "+ Add New Client / No Client", btn_delete: "Delete", modal_client_edit: "Edit Client", modal_client_add: "Add New Client", btn_view_tasks: "View Tasks", btn_edit_client: "Edit Profile", btn_save_client: "Save Client", btn_cancel: "Cancel", btn_confirm: "Confirm", modal_auth_title: "Enter Password", msg_auth_status: "Enter password to change task status.", msg_auth_del_task: "Enter password to delete task.", msg_auth_del_exp: "Enter password to delete expense.", msg_auth_save: "Enter password to save changes.", msg_auth_phone: "Enter password to reveal phone numbers.", search_tasks: "Search tasks...", filter_all_types: "All Types", filter_all_assignees: "All Assignees", tab_list: "List View", tab_board: "Kanban Board", status_pending: "Pending", status_in_progress: "In Progress", status_review: "Under Review"
+    btn_edit: "Edit", btn_done: "Done", btn_undo: "Undo", opt_add_client: "+ Add New Client / No Client", btn_delete: "Delete", modal_client_edit: "Edit Client", modal_client_add: "Add New Client", btn_view_tasks: "View Tasks", btn_edit_client: "Edit Profile", btn_save_client: "Save Client", btn_cancel: "Cancel", btn_confirm: "Confirm", modal_auth_title: "Enter Password", msg_auth_status: "Enter password to change task status.", msg_auth_del_task: "Enter password to delete task.", msg_auth_del_exp: "Enter password to delete expense.", msg_auth_save: "Enter password to save changes.", msg_auth_phone: "Enter password to reveal phone numbers.", msg_auth_inv: "Enter password to download invoice.", search_tasks: "Search tasks...", filter_all_types: "All Types", filter_all_assignees: "All Assignees", tab_list: "List View", tab_board: "Kanban Board", status_pending: "Pending", status_in_progress: "In Progress", status_review: "Under Review",
+    modal_writer_add: "Add New Writer", modal_writer_edit: "Edit Writer", lbl_w_name: "Full Name*", lbl_w_phone: "Phone*", lbl_w_email: "Email", lbl_w_image: "Image Link", lbl_w_dob: "Date of Birth", lbl_w_nid: "NID Details", btn_save_writer: "Save Writer", msg_writer_added: "Writer added!", msg_writer_updated: "Writer updated!", msg_writer_deleted: "Writer removed.", msg_req_name_phone: "Name and Phone are required!",
+    lbl_writer_pay: "Writer Pay (৳)", lbl_links: "Reference Files / Links", recent_activity: "Recent Activity", workload: "Workload", earnings: "Earnings", pending_pay: "Pending Pay", urgent: "Urgent"
   },
   bn: {
     title: "এজেন্সি ওএস", subtitle: "টাস্ক, ক্লায়েন্ট এবং হিসাব পরিচালনা করুন।", loading_text: "এজেন্সি ওএস লোড হচ্ছে...",
-    nav_overview: "সারাংশ", nav_clients: "ক্লায়েন্ট", nav_active: "চলমান কাজ", nav_done: "সম্পন্ন কাজ", nav_accounts: "খরচ",
+    nav_overview: "সারাংশ", nav_clients: "ক্লায়েন্ট", nav_active: "চলমান কাজ", nav_done: "সম্পন্ন কাজ", nav_invoices: "ইনভয়েস", nav_writers: "রাইটার", nav_accounts: "খরচ",
     stat_earned: "মোট আয়", stat_expected: "সম্ভাব্য আয়", stat_expenses: "মোট খরচ", stat_net: "নিট ব্যালেন্স", stat_pending: "চলমান কাজ", stat_total_tasks: "মোট কাজ", stat_completed_tasks: "সম্পন্ন কাজ",
     chart_title: "খরচের বিবরণ", chart_income_title: "আয়ের বিবরণ", top_clients: "শীর্ষ ক্লায়েন্ট (আয়)", filter_all_time: "সব সময়", filter_this_month: "এই মাস", filter_last_month: "গত মাস", filter_this_year: "এই বছর",
-    total_clients: "মোট ক্লায়েন্ট:", btn_new_task: "+ নতুন কাজ", btn_new_client: "+ ক্লায়েন্ট যোগ করুন", btn_log_expense: "খরচ যোগ করুন",
+    total_clients: "মোট ক্লায়েন্ট:", total_writers: "মোট রাইটার:", btn_new_task: "+ নতুন কাজ", btn_new_client: "+ ক্লায়েন্ট যোগ করুন", btn_new_writer: "+ রাইটার যোগ করুন", btn_log_expense: "খরচ যোগ করুন",
     calculating: "হিসাব করা হচ্ছে...", no_tasks: "কোনো কাজ নেই।", no_done: "কোনো কাজ সম্পন্ন হয়নি।", no_clients: "কোনো ক্লায়েন্ট নেই।", no_expenses: "কোনো খরচের রেকর্ড নেই।",
+    lbl_rel_task: "সম্পর্কিত কাজ (ঐচ্ছিক)", opt_no_task: "কোনো নির্দিষ্ট কাজ নয়", modal_exp_edit: "খরচ এডিট করুন",
     modal_task_title: "নতুন কাজ যোগ করুন", lbl_desc: "কাজের নাম / বিবরণ", lbl_details: "বিস্তারিত (ঐচ্ছিক)", plc_details: "নির্দিষ্ট প্রয়োজনীয়তা, লিঙ্ক বা নোট লিখুন...", lbl_type: "কাজের ধরন", lbl_deadline: "শেষ সময় (Deadline)", lbl_client: "ক্লায়েন্ট", search_client: "ক্লায়েন্ট খুঁজুন...", lbl_total: "মোট মূল্য (৳)", lbl_advance: "অগ্রিম পেমেন্ট (৳)", lbl_bonus: "বোনাস (৳)", lbl_assign: "দায়িত্বপ্রাপ্ত ব্যক্তি", lbl_token: "পাসওয়ার্ড", lbl_university: "বিশ্ববিদ্যালয়", lbl_link: "প্রজেক্ট লিঙ্ক (ঐচ্ছিক)", btn_deploy: "সেভ করুন", btn_load_more: "আরও দেখুন",
     modal_exp_title: "খরচ যোগ করুন", lbl_exp_cat: "খরচের খাত", lbl_exp_desc: "বিবরণ (ঐচ্ছিক)", lbl_exp_amount: "পরিমাণ (৳)", btn_deduct: "খরচ যুক্ত করুন", btn_update: "আপডেট", btn_export: "CSV এক্সপোর্ট", btn_invoice: "পিডিএফ ইনভয়েস",
     word_tasks: "টি কাজ", txt_internal: "নিজস্ব / ক্লায়েন্ট নেই", txt_due: "বাকি", txt_total: "মোট", txt_advance: "অগ্রিম", txt_bonus: "বোনাস", txt_net_income: "নিট আয়", txt_logged: "যুক্ত হয়েছে", txt_duration: "সময়কাল", txt_open_ended: "নির্ধারিত নয়", txt_overdue: "সময় পার হয়েছে", txt_days: "দিন", txt_unassigned: "নির্ধারিত নয়", txt_university: "বিশ্ববিদ্যালয়",
-    btn_edit: "এডিট", btn_done: "সম্পন্ন", btn_undo: "পূর্বাবস্থায়", opt_add_client: "+ নতুন ক্লায়েন্ট / ক্লায়েন্ট নেই", btn_delete: "ডিলিট", modal_client_edit: "ক্লায়েন্ট এডিট", modal_client_add: "নতুন ক্লায়েন্ট", btn_view_tasks: "কাজগুলো দেখুন", btn_edit_client: "এডিট করুন", btn_save_client: "সেভ করুন", btn_cancel: "বাতিল", btn_confirm: "নিশ্চিত করুন", modal_auth_title: "পাসওয়ার্ড দিন", msg_auth_status: "স্ট্যাটাস পরিবর্তন করতে পাসওয়ার্ড দিন।", msg_auth_del_task: "কাজ ডিলিট করতে পাসওয়ার্ড দিন।", msg_auth_del_exp: "খরচ ডিলিট করতে পাসওয়ার্ড দিন.", msg_auth_save: "সেভ করতে পাসওয়ার্ড দিন।", msg_auth_phone: "ফোন নম্বর দেখতে পাসওয়ার্ড দিন।", search_tasks: "কাজ খুঁজুন...", filter_all_types: "সব ধরন", filter_all_assignees: "সব ব্যক্তি", tab_list: "লিস্ট ভিউ", tab_board: "কানবান বোর্ড", status_pending: "অপেক্ষমান", status_in_progress: "চলমান", status_review: "রিভিউ চলছে"
+    btn_edit: "এডিট", btn_done: "সম্পন্ন", btn_undo: "পূর্বাবস্থায়", opt_add_client: "+ নতুন ক্লায়েন্ট / ক্লায়েন্ট নেই", btn_delete: "ডিলিট", modal_client_edit: "ক্লায়েন্ট এডিট", modal_client_add: "নতুন ক্লায়েন্ট", btn_view_tasks: "কাজগুলো দেখুন", btn_edit_client: "এডিট করুন", btn_save_client: "সেভ করুন", btn_cancel: "বাতিল", btn_confirm: "নিশ্চিত করুন", modal_auth_title: "পাসওয়ার্ড দিন", msg_auth_status: "স্ট্যাটাস পরিবর্তন করতে পাসওয়ার্ড দিন।", msg_auth_del_task: "কাজ ডিলিট করতে পাসওয়ার্ড দিন।", msg_auth_del_exp: "খরচ ডিলিট করতে পাসওয়ার্ড দিন.", msg_auth_save: "সেভ করতে পাসওয়ার্ড দিন।", msg_auth_phone: "ফোন নম্বর দেখতে পাসওয়ার্ড দিন।", msg_auth_inv: "ইনভয়েস ডাউনলোড করতে পাসওয়ার্ড দিন।", search_tasks: "কাজ খুঁজুন...", filter_all_types: "সব ধরন", filter_all_assignees: "সব ব্যক্তি", tab_list: "লিস্ট ভিউ", tab_board: "কানবান বোর্ড", status_pending: "অপেক্ষমান", status_in_progress: "চলমান", status_review: "রিভিউ চলছে",
+    modal_writer_add: "নতুন রাইটার যোগ করুন", modal_writer_edit: "রাইটার এডিট", lbl_w_name: "পুরো নাম*", lbl_w_phone: "ফোন নম্বর*", lbl_w_email: "ইমেইল", lbl_w_image: "ছবির লিঙ্ক", lbl_w_dob: "জন্ম তারিখ", lbl_w_nid: "এনআইডি তথ্য", btn_save_writer: "রাইটার সেভ করুন", msg_writer_added: "রাইটার যোগ করা হয়েছে!", msg_writer_updated: "রাইটার আপডেট করা হয়েছে!", msg_writer_deleted: "রাইটার ডিলিট করা হয়েছে।", msg_req_name_phone: "নাম এবং ফোন নম্বর প্রয়োজন!",
+    lbl_writer_pay: "রাইটার পেমেন্ট (৳)", lbl_links: "রেফারেন্স ফাইল / লিঙ্ক", recent_activity: "সাম্প্রতিক কর্মকাণ্ড", workload: "কাজের চাপ", earnings: "উপার্জন", pending_pay: "বাকি পেমেন্ট", urgent: "জরুরী"
   }
 };
 
@@ -396,7 +549,22 @@ function applyTranslations() {
   document.getElementById('btnSaveTask').innerText = document.getElementById('editTaskId').value ? t('btn_update') : t('btn_deploy');
   const editClientBtn = document.getElementById('btnSaveClient');
   if (editClientBtn) editClientBtn.innerText = document.getElementById('editClientId').value ? t('btn_update') : t('btn_save_client');
-  renderDashboard(); renderTasks(); renderClientsView(); renderExpenses(); filterClientDropdown();
+  
+  // Refresh current view to apply translations to dynamic content
+  refreshCurrentView();
+}
+
+function refreshCurrentView() {
+  const tabId = localStorage.getItem('activeTab') || 'dashboard';
+  switch(tabId) {
+    case 'dashboard': renderDashboard(); fetchLogs(); break;
+    case 'tasks': renderTasks(); break;
+    case 'done': renderTasks(); break;
+    case 'clients-view': renderClientsView(); break;
+    case 'invoices': renderInvoicesView(); break;
+    case 'writers': renderWritersView(); break;
+    case 'accounts': renderExpenses(); break;
+  }
 }
 
 function toggleLang() {
@@ -422,7 +590,7 @@ function customFormatDate(isoStr) {
 
 // === EXPORT CSV ===
 function exportAccountsCSV() {
-  if (!allExpenses.length) return alert(t('no_expenses'));
+  if (!allExpenses.length) return showToast(t('no_expenses'), 'info');
   let csvContent = "data:text/csv;charset=utf-8,Date,Category,Description,Amount (Tk)\n";
   allExpenses.forEach(e => {
     const d = new Date(e.date).toLocaleDateString();
@@ -435,6 +603,197 @@ function exportAccountsCSV() {
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+}
+
+// === TOAST SYSTEM ===
+function showToast(message, type = 'success') {
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    container.setAttribute('popover', 'manual');
+    document.body.appendChild(container);
+    try { container.showPopover(); } catch(e) {}
+  } else {
+    try { container.showPopover(); } catch(e) {}
+  }
+  
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  
+  const icons = {
+    success: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>',
+    error: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>',
+    info: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>'
+  };
+
+  toast.innerHTML = `${icons[type]}<span class="text-sm font-medium">${message}</span>`;
+  container.appendChild(toast);
+  
+  setTimeout(() => toast.classList.add('show'), 10);
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 400);
+  }, 4000);
+}
+
+async function unlockPhones() {
+  const password = await requestAuthToken(t('msg_auth_phone'));
+  if(!password) return;
+  try {
+    await handleFetch(`${API}/verify-phone-password`, { 
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) 
+    });
+    isPhoneUnlocked = true;
+    renderClientsView();
+    filterClientDropdown();
+    showToast("Phone numbers unlocked!");
+  } catch(err) { showToast(err.message, 'error'); }
+}
+
+async function fetchWriters() {
+  try {
+    const [resW, resS] = await Promise.all([
+      fetch(`${API}/writers`).then(r => r.json()),
+      fetch(`${API}/writer-stats`).then(r => r.json())
+    ]);
+    allWriters = resW;
+    writerStats = resS;
+    populateWriterDropdowns();
+    if (localStorage.getItem('activeTab') === 'writers') renderWritersView();
+  } catch (err) { console.error("Writers fetch error:", err); }
+}
+
+function populateWriterDropdowns() {
+  const select = document.getElementById("tAssign");
+  const filterSelect = document.getElementById("taskAssigneeFilter");
+  
+  const currentVal = select.value;
+  const currentFilterVal = filterSelect ? filterSelect.value : "all";
+  
+  const optionsHTML = allWriters.map(w => `<option value="${w.name}">${w.name} (${w.writerId})</option>`).join('');
+  
+  select.innerHTML = `<option value="Unassigned">${t('txt_unassigned')}</option>${optionsHTML}`;
+  if (filterSelect) {
+    filterSelect.innerHTML = `<option value="all">${t('filter_all_assignees')}</option>${optionsHTML}`;
+    filterSelect.value = currentFilterVal;
+  }
+  select.value = currentVal;
+}
+
+function renderWritersView(searchOverride = null) {
+  const list = document.getElementById("writerList");
+  list.innerHTML = "";
+  document.querySelector('[data-i18n="total_writers"]').innerText = `${t('total_writers')} ${allWriters.length}`;
+
+  const q = searchOverride || "";
+
+  allWriters.filter(w => !q || w.name.toLowerCase().includes(q) || w.writerId.toLowerCase().includes(q)).forEach(w => {
+    const stats = writerStats.find(s => s._id === w.name) || { activeWorkload: 0, totalEarnings: 0, pendingPayments: 0 };
+    const card = document.createElement("div");
+    card.className = "bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 rounded-2xl shadow-sm space-y-4 relative group transition-all hover:shadow-md border-b-4 border-b-transparent hover:border-b-indigo-500";
+    
+    const img = w.imageLink || `https://ui-avatars.com/api/?name=${encodeURIComponent(w.name)}&background=random`;
+    
+    card.innerHTML = `
+      <div class="flex items-center gap-3">
+        <img src="${img}" class="w-12 h-12 rounded-full object-cover border-2 border-indigo-500/20" alt="${w.name}">
+        <div class="flex-1">
+          <h3 class="font-bold text-sm text-zinc-900 dark:text-white line-clamp-1">${w.name}</h3>
+          <div class="flex items-center gap-2 mt-1">
+            <p class="text-[9px] font-mono text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 rounded">${w.writerId}</p>
+            <span class="text-[9px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded">৳${localNum(stats.totalEarnings)}</span>
+          </div>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-2 text-[10px]">
+        <div class="bg-zinc-50 dark:bg-zinc-800/50 p-2 rounded-xl text-center">
+          <p class="text-zinc-500 uppercase font-bold tracking-tighter">${t('workload')}</p>
+          <p class="text-lg font-black text-indigo-600">${stats.activeWorkload}</p>
+        </div>
+        <div class="bg-zinc-50 dark:bg-zinc-800/50 p-2 rounded-xl text-center">
+          <p class="text-zinc-500 uppercase font-bold tracking-tighter">${t('pending_pay')}</p>
+          <p class="text-lg font-black text-rose-500">৳${localNum(stats.pendingPayments)}</p>
+        </div>
+      </div>
+      <div class="flex gap-2 pt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button onclick="openWriterModal('${w._id}')" class="flex-1 py-1.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 rounded-lg text-[10px] font-bold transition-colors">Edit</button>
+        <button onclick="deleteWriter('${w._id}')" class="px-2 py-1.5 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 rounded-lg transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        </button>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+function openWriterModal(id = null) {
+  const modal = document.getElementById("writerModal");
+  const form = document.getElementById("writerForm");
+  const title = document.getElementById("writerModalTitle");
+  form.reset();
+  
+  if (id) {
+    const w = allWriters.find(x => x._id === id);
+    if (!w) return;
+    title.innerText = t('modal_writer_edit');
+    document.getElementById("editWriterId").value = w._id;
+    document.getElementById("wName").value = w.name;
+    document.getElementById("wPhone").value = w.phone;
+    document.getElementById("wEmail").value = w.email || "";
+    document.getElementById("wImage").value = w.imageLink || "";
+    document.getElementById("wDob").value = w.dob || "";
+    document.getElementById("wNid").value = w.nid || "";
+  } else {
+    title.innerText = t('modal_writer_add');
+    document.getElementById("editWriterId").value = "";
+  }
+  modal.showModal();
+}
+
+async function saveWriter() {
+  const id = document.getElementById("editWriterId").value;
+  const data = {
+    name: document.getElementById("wName").value.trim(),
+    phone: document.getElementById("wPhone").value.trim(),
+    email: document.getElementById("wEmail").value.trim(),
+    imageLink: document.getElementById("wImage").value.trim(),
+    dob: document.getElementById("wDob").value,
+    nid: document.getElementById("wNid").value.trim()
+  };
+
+  if (!data.name || !data.phone) return showToast(t('msg_req_name_phone'), 'error');
+
+  const password = await requestAuthToken(t('msg_auth_save'));
+  if (!password) return;
+  data.password = password;
+
+  try {
+    const method = id ? "PUT" : "POST";
+    const url = id ? `${API}/update-writer/${id}` : `${API}/add-writer`;
+    await handleFetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
+    document.getElementById("writerModal").close();
+    showToast(id ? t('msg_writer_updated') : t('msg_writer_added'));
+    fetchWriters();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function deleteWriter(id) {
+  const password = await requestAuthToken(t('msg_auth_del_task'));
+  if (!password) return;
+  try {
+    await handleFetch(`${API}/delete-writer/${id}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password })
+    });
+    showToast(t('msg_writer_deleted'));
+    fetchWriters();
+  } catch (err) { showToast(err.message, 'error'); }
 }
 
 // === CUSTOM PASSWORD PROMPT ===
@@ -473,20 +832,6 @@ function confirmAuthPrompt() {
   setTimeout(() => { if (resolver) resolver(val || null); }, 10);
 }
 
-// UNLOCK PHONES LOGIC
-async function unlockPhones() {
-  const password = await requestAuthToken(t('msg_auth_phone'));
-  if(!password) return;
-  try {
-    await handleFetch(`${API}/verify-phone-password`, { 
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) 
-    });
-    isPhoneUnlocked = true;
-    renderClientsView();
-    filterClientDropdown();
-  } catch(err) { alert(err.message); }
-}
-
 // === INITIALIZATION ===
 async function bootstrap() {
   const loader = document.getElementById('catLoader');
@@ -495,12 +840,12 @@ async function bootstrap() {
   currentTaskPage = 1;
   
   try {
-    await Promise.all([fetchTasks(1, false), fetchClients(), fetchExpenses()]);
+    await Promise.all([fetchTasks(1, false), fetchClients(), fetchExpenses(), fetchInvoices(), fetchWriters()]);
     applyTranslations(); 
     switchTab('dashboard');
   } catch (error) {
     console.error(error);
-    alert("Error connecting to the backend! Please check the API configuration.\nDetails: " + error.message);
+    showToast("Backend connection error!", 'error');
   } finally {
     loader.style.opacity = '0';
     setTimeout(() => { loader.style.display = 'none'; }, 500);
@@ -508,12 +853,91 @@ async function bootstrap() {
 }
 
 function switchTab(tabId) {
-  ['dashboard', 'clients-view', 'tasks', 'done', 'accounts'].forEach(id => {
-    document.getElementById(`view-${id}`).classList.add('hidden');
-    document.getElementById(`tab-${id}`).className = 'pb-3 px-1 tab-inactive text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors';
+  localStorage.setItem('activeTab', tabId);
+  const allViews = ['dashboard', 'clients-view', 'tasks', 'done', 'invoices', 'writers', 'accounts'];
+  
+  allViews.forEach(id => {
+    const view = document.getElementById(`view-${id}`);
+    const tab = document.getElementById(`tab-${id}`);
+    
+    if (view) {
+      if (id === tabId) {
+        view.classList.remove('hidden');
+        view.classList.add('block');
+      } else {
+        view.classList.add('hidden');
+        view.classList.remove('block');
+      }
+    }
+    
+    if (tab) {
+      const isActive = (id === tabId);
+      tab.classList.toggle('tab-active', isActive);
+      tab.classList.toggle('text-zinc-900', isActive);
+      tab.classList.toggle('dark:text-white', isActive);
+      tab.classList.toggle('border-zinc-900', isActive);
+      tab.classList.toggle('dark:border-white', isActive);
+      tab.classList.toggle('tab-inactive', !isActive);
+      tab.classList.toggle('text-zinc-500', !isActive);
+      tab.classList.toggle('dark:text-zinc-400', !isActive);
+    }
   });
-  document.getElementById(`view-${tabId}`).classList.remove('hidden');
-  document.getElementById(`tab-${tabId}`).className = 'pb-3 px-1 tab-active text-zinc-900 dark:text-white border-zinc-900 dark:border-white transition-colors';
+
+  refreshCurrentView();
+  if(tabId === 'invoices' && allInvoices.length === 0) fetchInvoices();
+  if(tabId === 'writers' && allWriters.length === 0) fetchWriters();
+}
+
+async function fetchLogs() {
+  try {
+    const logs = await handleFetch(`${API}/logs`);
+    renderLogs(logs);
+  } catch (err) { console.error("Logs error:", err); }
+}
+
+function renderLogs(logs) {
+  const list = document.getElementById("activityList");
+  list.innerHTML = "";
+  if (!logs.length) {
+    list.innerHTML = `<li class="text-xs text-zinc-500 italic">No recent activity</li>`;
+    return;
+  }
+
+  logs.forEach(log => {
+    const item = document.createElement("li");
+    item.className = "flex gap-3 items-start group";
+    
+    const iconColor = log.action.includes("Created") ? "text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10" : 
+                     log.action.includes("Deleted") ? "text-rose-500 bg-rose-50 dark:bg-rose-500/10" : 
+                     "text-blue-500 bg-blue-50 dark:bg-blue-500/10";
+
+    item.innerHTML = `
+      <div class="p-1.5 rounded-lg ${iconColor} shrink-0 mt-0.5">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+      </div>
+      <div>
+        <p class="text-[11px] font-bold text-zinc-900 dark:text-white leading-tight">${log.action}</p>
+        <p class="text-[10px] text-zinc-500 line-clamp-1">${log.details}</p>
+        <p class="text-[9px] text-zinc-400 mt-0.5">${new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+      </div>
+    `;
+    list.appendChild(item);
+  });
+}
+
+function handleGlobalSearch() {
+  const q = document.getElementById("globalSearch").value.toLowerCase();
+  if (!q) return refreshCurrentView();
+  
+  const tabId = localStorage.getItem('activeTab') || 'dashboard';
+  
+  if (tabId === 'tasks' || tabId === 'done') {
+    renderTasks(q);
+  } else if (tabId === 'clients-view') {
+    renderClientsView(q);
+  } else if (tabId === 'writers') {
+    renderWritersView(q);
+  }
 }
 
 async function handleFetch(url, options) {
@@ -546,6 +970,59 @@ async function fetchClients() {
 
 async function fetchExpenses() {
   allExpenses = await handleFetch(API + "/accounts");
+}
+
+async function fetchInvoices() {
+  allInvoices = await handleFetch(API + "/invoices");
+  if (localStorage.getItem('activeTab') === 'invoices') renderInvoicesView();
+}
+
+function renderInvoicesView() {
+  const list = document.getElementById("invoiceList");
+  list.innerHTML = "";
+  if(allInvoices.length === 0) return list.innerHTML = `<li class="p-8 text-center text-zinc-500 text-sm italic border-dashed border-2 border-zinc-100 dark:border-zinc-800/50 m-4 rounded-2xl">${t('no_invoices') || 'No invoices found.'}</li>`;
+
+  allInvoices.forEach(inv => {
+    list.innerHTML += `
+      <li class="p-4 sm:p-5 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
+        <div class="flex items-center gap-4">
+          <div class="p-2.5 rounded-xl bg-indigo-100 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          </div>
+          <div>
+            <p class="font-bold text-zinc-900 dark:text-white text-sm sm:text-base">${inv.clientName}</p>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5 mt-0.5">
+              <span>${inv.title}</span>
+              <span class="w-1 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700"></span>
+              <span>${customFormatDate(inv.date)}</span>
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 sm:gap-6">
+          <span class="font-bold text-emerald-600 dark:text-emerald-400 text-sm sm:text-lg">৳${localNum(inv.amount)}</span>
+          <div class="flex items-center gap-2">
+            <button onclick="downloadExistingInvoice('${inv.taskId}')" class="p-2 text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" title="Download PDF"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></button>
+            <button onclick="deleteInvoice('${inv._id}')" class="p-2 text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+          </div>
+        </div>
+      </li>
+    `;
+  });
+}
+
+async function deleteInvoice(id) {
+  const password = await requestAuthToken(t('msg_auth_del_exp'));
+  if(!password) return;
+  try {
+    await handleFetch(`${API}/delete-invoice/${id}`, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) });
+    allInvoices = allInvoices.filter(i => i._id !== id);
+    renderInvoicesView();
+    showToast("Invoice record deleted.");
+  } catch(err) { showToast(err.message, 'error'); }
+}
+
+function downloadExistingInvoice(taskId) {
+  generatePDFInvoice(taskId);
 }
 
 function filterClientDropdown() {
@@ -668,20 +1145,22 @@ function renderDashboard() {
   document.getElementById("stat-total-tasks").innerText = localNum(pendingTasksCount + completedTasksCount);
 
   const topList = document.getElementById("topClientsList");
-  const sortedClients = Object.values(clientEarningsMap).sort((a,b) => b.earned - a.earned).slice(0, 5); 
-  topList.innerHTML = sortedClients.length > 0 ? '' : `<li class="text-zinc-500 text-sm italic">${t('no_clients')}</li>`;
-  
-  sortedClients.forEach((c, idx) => {
-    topList.innerHTML += `
-      <li class="flex justify-between items-center p-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-colors">
-        <div class="flex items-center gap-3">
-          <span class="text-zinc-600 dark:text-zinc-500 font-bold text-xs">${localNum(idx + 1)}.</span>
-          <span class="text-zinc-900 dark:text-zinc-300 text-sm font-medium">${c.name}</span>
-        </div>
-        <span class="text-emerald-600 dark:text-emerald-400 font-semibold text-sm">৳${localNum(c.earned)}</span>
-      </li>
-    `;
-  });
+  if (topList) {
+    const sortedClients = Object.values(clientEarningsMap).sort((a,b) => b.earned - a.earned).slice(0, 5); 
+    topList.innerHTML = sortedClients.length > 0 ? '' : `<li class="text-zinc-500 text-sm italic">${t('no_clients')}</li>`;
+    
+    sortedClients.forEach((c, idx) => {
+      topList.innerHTML += `
+        <li class="flex justify-between items-center p-2 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-colors">
+          <div class="flex items-center gap-3">
+            <span class="text-zinc-600 dark:text-zinc-500 font-bold text-xs">${localNum(idx + 1)}.</span>
+            <span class="text-zinc-900 dark:text-zinc-300 text-sm font-medium">${c.name}</span>
+          </div>
+          <span class="text-emerald-600 dark:text-emerald-400 font-semibold text-sm">৳${localNum(c.earned)}</span>
+        </li>
+      `;
+    });
+  }
 
   renderCharts(expenseBreakdown, incomeBreakdown);
 }
@@ -722,17 +1201,19 @@ function renderCharts(expenseBreakdown, incomeBreakdown) {
   });
 }
 
-function renderClientsView() {
-  document.getElementById("clientCount").innerText = localNum(allClients.length);
+function renderClientsView(searchOverride = null) {
+  const q = searchOverride || "";
+  const filtered = allClients.filter(c => !q || c.name.toLowerCase().includes(q) || (c.phone || "").includes(q));
+  document.getElementById("clientCount").innerText = localNum(filtered.length);
   const grid = document.getElementById("clientsGrid");
   grid.innerHTML = "";
 
-  if(allClients.length === 0) {
-    grid.innerHTML = `<div class="col-span-full p-8 text-center border border-zinc-300 dark:border-zinc-800 border-dashed rounded-xl text-zinc-500">${t('no_clients')}</div>`;
+  if(filtered.length === 0) {
+    grid.innerHTML = `<div class="col-span-full p-8 text-center border border-zinc-300 dark:border-zinc-800 border-dashed rounded-xl text-zinc-500">${q ? 'No clients found matching search.' : t('no_clients')}</div>`;
     return;
   }
 
-  allClients.forEach(client => {
+  filtered.forEach(client => {
     const cTasks = allTasks.filter(t => (t.client && t.client._id === client._id) || t.client === client._id);
     let netIncome = 0;
     cTasks.forEach(tk => {
@@ -787,7 +1268,24 @@ function generateTaskHTML(tk, isDone, isKanbanCard = false) {
   const displayType = currentLang === 'bn' ? (typeMap[tk.workType] || tk.workType) : (tk.workType || 'Task');
   const colorClass = tagColors[tk.workType] || tagColors["Other"];
   const detailsHTML = tk.details ? `<p class="text-[11px] sm:text-xs text-zinc-500 mt-1 italic leading-tight">${tk.details}</p>` : '';
-  const linkHTML = tk.link ? `<a href="${tk.link.startsWith('http') ? tk.link : 'https://'+tk.link}" target="_blank" class="inline-flex items-center gap-1 text-indigo-500 hover:text-indigo-600 text-[10px] sm:text-xs font-semibold mt-1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg> Open Link</a>` : '';
+  
+  // Deadline Urgency Check
+  let urgencyHTML = '';
+  if (!isDone && tk.deadline) {
+    const diff = new Date(tk.deadline) - new Date();
+    const hours = diff / (1000 * 60 * 60);
+    if (hours > 0 && hours < 24) {
+      urgencyHTML = `<span class="bg-rose-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full animate-pulse uppercase ml-2">${t('urgent')}</span>`;
+    }
+  }
+
+  // Handle Multiple Links
+  const links = (tk.link || "").split('\n').filter(l => l.trim());
+  const linksHTML = links.map(l => `
+    <a href="${l.trim().startsWith('http') ? l.trim() : 'https://'+l.trim()}" target="_blank" class="inline-flex items-center gap-1 text-indigo-500 hover:text-indigo-600 text-[10px] sm:text-xs font-semibold mt-1">
+      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg> 
+      ${l.length > 20 ? l.slice(0, 20) + '...' : l}
+    </a>`).join(' ');
 
   let actionButtons = '';
   if (isKanbanCard) {
@@ -804,13 +1302,14 @@ function generateTaskHTML(tk, isDone, isKanbanCard = false) {
   const netBalance = (total + bonus) - advance;
 
   if (isKanbanCard) {
-    return `<div data-id="${tk._id}" class="bg-white dark:bg-zinc-950 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm cursor-grab active:cursor-grabbing hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors"><div class="flex items-center justify-between mb-2"><span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${colorClass}">${displayType}</span><span class="text-[10px] text-zinc-500 font-medium">${customFormatDate(tk.deadline)}</span></div><h4 class="text-sm font-semibold text-zinc-900 dark:text-white leading-tight">${tk.title}</h4><p class="text-[11px] text-zinc-500 mt-1 truncate">${clientName}</p>${linkHTML}<div class="mt-3 flex justify-between items-center border-t border-zinc-100 dark:border-zinc-800 pt-2"><span class="text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 px-1.5 rounded">${tk.assignedTo?.split(' ')[0] || '-'}</span><span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">৳${localNum(netBalance)}</span></div></div>`;
+    return `<div data-id="${tk._id}" class="bg-white dark:bg-zinc-950 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm cursor-grab active:cursor-grabbing hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors"><div class="flex items-center justify-between mb-2"><div class="flex items-center gap-1"><span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${colorClass}">${displayType}</span>${urgencyHTML}</div><span class="text-[10px] text-zinc-500 font-medium">${customFormatDate(tk.deadline)}</span></div><h4 class="text-sm font-semibold text-zinc-900 dark:text-white leading-tight">${tk.title}</h4><p class="text-[11px] text-zinc-500 mt-1 truncate">${clientName}</p>${linksHTML}<div class="mt-3 flex justify-between items-center border-t border-zinc-100 dark:border-zinc-800 pt-2"><span class="text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 px-1.5 rounded">${tk.assignedTo?.split(' ')[0] || '-'}</span><span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">৳${localNum(netBalance)}</span></div></div>`;
   }
 
   const bonusHtml = bonus > 0 ? `<div class="text-indigo-600 dark:text-indigo-400">${t('txt_bonus')}: ৳${localNum(bonus)}</div>` : '';
 
-  return `<li class="border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-none rounded-2xl p-4 sm:p-5 bg-white dark:bg-zinc-900/50 flex flex-col md:flex-row gap-4 justify-between transition-all hover:border-zinc-300 dark:hover:border-zinc-700"><div class="flex-1 space-y-3"><div class="flex items-center gap-2 flex-wrap"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${isDone ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500' : 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300'}">${t(isDone ? 'btn_done' : 'nav_active')}</span><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${colorClass}">${displayType}</span><span class="text-xs text-zinc-500 dark:text-zinc-400 font-medium ml-1 sm:ml-2">${t('txt_due')}: ${customFormatDate(tk.deadline)}</span></div><div><h3 class="text-lg font-semibold text-zinc-900 dark:text-white ${isDone ? 'line-through text-zinc-500 dark:text-zinc-500' : ''}">${tk.title}</h3>${detailsHTML}${linkHTML}<p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-1.5"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>${clientName}</p></div><div class="flex flex-wrap gap-3 sm:gap-4 text-xs font-medium border-t border-zinc-100 dark:border-zinc-800/50 pt-3"><div class="text-emerald-600 dark:text-emerald-400">${t('txt_total')}: ৳${localNum(total)}</div>${bonusHtml}<div class="text-zinc-600 dark:text-zinc-300">${t('txt_advance')}: ৳${localNum(advance)}</div><div class="text-rose-600 dark:text-rose-400">${t('txt_due')}: ৳${localNum(netBalance)}</div><div class="text-zinc-500 dark:text-zinc-500 w-full sm:w-auto sm:ml-auto flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>${tk.assignedTo || t('txt_unassigned')}</div></div></div><div class="flex flex-col gap-2 shrink-0 items-stretch justify-center w-full md:w-32 border-t md:border-t-0 md:border-l border-zinc-100 dark:border-zinc-800/50 pt-3 md:pt-0 md:pl-4">${actionButtons}</div></li>`;
+  return `<li class="border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-none rounded-2xl p-4 sm:p-5 bg-white dark:bg-zinc-900/50 flex flex-col md:flex-row gap-4 justify-between transition-all hover:border-zinc-300 dark:hover:border-zinc-700"><div class="flex-1 space-y-3"><div class="flex items-center gap-2 flex-wrap"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${isDone ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500' : 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300'}">${t(isDone ? 'btn_done' : 'nav_active')}</span><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${colorClass}">${displayType}</span>${urgencyHTML}<span class="text-xs text-zinc-500 dark:text-zinc-400 font-medium ml-1 sm:ml-2">${t('txt_due')}: ${customFormatDate(tk.deadline)}</span></div><div><h3 class="text-lg font-semibold text-zinc-900 dark:text-white ${isDone ? 'line-through text-zinc-500 dark:text-zinc-500' : ''}">${tk.title}</h3>${detailsHTML}${linksHTML}<p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-1.5"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>${clientName}</p></div><div class="flex flex-wrap gap-3 sm:gap-4 text-xs font-medium border-t border-zinc-100 dark:border-zinc-800/50 pt-3"><div class="text-emerald-600 dark:text-emerald-400">${t('txt_total')}: ৳${localNum(total)}</div>${bonusHtml}<div class="text-zinc-600 dark:text-zinc-300">${t('txt_advance')}: ৳${localNum(advance)}</div><div class="text-rose-600 dark:text-rose-400">${t('txt_due')}: ৳${localNum(netBalance)}</div><div class="text-zinc-500 dark:text-zinc-500 w-full sm:w-auto sm:ml-auto flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>${tk.assignedTo || t('txt_unassigned')}</div></div></div><div class="flex flex-col gap-2 shrink-0 items-stretch justify-center w-full md:w-32 border-t md:border-t-0 md:border-l border-zinc-100 dark:border-zinc-800/50 pt-3 md:pt-0 md:pl-4">${actionButtons}</div></li>`;
 }
+
 
 function toggleTaskViewMode() {
   currentTaskViewMode = currentTaskViewMode === 'list' ? 'board' : 'list';
@@ -819,10 +1318,10 @@ function toggleTaskViewMode() {
   renderTasks();
 }
 
-function renderTasks() {
+function renderTasks(searchOverride = null) {
   const activeList = document.getElementById("taskList"), taskBoard = document.getElementById("taskBoard"), doneList = document.getElementById("doneTaskList"), pagControl = document.getElementById("taskPaginationControls");
   
-  const q = (document.getElementById("taskSearchQuery")?.value || "").toLowerCase();
+  const q = (searchOverride || document.getElementById("taskSearchQuery")?.value || "").toLowerCase();
   const fType = document.getElementById("taskTypeFilter")?.value || "all";
   const fAssignee = document.getElementById("taskAssigneeFilter")?.value || "all";
 
@@ -866,19 +1365,32 @@ function renderExpenses() {
   allExpenses.forEach(tx => {
     const mapCat = { "Facebook Ads": "ফেসবুক অ্যাড", "Supplements": "সাপ্লিমেন্ট", "Withdraws": "উত্তোলন", "Others": "অন্যান্য" };
     const displayCat = currentLang === 'bn' ? (mapCat[tx.category] || tx.category) : tx.category;
+    
+    // Find associated task title if taskId exists
+    let taskBadge = '';
+    if (tx.taskId) {
+      const task = allTasks.find(t => t._id === tx.taskId);
+      if (task) {
+        taskBadge = `<span class="inline-block bg-zinc-100 dark:bg-zinc-800 text-zinc-500 text-[9px] px-1.5 py-0.5 rounded mt-1 truncate max-w-[150px]">Task: ${task.title}</span>`;
+      }
+    }
 
     list.innerHTML += `
-      <li class="p-4 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+      <li class="p-4 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors group">
         <div class="flex items-center gap-3 sm:gap-4">
           <div class="p-2 rounded-full bg-rose-100 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg></div>
           <div>
             <p class="font-medium text-zinc-900 dark:text-white text-sm">${displayCat}</p>
             <p class="text-xs text-zinc-500">${customFormatDate(tx.date)} ${tx.description ? '• ' + tx.description : ''}</p>
+            ${taskBadge}
           </div>
         </div>
-        <div class="flex items-center gap-3 sm:gap-4 shrink-0">
+        <div class="flex items-center gap-2 sm:gap-4 shrink-0">
           <span class="font-semibold text-rose-600 dark:text-rose-400 text-sm sm:text-base">-৳${localNum(tx.amount)}</span>
-          <button onclick="deleteTx('${tx._id}')" class="text-zinc-400 hover:text-rose-600 dark:text-zinc-600 dark:hover:text-rose-400 p-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+          <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button onclick="openEditTxModal('${tx._id}')" class="text-zinc-400 hover:text-indigo-600 p-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+            <button onclick="deleteTx('${tx._id}')" class="text-zinc-400 hover:text-rose-600 p-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+          </div>
         </div>
       </li>
     `;
@@ -942,13 +1454,24 @@ function initKanbanBoards() {
   });
 }
 
-function generatePDFInvoice(taskId) {
+async function generatePDFInvoice(taskId) {
   const tk = allTasks.find(t => t._id === taskId);
   if(!tk) return;
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
   
-  // Calculate balances
+  const password = await requestAuthToken(t('msg_auth_inv') || "Enter password to download invoice.");
+  if(!password) return;
+  
+  try {
+    await handleFetch(`${API}/verify-invoice-password`, { 
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) 
+    });
+  } catch(err) { 
+    return showToast(err.message, 'error'); 
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ format: 'a4' });
+  
   const total = tk.totalValue || 0;
   const advance = tk.advancePaid || 0;
   const bonus = tk.bonus || 0;
@@ -956,76 +1479,171 @@ function generatePDFInvoice(taskId) {
   const balance = subtotal - advance;
   const isPaid = balance <= 0;
   
-  // Header: Branding
-  doc.setFontSize(24); doc.setTextColor(30, 41, 59); doc.setFont(undefined, 'bold');
-  doc.text("Assignment Koran", 20, 20);
+  // Design Tokens
+  const primaryColor = [15, 23, 42]; // Slate 900
+  const secondaryColor = [71, 85, 105]; // Slate 600
+  const accentColor = [59, 130, 246]; // Blue 500
+  const lightGray = [241, 245, 249]; // Slate 100
+  const borderGray = [226, 232, 240]; // Slate 200
+  const paidColor = [22, 163, 74]; // Green 600
+  const dueColor = [220, 38, 38]; // Red 600
+  const statusColor = isPaid ? paidColor : dueColor;
+  const pageWidth = doc.internal.pageSize.getWidth();
   
-  doc.setFontSize(10); doc.setTextColor(113, 113, 122); doc.setFont(undefined, 'normal');
-  doc.text(`Invoice Ref: #${tk._id.substring(tk._id.length - 8).toUpperCase()}`, 20, 30);
-  doc.text(`Date Issued: ${new Date().toLocaleDateString()}`, 20, 36);
-  doc.text(`Delivery Date: ${tk.deadline ? new Date(tk.deadline).toLocaleDateString() : 'N/A'}`, 20, 42);
+  // --- HEADER SECTION ---
   
-  // The PAID / DUE Seal
-  const sealText = isPaid ? "PAID" : "DUE";
-  const sealColor = isPaid ? [22, 163, 74] : [220, 38, 38]; 
+  // Abstract shape in header
+  doc.setFillColor(accentColor[0], accentColor[1], accentColor[2]);
+  doc.rect(0, 0, pageWidth, 8, 'F');
   
-  doc.setDrawColor(sealColor[0], sealColor[1], sealColor[2]);
-  doc.setLineWidth(1.2);
-  doc.roundedRect(160, 12, 35, 14, 2, 2); 
-  doc.setTextColor(sealColor[0], sealColor[1], sealColor[2]);
-  doc.setFontSize(14); doc.setFont(undefined, 'bold');
-  doc.text(sealText, 177.5, 22, null, null, "center");
-
-  // Client Details
-  doc.setFontSize(12); doc.setTextColor(30, 41, 59); doc.text("Billed To:", 20, 52);
-  doc.setFont(undefined, 'bold'); const cName = tk.client?.name || "Internal Agency Task"; doc.text(cName, 20, 59);
-  doc.setFont(undefined, 'normal'); 
-  let currentY = 65;
-  if(tk.client?.phone) { doc.text(tk.client.phone, 20, currentY); currentY += 6; }
-  if(tk.client?.university) { doc.text(tk.client.university, 20, currentY); currentY += 6; }
+  // "INVOICE" Title
+  doc.setFontSize(32); doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]); doc.setFont("helvetica", "bold");
+  doc.text("INVOICE", pageWidth - 20, 30, { align: "right" });
   
-  // Table Lines
-  doc.setDrawColor(228, 228, 231); doc.line(20, 80, 190, 80);
-  doc.setFontSize(11); doc.setFont(undefined, 'bold'); doc.text("Description", 20, 87); doc.text("Amount", 170, 87);
-  doc.line(20, 92, 190, 92);
+  // Invoice Meta Info (Right side)
+  doc.setFontSize(10); doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]); doc.setFont("helvetica", "bold");
+  doc.text("Invoice No:", pageWidth - 60, 42); doc.setFont("helvetica", "normal"); doc.text(`#${tk._id.substring(tk._id.length - 6).toUpperCase()}`, pageWidth - 20, 42, { align: "right" });
+  doc.setFont("helvetica", "bold"); doc.text("Date:", pageWidth - 60, 48); doc.setFont("helvetica", "normal"); doc.text(new Date().toLocaleDateString('en-GB'), pageWidth - 20, 48, { align: "right" });
+  doc.setFont("helvetica", "bold"); doc.text("Due Date:", pageWidth - 60, 54); doc.setFont("helvetica", "normal"); doc.text(tk.deadline ? new Date(tk.deadline).toLocaleDateString('en-GB') : 'N/A', pageWidth - 20, 54, { align: "right" });
   
-  // Task Details
-  doc.setFont(undefined, 'normal'); const taskTitle = doc.splitTextToSize(tk.title, 130);
-  doc.text(taskTitle, 20, 102); doc.text(`Tk ${total}`, 170, 102);
+  // Company Info (Left side)
+  doc.setFontSize(22); doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]); doc.setFont("helvetica", "bold");
+  doc.text("Assignment Koran", 20, 30);
   
-  // Totals
-  doc.line(130, 130, 190, 130);
+  doc.setFontSize(10); doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]); doc.setFont("helvetica", "normal");
+  doc.text("Professional Academic Solutions", 20, 38);
+  doc.text("Dhaka, Bangladesh", 20, 44);
   
-  let totalsY = 140;
+  // --- BILL TO SECTION ---
+  doc.setDrawColor(borderGray[0], borderGray[1], borderGray[2]); doc.setLineWidth(0.5);
+  doc.line(20, 65, pageWidth - 20, 65);
   
-  doc.text(`Task Total:`, 130, totalsY); doc.text(`Tk ${total}`, 170, totalsY);
+  doc.setFontSize(11); doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]); doc.setFont("helvetica", "bold");
+  doc.text("BILLED TO:", 20, 76);
+  
+  doc.setFontSize(14); doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]); doc.setFont("helvetica", "bold");
+  const cName = tk.client?.name || "Valued Client";
+  doc.text(cName, 20, 84);
+  
+  doc.setFontSize(10); doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]); doc.setFont("helvetica", "normal");
+  let billY = 90;
+  if(tk.client?.phone) { doc.text(`${tk.client.phone}`, 20, billY); billY += 6; }
+  if(tk.client?.university) { doc.text(`${tk.client.university}`, 20, billY); billY += 6; }
+  
+  // Status Stamp
+  doc.setDrawColor(statusColor[0], statusColor[1], statusColor[2]);
+  doc.setLineWidth(1.5);
+  doc.roundedRect(pageWidth - 60, 72, 40, 16, 2, 2); 
+  doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
+  doc.setFontSize(16); doc.setFont("helvetica", "bold");
+  doc.text(isPaid ? "PAID" : "DUE", pageWidth - 40, 83.5, { align: "center", angle: 0 });
+  
+  // --- TABLE SECTION ---
+  const tableTop = 115;
+  
+  // Table Header Background
+  doc.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
+  doc.rect(20, tableTop, pageWidth - 40, 12, 'F');
+  
+  // Table Headers
+  doc.setFontSize(10); doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]); doc.setFont("helvetica", "bold");
+  doc.text("Item Description", 25, tableTop + 8);
+  doc.text("Type", 120, tableTop + 8);
+  doc.text("Amount", pageWidth - 25, tableTop + 8, { align: "right" });
+  
+  // Table Row Content
+  const rowTop = tableTop + 12;
+  doc.setFontSize(11); doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]); doc.setFont("helvetica", "normal");
+  
+  // Handle long descriptions
+  const descriptionLines = doc.splitTextToSize(tk.title, 90);
+  doc.text(descriptionLines, 25, rowTop + 8);
+  
+  const typeText = tk.workType || "Task";
+  doc.text(typeText, 120, rowTop + 8);
+  
+  doc.text(`Tk ${localNum(total)}`, pageWidth - 25, rowTop + 8, { align: "right" });
+  
+  // Table Bottom Line
+  const tableBottom = rowTop + (descriptionLines.length * 6) + 4;
+  doc.setDrawColor(borderGray[0], borderGray[1], borderGray[2]); doc.setLineWidth(0.5);
+  doc.line(20, tableBottom, pageWidth - 20, tableBottom);
+  
+  // --- TOTALS SECTION ---
+  const totalsX = pageWidth - 80;
+  const amountsX = pageWidth - 25;
+  let currentTotalY = tableBottom + 12;
+  
+  doc.setFontSize(10); doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]); doc.setFont("helvetica", "normal");
+  
+  doc.text("Subtotal:", totalsX, currentTotalY);
+  doc.text(`Tk ${localNum(total)}`, amountsX, currentTotalY, { align: "right" });
+  currentTotalY += 8;
   
   if (bonus > 0) {
-      totalsY += 8;
-      doc.text(`Bonus:`, 130, totalsY); doc.text(`Tk ${bonus}`, 170, totalsY);
+    doc.text("Bonus:", totalsX, currentTotalY);
+    doc.text(`Tk ${localNum(bonus)}`, amountsX, currentTotalY, { align: "right" });
+    currentTotalY += 8;
   }
   
-  totalsY += 8;
-  doc.text(`Advance Paid:`, 130, totalsY); doc.setTextColor(225, 29, 72); doc.text(`-Tk ${advance}`, 170, totalsY);
+  doc.text("Advance Paid:", totalsX, currentTotalY);
+  doc.setTextColor(dueColor[0], dueColor[1], dueColor[2]);
+  doc.text(`- Tk ${localNum(advance)}`, amountsX, currentTotalY, { align: "right" });
+  currentTotalY += 8;
   
-  totalsY += 5;
-  doc.line(130, totalsY, 190, totalsY); 
-  totalsY += 10;
-  doc.setFont(undefined, 'bold'); doc.setTextColor(sealColor[0], sealColor[1], sealColor[2]);
-  doc.text(`Balance Due:`, 130, totalsY); doc.text(`Tk ${Math.max(0, balance)}`, 170, totalsY);
+  // Final Balance Box
+  doc.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
+  doc.rect(totalsX - 5, currentTotalY - 4, pageWidth - totalsX - 15, 14, 'F');
   
-  // Footer text
-  doc.setFont(undefined, 'normal'); doc.setFontSize(10); doc.setTextColor(161, 161, 170);
-  doc.text("Thank you for choosing Assignment Koran.", 105, 270, null, null, "center");
+  doc.setFontSize(12); doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]); doc.setFont("helvetica", "bold");
+  doc.text("Balance Due:", totalsX, currentTotalY + 5);
+  doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
+  doc.text(`Tk ${localNum(Math.max(0, balance))}`, amountsX, currentTotalY + 5, { align: "right" });
   
-  // Footer Links
-  doc.setTextColor(59, 130, 246);
-  doc.text("facebook.com/assignmentKoran", 105, 276, null, null, "center");
-  doc.text("a-koran.vercel.app/ak.html", 105, 282, null, null, "center");
+  // Payment Info
+  if (!isPaid) {
+    const paymentInfoY = tableBottom + 12;
+    doc.setFontSize(10); doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]); doc.setFont("helvetica", "bold");
+    doc.text("Payment Information", 20, paymentInfoY);
+    doc.setFontSize(9); doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]); doc.setFont("helvetica", "normal");
+    doc.text("Please clear the due balance to complete", 20, paymentInfoY + 6);
+    doc.text("the transaction.", 20, paymentInfoY + 11);
+  } else {
+    const paymentInfoY = tableBottom + 12;
+    doc.setFontSize(11); doc.setTextColor(paidColor[0], paidColor[1], paidColor[2]); doc.setFont("helvetica", "bold");
+    doc.text("Thank you for your payment!", 20, paymentInfoY + 6);
+  }
+  
+  // --- FOOTER SECTION ---
+  const footerY = 270;
+  doc.setDrawColor(borderGray[0], borderGray[1], borderGray[2]); doc.setLineWidth(0.5);
+  doc.line(20, footerY - 5, pageWidth - 20, footerY - 5);
+  
+  // Left side footer (Social)
+  // FB Icon (Blue Circle with F)
+  doc.setFillColor(24, 119, 242); doc.circle(22, footerY + 4, 2.5, 'F');
+  doc.setTextColor(255, 255, 255); doc.setFontSize(6); doc.setFont("helvetica", "bold");
+  doc.text("f", 22, footerY + 5.5, { align: "center" });
+  
+  doc.setFontSize(9); doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]); doc.setFont("helvetica", "normal");
+  doc.textWithLink("facebook.com/assignmentKoran", 26, footerY + 5, { url: 'https://facebook.com/assignmentKoran' });
+  
+  // Web Icon (Globe lines)
+  doc.setDrawColor(71, 85, 105); doc.setLineWidth(0.3);
+  doc.circle(86, footerY + 4, 2.5, 'S');
+  doc.line(83.5, footerY + 4, 88.5, footerY + 4); 
+  doc.line(86, footerY + 1.5, 86, footerY + 6.5);
+  doc.ellipse(86, footerY + 4, 1, 2.5, 'S');
+  
+  doc.textWithLink("a-koran.vercel.app", 90, footerY + 5, { url: 'https://a-koran.vercel.app/ak.html' });
+  
+  // Right side footer
+  doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
+  doc.text("Thank you for your business!", pageWidth - 20, footerY + 5, { align: "right" });
 
-  doc.save(`Invoice_${cName.substring(0,10)}_${tk.title.substring(0,10)}.pdf`);
+  doc.save(`Invoice_${cName.substring(0,10)}_${tk._id.substring(tk._id.length - 4)}.pdf`);
+  showToast("Invoice generated successfully!");
 }
-
 function toggleNewClientFields() { 
   const fields = document.getElementById("newClientFields");
   if (fields) fields.style.display = document.getElementById("tClientSelect").value === 'new' ? 'grid' : 'none'; 
@@ -1047,10 +1665,13 @@ function openTaskModal(taskId = null) {
     document.getElementById("tTotal").value = tk.totalValue || 0;
     document.getElementById("tAdvance").value = tk.advancePaid || 0;
     document.getElementById("tBonus").value = tk.bonus || 0;
-    document.getElementById("tAssignee").value = tk.assignedTo || "Imranul Islam Shihab";
+    document.getElementById("tWriterPay").value = tk.writerPay || 0;
+    document.getElementById("tAssign").value = tk.assignedTo || "Unassigned";
+    document.getElementById("taskModalTitle").innerText = t('btn_update');
     document.getElementById("tDeadline").value = tk.deadline ? tk.deadline.split('T')[0] : "";
     document.getElementById("tClientSelect").value = tk.client ? tk.client._id : "new";
     toggleNewClientFields();
+    document.getElementById("tLink").value = tk.link || "";
   } else {
     document.getElementById("taskModalTitle").innerText = t('modal_task_title');
     document.getElementById("tTitle").value = "";
@@ -1090,11 +1711,12 @@ async function saveTask(e) {
     totalValue: Number(document.getElementById("tTotal").value) || 0,
     advancePaid: Number(document.getElementById("tAdvance").value) || 0,
     bonus: Number(document.getElementById("tBonus").value) || 0,
-    assignedTo: document.getElementById("tAssignee").value,
+    writerPay: Number(document.getElementById("tWriterPay").value) || 0,
+    assignedTo: document.getElementById("tAssign").value,
     password
   };
   
-  if(!payload.title) { alert("Title is required"); btn.disabled = false; return; }
+  if(!payload.title) { showToast("Title is required", 'error'); btn.disabled = false; return; }
   btn.innerText = "...";
   try {
     await handleFetch(id ? `${API}/update-task/${id}` : `${API}/add-task`, { method: id ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
@@ -1102,13 +1724,49 @@ async function saveTask(e) {
     currentTaskPage = 1; 
     await Promise.all([fetchTasks(1, false), fetchClients(), fetchExpenses()]);
     renderDashboard(); renderTasks(); renderClientsView();
+    showToast(id ? "Task updated!" : "Task deployed!");
     btn.innerText = id ? t('btn_update') : t('btn_deploy');
     btn.disabled = false;
-  } catch(err) { alert(err.message); btn.innerText = id ? t('btn_update') : t('btn_deploy'); btn.disabled = false; }
+  } catch(err) { showToast(err.message, 'error'); btn.innerText = id ? t('btn_update') : t('btn_deploy'); btn.disabled = false; }
 }
 
 function openTxModal() {
-  document.getElementById("txAmount").value = ""; document.getElementById("txDescription").value = "";
+  editingTxId = null;
+  document.getElementById("txAmount").value = ""; 
+  document.getElementById("txDescription").value = "";
+  document.getElementById("txTaskId").value = "";
+  document.querySelector("[data-i18n='modal_exp_title']").innerText = t('modal_exp_title');
+  
+  // Populate Tasks Dropdown
+  const taskSelect = document.getElementById("txTaskId");
+  const currentVal = taskSelect.value;
+  taskSelect.innerHTML = `<option value="">${t('opt_no_task')}</option>`;
+  allTasks.forEach(tk => {
+    taskSelect.innerHTML += `<option value="${tk._id}">${tk.title} (${tk.client?.name || 'Internal'})</option>`;
+  });
+  taskSelect.value = currentVal;
+
+  document.getElementById("txModal").showModal();
+}
+
+function openEditTxModal(id) {
+  const tx = allExpenses.find(e => e._id === id);
+  if (!tx) return;
+  
+  editingTxId = id;
+  document.getElementById("txAmount").value = tx.amount;
+  document.getElementById("txDescription").value = tx.description || "";
+  document.getElementById("txCategory").value = tx.category;
+  
+  // Populate Tasks Dropdown
+  const taskSelect = document.getElementById("txTaskId");
+  taskSelect.innerHTML = `<option value="">${t('opt_no_task')}</option>`;
+  allTasks.forEach(tk => {
+    taskSelect.innerHTML += `<option value="${tk._id}">${tk.title} (${tk.client?.name || 'Internal'})</option>`;
+  });
+  taskSelect.value = tx.taskId || "";
+
+  document.querySelector("[data-i18n='modal_exp_title']").innerText = t('modal_exp_edit');
   document.getElementById("txModal").showModal();
 }
 
@@ -1118,16 +1776,57 @@ async function saveTransaction(e) {
   const password = await requestAuthToken(t('msg_auth_save'));
   if(!password) { btn.disabled = false; return; }
   
-  const payload = { category: document.getElementById("txCategory").value, description: document.getElementById("txDescription").value, amount: Number(document.getElementById("txAmount").value), type: "expense", password };
-  if(payload.amount <= 0) { btn.disabled = false; return; }
+  const payload = { 
+    category: document.getElementById("txCategory").value, 
+    description: document.getElementById("txDescription").value, 
+    amount: Number(document.getElementById("txAmount").value), 
+    taskId: document.getElementById("txTaskId").value || null,
+    type: "expense", 
+    password 
+  };
+  
+  if(payload.amount <= 0) { 
+    showToast("Invalid amount", "error");
+    btn.disabled = false; 
+    return; 
+  }
   
   try {
-    await handleFetch(`${API}/add-account`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    const url = editingTxId ? `${API}/update-account/${editingTxId}` : `${API}/add-account`;
+    const method = editingTxId ? "PUT" : "POST";
+    
+    await handleFetch(url, { 
+      method, 
+      headers: { "Content-Type": "application/json" }, 
+      body: JSON.stringify(payload) 
+    });
+    
     document.getElementById("txModal").close(); 
-    await Promise.all([fetchExpenses()]);
-    renderDashboard(); renderExpenses();
+    await fetchExpenses();
+    renderDashboard(); 
+    renderExpenses();
+    showToast(editingTxId ? "Expense updated!" : "Expense logged!");
     btn.disabled = false;
-  } catch(err) { alert(err.message); btn.disabled = false; }
+  } catch(err) { 
+    showToast(err.message, 'error'); 
+    btn.disabled = false; 
+  }
+}
+
+async function deleteTx(id) {
+  const password = await requestAuthToken(t('msg_auth_del_exp'));
+  if(!password) return;
+  try {
+    await handleFetch(`${API}/delete-account/${id}`, { 
+      method: "DELETE", 
+      headers: { "Content-Type": "application/json" }, 
+      body: JSON.stringify({ password }) 
+    });
+    await fetchExpenses();
+    renderDashboard();
+    renderExpenses();
+    showToast("Expense deleted");
+  } catch(err) { showToast(err.message, 'error'); }
 }
 
 async function updateTaskStatus(id, status) {
@@ -1138,7 +1837,8 @@ async function updateTaskStatus(id, status) {
     currentTaskPage = 1;
     await Promise.all([fetchTasks(1, false), fetchClients(), fetchExpenses()]);
     renderDashboard(); renderTasks(); renderClientsView();
-  } catch(err) { alert(err.message); }
+    showToast(`Status updated to ${status}`);
+  } catch(err) { showToast(err.message, 'error'); }
 }
 
 async function deleteTask(id) {
@@ -1149,17 +1849,8 @@ async function deleteTask(id) {
     currentTaskPage = 1;
     await Promise.all([fetchTasks(1, false), fetchClients(), fetchExpenses()]);
     renderDashboard(); renderTasks(); renderClientsView();
-  } catch (err) { alert(err.message); }
-}
-
-async function deleteTx(id) {
-  const password = await requestAuthToken(t('msg_auth_del_exp'));
-  if(!password) return;
-  try {
-    await handleFetch(`${API}/delete-account/${id}`, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) });
-    await Promise.all([fetchExpenses()]);
-    renderDashboard(); renderExpenses();
-  } catch(err) { alert(err.message); }
+    showToast("Task deleted.");
+  } catch (err) { showToast(err.message, 'error'); }
 }
 
 function openClientAddModal() {
@@ -1198,8 +1889,9 @@ async function saveClient(e) {
     document.getElementById("clientEditModal").close();
     await Promise.all([fetchClients()]);
     renderClientsView();
+    showToast(id ? "Client updated!" : "Client added!");
     btn.disabled = false;
-  } catch(err) { alert(err.message); btn.disabled = false; }
+  } catch(err) { showToast(err.message, 'error'); btn.disabled = false; }
 }
 
 function openClientViewModal(clientId) {
