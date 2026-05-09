@@ -166,7 +166,7 @@
 
       <ul id="taskList" class="grid grid-cols-1 gap-3 sm:gap-4"></ul>
       
-      <!-- Kanban Board Container (Updated for SortableJS) -->
+      <!-- Kanban Board Container -->
       <div id="taskBoard" class="hidden grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 items-stretch">
         <div class="bg-zinc-100 dark:bg-zinc-900/50 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col">
           <h3 class="font-bold text-sm text-zinc-500 uppercase tracking-wider mb-4 px-1" data-i18n="status_pending">Pending</h3>
@@ -234,9 +234,10 @@
         <div class="space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_client">Client</label><input type="text" id="clientSearchInput" oninput="filterClientDropdown()" placeholder="Search clients..." class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-t-lg border-b-0 px-3 py-2 outline-none focus:border-indigo-500 text-sm text-zinc-900 dark:text-white mb-0" data-i18n-placeholder="search_client"><select id="tClientSelect" onchange="this.size=1; toggleNewClientFields()" class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-b-lg px-3 py-2 sm:py-2.5 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white text-sm"><option value="new">+ Add New Client / No Client</option></select></div>
         <div id="newClientFields" class="grid grid-cols-1 sm:grid-cols-3 gap-3"><input type="text" id="tClientName" placeholder="Client Name" class="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500"><input type="text" id="tClientPhone" placeholder="Phone Number" class="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500"><input type="text" id="tClientUniversity" placeholder="University (Optional)" class="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500"></div>
       </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <div class="space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_total">Total Value (৳)</label><input type="number" id="tTotal" value="0" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none focus:border-emerald-500 text-emerald-600 dark:text-emerald-400 font-medium text-sm"></div>
         <div class="space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_advance">Advance Paid (৳)</label><input type="number" id="tAdvance" value="0" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none focus:border-emerald-500 text-sm"></div>
+        <div class="space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-indigo-500 dark:text-indigo-400 uppercase tracking-wider" data-i18n="lbl_bonus">Bonus (৳)</label><input type="number" id="tBonus" value="0" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-indigo-200 dark:border-indigo-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none focus:border-indigo-500 text-indigo-600 dark:text-indigo-400 font-medium text-sm"></div>
       </div>
       <div class="grid grid-cols-1 gap-3 sm:gap-4"><div class="space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_assign">Assign To</label><select id="tAssignee" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none text-zinc-900 dark:text-white text-sm"><option value="Imranul Islam Shihab">Imranul Islam Shihab</option><option value="Siyam Bhuiyan">Siyam Bhuiyan</option></select></div></div>
     </div>
@@ -367,9 +368,9 @@ const translations = {
     chart_title: "Expense Breakdown", chart_income_title: "Income Breakdown", top_clients: "Top Clients (Earnings)", filter_all_time: "All Time", filter_this_month: "This Month", filter_last_month: "Last Month", filter_this_year: "This Year",
     total_clients: "Total Clients:", btn_new_task: "+ New Task", btn_new_client: "+ Add Client", btn_log_expense: "Log Expense",
     calculating: "Calculating...", no_tasks: "No tasks in pipeline.", no_done: "No completed works yet.", no_clients: "No clients registered.", no_expenses: "No expenses logged yet.",
-    modal_task_title: "Add New Task", lbl_desc: "Description / Title", lbl_details: "Details (Optional)", plc_details: "Enter specific requirements, links, or notes...", lbl_type: "Type of Work", lbl_deadline: "Deadline", lbl_client: "Client", search_client: "Search clients...", lbl_total: "Total Value (৳)", lbl_advance: "Advance Paid (৳)", lbl_assign: "Assign To", lbl_token: "Password", lbl_university: "University", lbl_link: "Project Link (Optional)", btn_deploy: "Deploy Task", btn_load_more: "Load More",
+    modal_task_title: "Add New Task", lbl_desc: "Description / Title", lbl_details: "Details (Optional)", plc_details: "Enter specific requirements, links, or notes...", lbl_type: "Type of Work", lbl_deadline: "Deadline", lbl_client: "Client", search_client: "Search clients...", lbl_total: "Total Value (৳)", lbl_advance: "Advance Paid (৳)", lbl_bonus: "Bonus (৳)", lbl_assign: "Assign To", lbl_token: "Password", lbl_university: "University", lbl_link: "Project Link (Optional)", btn_deploy: "Deploy Task", btn_load_more: "Load More",
     modal_exp_title: "Log Expense", lbl_exp_cat: "Expense Category", lbl_exp_desc: "Description (Optional)", lbl_exp_amount: "Amount (৳)", btn_deduct: "Deduct Funds", btn_update: "Update", btn_export: "Export CSV", btn_invoice: "PDF Invoice",
-    word_tasks: "Tasks", txt_internal: "Internal/No Client", txt_due: "Due", txt_total: "Total", txt_advance: "Advance", txt_net_income: "Net Income", txt_logged: "Logged", txt_duration: "Duration", txt_open_ended: "Open-ended", txt_overdue: "Overdue", txt_days: "days", txt_unassigned: "Unassigned", txt_university: "University",
+    word_tasks: "Tasks", txt_internal: "Internal/No Client", txt_due: "Due", txt_total: "Total", txt_advance: "Advance", txt_bonus: "Bonus", txt_net_income: "Net Income", txt_logged: "Logged", txt_duration: "Duration", txt_open_ended: "Open-ended", txt_overdue: "Overdue", txt_days: "days", txt_unassigned: "Unassigned", txt_university: "University",
     btn_edit: "Edit", btn_done: "Done", btn_undo: "Undo", opt_add_client: "+ Add New Client / No Client", btn_delete: "Delete", modal_client_edit: "Edit Client", modal_client_add: "Add New Client", btn_view_tasks: "View Tasks", btn_edit_client: "Edit Profile", btn_save_client: "Save Client", btn_cancel: "Cancel", btn_confirm: "Confirm", modal_auth_title: "Enter Password", msg_auth_status: "Enter password to change task status.", msg_auth_del_task: "Enter password to delete task.", msg_auth_del_exp: "Enter password to delete expense.", msg_auth_save: "Enter password to save changes.", msg_auth_phone: "Enter password to reveal phone numbers.", search_tasks: "Search tasks...", filter_all_types: "All Types", filter_all_assignees: "All Assignees", tab_list: "List View", tab_board: "Kanban Board", status_pending: "Pending", status_in_progress: "In Progress", status_review: "Under Review"
   },
   bn: {
@@ -379,9 +380,9 @@ const translations = {
     chart_title: "খরচের বিবরণ", chart_income_title: "আয়ের বিবরণ", top_clients: "শীর্ষ ক্লায়েন্ট (আয়)", filter_all_time: "সব সময়", filter_this_month: "এই মাস", filter_last_month: "গত মাস", filter_this_year: "এই বছর",
     total_clients: "মোট ক্লায়েন্ট:", btn_new_task: "+ নতুন কাজ", btn_new_client: "+ ক্লায়েন্ট যোগ করুন", btn_log_expense: "খরচ যোগ করুন",
     calculating: "হিসাব করা হচ্ছে...", no_tasks: "কোনো কাজ নেই।", no_done: "কোনো কাজ সম্পন্ন হয়নি।", no_clients: "কোনো ক্লায়েন্ট নেই।", no_expenses: "কোনো খরচের রেকর্ড নেই।",
-    modal_task_title: "নতুন কাজ যোগ করুন", lbl_desc: "কাজের নাম / বিবরণ", lbl_details: "বিস্তারিত (ঐচ্ছিক)", plc_details: "নির্দিষ্ট প্রয়োজনীয়তা, লিঙ্ক বা নোট লিখুন...", lbl_type: "কাজের ধরন", lbl_deadline: "শেষ সময় (Deadline)", lbl_client: "ক্লায়েন্ট", search_client: "ক্লায়েন্ট খুঁজুন...", lbl_total: "মোট মূল্য (৳)", lbl_advance: "অগ্রিম পেমেন্ট (৳)", lbl_assign: "দায়িত্বপ্রাপ্ত ব্যক্তি", lbl_token: "পাসওয়ার্ড", lbl_university: "বিশ্ববিদ্যালয়", lbl_link: "প্রজেক্ট লিঙ্ক (ঐচ্ছিক)", btn_deploy: "সেভ করুন", btn_load_more: "আরও দেখুন",
+    modal_task_title: "নতুন কাজ যোগ করুন", lbl_desc: "কাজের নাম / বিবরণ", lbl_details: "বিস্তারিত (ঐচ্ছিক)", plc_details: "নির্দিষ্ট প্রয়োজনীয়তা, লিঙ্ক বা নোট লিখুন...", lbl_type: "কাজের ধরন", lbl_deadline: "শেষ সময় (Deadline)", lbl_client: "ক্লায়েন্ট", search_client: "ক্লায়েন্ট খুঁজুন...", lbl_total: "মোট মূল্য (৳)", lbl_advance: "অগ্রিম পেমেন্ট (৳)", lbl_bonus: "বোনাস (৳)", lbl_assign: "দায়িত্বপ্রাপ্ত ব্যক্তি", lbl_token: "পাসওয়ার্ড", lbl_university: "বিশ্ববিদ্যালয়", lbl_link: "প্রজেক্ট লিঙ্ক (ঐচ্ছিক)", btn_deploy: "সেভ করুন", btn_load_more: "আরও দেখুন",
     modal_exp_title: "খরচ যোগ করুন", lbl_exp_cat: "খরচের খাত", lbl_exp_desc: "বিবরণ (ঐচ্ছিক)", lbl_exp_amount: "পরিমাণ (৳)", btn_deduct: "খরচ যুক্ত করুন", btn_update: "আপডেট", btn_export: "CSV এক্সপোর্ট", btn_invoice: "পিডিএফ ইনভয়েস",
-    word_tasks: "টি কাজ", txt_internal: "নিজস্ব / ক্লায়েন্ট নেই", txt_due: "বাকি", txt_total: "মোট", txt_advance: "অগ্রিম", txt_net_income: "নিট আয়", txt_logged: "যুক্ত হয়েছে", txt_duration: "সময়কাল", txt_open_ended: "নির্ধারিত নয়", txt_overdue: "সময় পার হয়েছে", txt_days: "দিন", txt_unassigned: "নির্ধারিত নয়", txt_university: "বিশ্ববিদ্যালয়",
+    word_tasks: "টি কাজ", txt_internal: "নিজস্ব / ক্লায়েন্ট নেই", txt_due: "বাকি", txt_total: "মোট", txt_advance: "অগ্রিম", txt_bonus: "বোনাস", txt_net_income: "নিট আয়", txt_logged: "যুক্ত হয়েছে", txt_duration: "সময়কাল", txt_open_ended: "নির্ধারিত নয়", txt_overdue: "সময় পার হয়েছে", txt_days: "দিন", txt_unassigned: "নির্ধারিত নয়", txt_university: "বিশ্ববিদ্যালয়",
     btn_edit: "এডিট", btn_done: "সম্পন্ন", btn_undo: "পূর্বাবস্থায়", opt_add_client: "+ নতুন ক্লায়েন্ট / ক্লায়েন্ট নেই", btn_delete: "ডিলিট", modal_client_edit: "ক্লায়েন্ট এডিট", modal_client_add: "নতুন ক্লায়েন্ট", btn_view_tasks: "কাজগুলো দেখুন", btn_edit_client: "এডিট করুন", btn_save_client: "সেভ করুন", btn_cancel: "বাতিল", btn_confirm: "নিশ্চিত করুন", modal_auth_title: "পাসওয়ার্ড দিন", msg_auth_status: "স্ট্যাটাস পরিবর্তন করতে পাসওয়ার্ড দিন।", msg_auth_del_task: "কাজ ডিলিট করতে পাসওয়ার্ড দিন।", msg_auth_del_exp: "খরচ ডিলিট করতে পাসওয়ার্ড দিন.", msg_auth_save: "সেভ করতে পাসওয়ার্ড দিন।", msg_auth_phone: "ফোন নম্বর দেখতে পাসওয়ার্ড দিন।", search_tasks: "কাজ খুঁজুন...", filter_all_types: "সব ধরন", filter_all_assignees: "সব ব্যক্তি", tab_list: "লিস্ট ভিউ", tab_board: "কানবান বোর্ড", status_pending: "অপেক্ষমান", status_in_progress: "চলমান", status_review: "রিভিউ চলছে"
   }
 };
@@ -608,12 +609,25 @@ function renderDashboard() {
   allTasks.forEach(tk => {
     if (!isDateInRange(tk.createdAt, filterType)) return;
 
-    const total = tk.totalValue || 0, advance = tk.advancePaid || 0, balance = total - advance;
+    const total = tk.totalValue || 0;
+    const advance = tk.advancePaid || 0;
+    const bonus = tk.bonus || 0; 
     const isDone = tk.status === 'done';
 
+    // Total task value plus any bonus
+    const finalTaskValue = total + bonus;
+    const balance = finalTaskValue - advance;
+
     let taskEarned = advance;
-    if (isDone) { taskEarned += balance; completedTasksCount++; } 
-    else { expectedEarnings += balance; pendingTasksCount++; }
+    if (isDone) { 
+        taskEarned += balance; 
+        completedTasksCount++; 
+    } else { 
+        expectedEarnings += balance; 
+        pendingTasksCount++; 
+    }
+    
+    // Add bonus even if not completed, assuming it's part of the guaranteed earning
     totalEarned += taskEarned;
 
     // Income breakdown mapping
@@ -632,9 +646,17 @@ function renderDashboard() {
   const expenseBreakdown = { "Facebook Ads": 0, "Supplements": 0, "Withdraws": 0, "Others": 0 };
   allExpenses.forEach(e => {
     if (!isDateInRange(e.date, filterType)) return;
-    totalExpenses += (e.amount || 0);
-    if(expenseBreakdown[e.category] !== undefined) expenseBreakdown[e.category] += (e.amount || 0);
-    else expenseBreakdown["Others"] += (e.amount || 0);
+    
+    // Only tally if it's an expense or hasn't got an income type
+    if (e.type !== 'income') {
+        totalExpenses += (e.amount || 0);
+        if(expenseBreakdown[e.category] !== undefined) expenseBreakdown[e.category] += (e.amount || 0);
+        else expenseBreakdown["Others"] += (e.amount || 0);
+    } else {
+        // If you ever add an "income" transaction manually, it adds to totalEarned and "Other" income breakdown
+        totalEarned += (e.amount || 0);
+        incomeBreakdown["Other"] = (incomeBreakdown["Other"] || 0) + (e.amount || 0);
+    }
   });
 
   document.getElementById("stat-in").innerText = `৳${localNum(totalEarned)}`;
@@ -668,7 +690,6 @@ function renderCharts(expenseBreakdown, incomeBreakdown) {
   Chart.defaults.color = currentTheme === 'dark' ? '#a1a1aa' : '#52525b'; 
   Chart.defaults.font.family = 'Inter';
 
-  // --- EXPENSE CHART ---
   const ctxExp = document.getElementById('expenseChart').getContext('2d');
   if (expenseChartInstance) expenseChartInstance.destroy();
   
@@ -684,7 +705,6 @@ function renderCharts(expenseBreakdown, incomeBreakdown) {
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: currentTheme === 'dark' ? '#27272a' : '#e4e4e7' } }, x: { grid: { display: false } } } }
   });
 
-  // --- INCOME CHART ---
   const ctxInc = document.getElementById('incomeChart').getContext('2d');
   if (incomeChartInstance) incomeChartInstance.destroy();
   
@@ -716,8 +736,9 @@ function renderClientsView() {
     const cTasks = allTasks.filter(t => (t.client && t.client._id === client._id) || t.client === client._id);
     let netIncome = 0;
     cTasks.forEach(tk => {
+      const bonus = tk.bonus || 0;
       let earned = tk.advancePaid || 0;
-      if (tk.status === 'done') earned += ((tk.totalValue || 0) - (tk.advancePaid || 0));
+      if (tk.status === 'done') earned += (((tk.totalValue || 0) + bonus) - (tk.advancePaid || 0));
       netIncome += earned;
     });
 
@@ -758,7 +779,9 @@ function renderClientsView() {
 
 function generateTaskHTML(tk, isDone, isKanbanCard = false) {
   const clientName = tk.client && tk.client.name ? tk.client.name : t('txt_internal');
-  const total = tk.totalValue || 0, advance = tk.advancePaid || 0;
+  const total = tk.totalValue || 0;
+  const advance = tk.advancePaid || 0;
+  const bonus = tk.bonus || 0;
   
   const typeMap = { "Assignment": "অ্যাসাইনমেন্ট", "Thesis": "থিসিস", "Presentation": "প্রেজেন্টেশন", "Lab Project": "ল্যাব", "Other": "অন্যান্য" };
   const displayType = currentLang === 'bn' ? (typeMap[tk.workType] || tk.workType) : (tk.workType || 'Task');
@@ -778,11 +801,15 @@ function generateTaskHTML(tk, isDone, isKanbanCard = false) {
      actionButtons += `<button onclick="deleteTask('${tk._id}')" class="px-3 py-2 sm:py-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded text-xs font-medium transition-colors text-center flex items-center justify-center gap-1 w-full"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg> ${t('btn_delete')}</button>`;
   }
 
+  const netBalance = (total + bonus) - advance;
+
   if (isKanbanCard) {
-    return `<div data-id="${tk._id}" class="bg-white dark:bg-zinc-950 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm cursor-grab active:cursor-grabbing hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors"><div class="flex items-center justify-between mb-2"><span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${colorClass}">${displayType}</span><span class="text-[10px] text-zinc-500 font-medium">${customFormatDate(tk.deadline)}</span></div><h4 class="text-sm font-semibold text-zinc-900 dark:text-white leading-tight">${tk.title}</h4><p class="text-[11px] text-zinc-500 mt-1 truncate">${clientName}</p>${linkHTML}<div class="mt-3 flex justify-between items-center border-t border-zinc-100 dark:border-zinc-800 pt-2"><span class="text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 px-1.5 rounded">${tk.assignedTo?.split(' ')[0] || '-'}</span><span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">৳${localNum(total - advance)}</span></div></div>`;
+    return `<div data-id="${tk._id}" class="bg-white dark:bg-zinc-950 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm cursor-grab active:cursor-grabbing hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors"><div class="flex items-center justify-between mb-2"><span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${colorClass}">${displayType}</span><span class="text-[10px] text-zinc-500 font-medium">${customFormatDate(tk.deadline)}</span></div><h4 class="text-sm font-semibold text-zinc-900 dark:text-white leading-tight">${tk.title}</h4><p class="text-[11px] text-zinc-500 mt-1 truncate">${clientName}</p>${linkHTML}<div class="mt-3 flex justify-between items-center border-t border-zinc-100 dark:border-zinc-800 pt-2"><span class="text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 px-1.5 rounded">${tk.assignedTo?.split(' ')[0] || '-'}</span><span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">৳${localNum(netBalance)}</span></div></div>`;
   }
 
-  return `<li class="border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-none rounded-2xl p-4 sm:p-5 bg-white dark:bg-zinc-900/50 flex flex-col md:flex-row gap-4 justify-between transition-all hover:border-zinc-300 dark:hover:border-zinc-700"><div class="flex-1 space-y-3"><div class="flex items-center gap-2 flex-wrap"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${isDone ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500' : 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300'}">${t(isDone ? 'btn_done' : 'nav_active')}</span><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${colorClass}">${displayType}</span><span class="text-xs text-zinc-500 dark:text-zinc-400 font-medium ml-1 sm:ml-2">${t('txt_due')}: ${customFormatDate(tk.deadline)}</span></div><div><h3 class="text-lg font-semibold text-zinc-900 dark:text-white ${isDone ? 'line-through text-zinc-500 dark:text-zinc-500' : ''}">${tk.title}</h3>${detailsHTML}${linkHTML}<p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-1.5"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>${clientName}</p></div><div class="flex flex-wrap gap-3 sm:gap-4 text-xs font-medium border-t border-zinc-100 dark:border-zinc-800/50 pt-3"><div class="text-emerald-600 dark:text-emerald-400">${t('txt_total')}: ৳${localNum(total)}</div><div class="text-zinc-600 dark:text-zinc-300">${t('txt_advance')}: ৳${localNum(advance)}</div><div class="text-rose-600 dark:text-rose-400">${t('txt_due')}: ৳${localNum(total - advance)}</div><div class="text-zinc-500 dark:text-zinc-500 w-full sm:w-auto sm:ml-auto flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>${tk.assignedTo || t('txt_unassigned')}</div></div></div><div class="flex flex-col gap-2 shrink-0 items-stretch justify-center w-full md:w-32 border-t md:border-t-0 md:border-l border-zinc-100 dark:border-zinc-800/50 pt-3 md:pt-0 md:pl-4">${actionButtons}</div></li>`;
+  const bonusHtml = bonus > 0 ? `<div class="text-indigo-600 dark:text-indigo-400">${t('txt_bonus')}: ৳${localNum(bonus)}</div>` : '';
+
+  return `<li class="border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-none rounded-2xl p-4 sm:p-5 bg-white dark:bg-zinc-900/50 flex flex-col md:flex-row gap-4 justify-between transition-all hover:border-zinc-300 dark:hover:border-zinc-700"><div class="flex-1 space-y-3"><div class="flex items-center gap-2 flex-wrap"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${isDone ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500' : 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300'}">${t(isDone ? 'btn_done' : 'nav_active')}</span><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${colorClass}">${displayType}</span><span class="text-xs text-zinc-500 dark:text-zinc-400 font-medium ml-1 sm:ml-2">${t('txt_due')}: ${customFormatDate(tk.deadline)}</span></div><div><h3 class="text-lg font-semibold text-zinc-900 dark:text-white ${isDone ? 'line-through text-zinc-500 dark:text-zinc-500' : ''}">${tk.title}</h3>${detailsHTML}${linkHTML}<p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-1.5"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>${clientName}</p></div><div class="flex flex-wrap gap-3 sm:gap-4 text-xs font-medium border-t border-zinc-100 dark:border-zinc-800/50 pt-3"><div class="text-emerald-600 dark:text-emerald-400">${t('txt_total')}: ৳${localNum(total)}</div>${bonusHtml}<div class="text-zinc-600 dark:text-zinc-300">${t('txt_advance')}: ৳${localNum(advance)}</div><div class="text-rose-600 dark:text-rose-400">${t('txt_due')}: ৳${localNum(netBalance)}</div><div class="text-zinc-500 dark:text-zinc-500 w-full sm:w-auto sm:ml-auto flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>${tk.assignedTo || t('txt_unassigned')}</div></div></div><div class="flex flex-col gap-2 shrink-0 items-stretch justify-center w-full md:w-32 border-t md:border-t-0 md:border-l border-zinc-100 dark:border-zinc-800/50 pt-3 md:pt-0 md:pl-4">${actionButtons}</div></li>`;
 }
 
 function toggleTaskViewMode() {
@@ -924,7 +951,9 @@ function generatePDFInvoice(taskId) {
   // Calculate balances
   const total = tk.totalValue || 0;
   const advance = tk.advancePaid || 0;
-  const balance = total - advance;
+  const bonus = tk.bonus || 0;
+  const subtotal = total + bonus;
+  const balance = subtotal - advance;
   const isPaid = balance <= 0;
   
   // Header: Branding
@@ -938,11 +967,11 @@ function generatePDFInvoice(taskId) {
   
   // The PAID / DUE Seal
   const sealText = isPaid ? "PAID" : "DUE";
-  const sealColor = isPaid ? [22, 163, 74] : [220, 38, 38]; // Emerald Green vs Red
+  const sealColor = isPaid ? [22, 163, 74] : [220, 38, 38]; 
   
   doc.setDrawColor(sealColor[0], sealColor[1], sealColor[2]);
   doc.setLineWidth(1.2);
-  doc.roundedRect(160, 12, 35, 14, 2, 2); // x, y, width, height, rx, ry
+  doc.roundedRect(160, 12, 35, 14, 2, 2); 
   doc.setTextColor(sealColor[0], sealColor[1], sealColor[2]);
   doc.setFontSize(14); doc.setFont(undefined, 'bold');
   doc.text(sealText, 177.5, 22, null, null, "center");
@@ -966,11 +995,24 @@ function generatePDFInvoice(taskId) {
   
   // Totals
   doc.line(130, 130, 190, 130);
-  doc.text(`Subtotal:`, 130, 140); doc.text(`Tk ${total}`, 170, 140);
-  doc.text(`Advance Paid:`, 130, 148); doc.setTextColor(225, 29, 72); doc.text(`-Tk ${advance}`, 170, 148);
   
-  doc.line(130, 153, 190, 153); doc.setFont(undefined, 'bold'); doc.setTextColor(sealColor[0], sealColor[1], sealColor[2]);
-  doc.text(`Balance Due:`, 130, 163); doc.text(`Tk ${Math.max(0, balance)}`, 170, 163);
+  let totalsY = 140;
+  
+  doc.text(`Task Total:`, 130, totalsY); doc.text(`Tk ${total}`, 170, totalsY);
+  
+  if (bonus > 0) {
+      totalsY += 8;
+      doc.text(`Bonus:`, 130, totalsY); doc.text(`Tk ${bonus}`, 170, totalsY);
+  }
+  
+  totalsY += 8;
+  doc.text(`Advance Paid:`, 130, totalsY); doc.setTextColor(225, 29, 72); doc.text(`-Tk ${advance}`, 170, totalsY);
+  
+  totalsY += 5;
+  doc.line(130, totalsY, 190, totalsY); 
+  totalsY += 10;
+  doc.setFont(undefined, 'bold'); doc.setTextColor(sealColor[0], sealColor[1], sealColor[2]);
+  doc.text(`Balance Due:`, 130, totalsY); doc.text(`Tk ${Math.max(0, balance)}`, 170, totalsY);
   
   // Footer text
   doc.setFont(undefined, 'normal'); doc.setFontSize(10); doc.setTextColor(161, 161, 170);
@@ -1004,6 +1046,7 @@ function openTaskModal(taskId = null) {
     document.getElementById("tType").value = tk.workType || tk.type || "Assignment";
     document.getElementById("tTotal").value = tk.totalValue || 0;
     document.getElementById("tAdvance").value = tk.advancePaid || 0;
+    document.getElementById("tBonus").value = tk.bonus || 0;
     document.getElementById("tAssignee").value = tk.assignedTo || "Imranul Islam Shihab";
     document.getElementById("tDeadline").value = tk.deadline ? tk.deadline.split('T')[0] : "";
     document.getElementById("tClientSelect").value = tk.client ? tk.client._id : "new";
@@ -1015,6 +1058,7 @@ function openTaskModal(taskId = null) {
     document.getElementById("tLink").value = "";
     document.getElementById("tTotal").value = "0";
     document.getElementById("tAdvance").value = "0";
+    document.getElementById("tBonus").value = "0";
     document.getElementById("tDeadline").value = ""; 
     document.getElementById("tClientSelect").value = "new";
     document.getElementById("tClientName").value = "";
@@ -1045,6 +1089,7 @@ async function saveTask(e) {
     clientUniversity: document.getElementById("tClientUniversity").value,
     totalValue: Number(document.getElementById("tTotal").value) || 0,
     advancePaid: Number(document.getElementById("tAdvance").value) || 0,
+    bonus: Number(document.getElementById("tBonus").value) || 0,
     assignedTo: document.getElementById("tAssignee").value,
     password
   };
@@ -1073,7 +1118,7 @@ async function saveTransaction(e) {
   const password = await requestAuthToken(t('msg_auth_save'));
   if(!password) { btn.disabled = false; return; }
   
-  const payload = { category: document.getElementById("txCategory").value, description: document.getElementById("txDescription").value, amount: Number(document.getElementById("txAmount").value), password };
+  const payload = { category: document.getElementById("txCategory").value, description: document.getElementById("txDescription").value, amount: Number(document.getElementById("txAmount").value), type: "expense", password };
   if(payload.amount <= 0) { btn.disabled = false; return; }
   
   try {
