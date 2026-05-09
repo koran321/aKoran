@@ -72,6 +72,7 @@ app.get("/api/dashboard-stats", async (req, res) => {
           _id: null,
           totalTaskValue: { $sum: { $toDouble: "$totalValue" } },
           totalAdvance: { $sum: { $toDouble: "$advancePaid" } },
+          totalBonus: { $sum: { $toDouble: { $ifNull: ["$bonus", 0] } } },
           pendingTasks: {
             $sum: { $cond: [{ $ne: ["$status", "done"] }, 1, 0] }
           },
@@ -79,7 +80,10 @@ app.get("/api/dashboard-stats", async (req, res) => {
             $sum: {
               $cond: [
                 { $ne: ["$status", "done"] },
-                { $subtract: [{ $toDouble: "$totalValue" }, { $toDouble: "$advancePaid" }] },
+                { $subtract: [
+                    { $add: [{ $toDouble: "$totalValue" }, { $toDouble: { $ifNull: ["$bonus", 0] } }] }, 
+                    { $toDouble: "$advancePaid" }
+                ]},
                 0
               ]
             }
@@ -89,6 +93,7 @@ app.get("/api/dashboard-stats", async (req, res) => {
     ]).toArray();
 
     const [expenseStats] = await db.collection("accounts").aggregate([
+      { $match: { type: { $ne: "income" } } },
       {
         $group: {
           _id: null,
@@ -163,7 +168,7 @@ app.get("/api/tasks", async (req, res) => {
 // ➕ ADD TASK
 app.post("/api/add-task", checkPassword, async (req, res) => {
   try {
-    const { title, details, link, workType, clientId, clientName, clientPhone, clientUniversity, deadline, totalValue, advancePaid, assignedTo, status } = req.body;
+    const { title, details, link, workType, clientId, clientName, clientPhone, clientUniversity, deadline, totalValue, advancePaid, bonus, assignedTo, status } = req.body;
     const client = await clientPromise;
     const db = client.db("ak_process");
 
@@ -185,13 +190,13 @@ app.post("/api/add-task", checkPassword, async (req, res) => {
     
     // Auto clear payment if task is instantly created as "done"
     if (finalStatus === 'done') {
-        finalAdvance = Number(totalValue) || 0;
+        finalAdvance = (Number(totalValue) || 0) + (Number(bonus) || 0);
     }
 
     const task = await db.collection("assignment").insertOne({
       title, details: details || "", link: link || "", workType, client: finalClientId, 
       deadline: deadline || null, totalValue: Number(totalValue) || 0, 
-      advancePaid: finalAdvance, assignedTo, status: finalStatus,
+      advancePaid: finalAdvance, bonus: Number(bonus) || 0, assignedTo, status: finalStatus,
       createdAt: new Date(),
       updatedAt: new Date()
     });
@@ -234,12 +239,15 @@ app.put("/api/update-task/:id", checkPassword, async (req, res) => {
     // Ensure numbers are cast properly
     if (updates.totalValue !== undefined) updates.totalValue = Number(updates.totalValue);
     if (updates.advancePaid !== undefined) updates.advancePaid = Number(updates.advancePaid);
+    if (updates.bonus !== undefined) updates.bonus = Number(updates.bonus);
 
     // If marked as done, AUTO CLEAR the payment safely from DB state
     if (updates.status === 'done') {
         const currentTask = await db.collection("assignment").findOne({ _id: new ObjectId(req.params.id) });
         if (currentTask) {
-            updates.advancePaid = updates.totalValue !== undefined ? updates.totalValue : Number(currentTask.totalValue) || 0;
+            const finalTotal = updates.totalValue !== undefined ? updates.totalValue : Number(currentTask.totalValue) || 0;
+            const finalBonus = updates.bonus !== undefined ? updates.bonus : Number(currentTask.bonus) || 0;
+            updates.advancePaid = finalTotal + finalBonus;
         }
     }
 
@@ -316,7 +324,7 @@ app.put("/api/update-client/:id", checkPassword, async (req, res) => {
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-// 💰 ACCOUNTS (Expenses)
+// 💰 ACCOUNTS (Expenses & Income)
 app.get("/api/accounts", async (req, res) => {
   try {
     const client = await clientPromise;
@@ -338,9 +346,11 @@ app.post("/api/add-account", checkPassword, async (req, res) => {
     const client = await clientPromise;
     const db = client.db("ak_process");
     
-    const { category, amount, description } = req.body;
+    const { category, amount, description, type } = req.body;
+    const transactionType = type || "expense"; // flexible schema for future income transactions
+
     const result = await db.collection("accounts").insertOne({
-      category, amount: Number(amount), description, date: new Date(), createdAt: new Date()
+      category, amount: Number(amount), description, type: transactionType, date: new Date(), createdAt: new Date()
     });
 
     res.json(result);
