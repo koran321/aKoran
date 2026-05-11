@@ -1,0 +1,7 @@
+node_modules/
+.env
+.DS_Store
+os_backup/
+temp_clone/
+*.log
+.gemini/
