@@ -198,10 +198,41 @@ app.get("/api/tasks", async (req, res) => {
   }
 });
 
+// 🔍 PUBLIC TASK TRACKING (For Client Portal)
+app.get("/api/track-task/:id", async (req, res) => {
+  try {
+    const client = await clientPromise;
+    const db = client.db("ak_process");
+    
+    const task = await db.collection("assignment").aggregate([
+      { $match: { _id: new ObjectId(req.params.id) } },
+      {
+        $lookup: {
+          from: "clients",
+          localField: "client",
+          foreignField: "_id",
+          as: "clientData"
+        }
+      },
+      {
+        $addFields: {
+          clientName: { $ifNull: [{ $arrayElemAt: ["$clientData.name", 0] }, "Internal"] }
+        }
+      },
+      { $project: { title: 1, status: 1, deadline: 1, clientName: 1 } }
+    ]).next();
+
+    if (!task) return res.status(404).json({ message: "Task not found" });
+    res.json(task);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ➕ ADD TASK
 app.post("/api/add-task", checkPassword, async (req, res) => {
   try {
-    const { title, details, link, workType, clientId, clientName, clientPhone, clientUniversity, clientCountry, clientProgram, clientSubject, deadline, totalValue, advancePaid, bonus, assignedTo, status, writerPay } = req.body;
+    const { title, details, link, driveLink, revisionCount, workType, clientId, clientName, clientPhone, clientUniversity, clientCountry, clientProgram, clientSubject, deadline, totalValue, advancePaid, bonus, assignedTo, status, writerPay } = req.body;
     const client = await clientPromise;
     const db = client.db("ak_process");
 
@@ -230,7 +261,9 @@ app.post("/api/add-task", checkPassword, async (req, res) => {
     }
 
     const task = await db.collection("assignment").insertOne({
-      title, details: details || "", link: link || "", workType, client: finalClientId, 
+      title, details: details || "", link: link || "", driveLink: driveLink || "",
+      revisionCount: Number(revisionCount) || 0,
+      workType, client: finalClientId, 
       deadline: deadline || null, totalValue: Number(totalValue) || 0, 
       advancePaid: finalAdvance, bonus: Number(bonus) || 0, assignedTo, status: finalStatus,
       writerPay: Number(writerPay) || 0,
@@ -279,6 +312,7 @@ app.put("/api/update-task/:id", checkPassword, async (req, res) => {
     if (updates.totalValue !== undefined) updates.totalValue = Number(updates.totalValue);
     if (updates.advancePaid !== undefined) updates.advancePaid = Number(updates.advancePaid);
     if (updates.bonus !== undefined) updates.bonus = Number(updates.bonus);
+    if (updates.revisionCount !== undefined) updates.revisionCount = Number(updates.revisionCount) || 0;
 
     // If marked as done, AUTO CLEAR the payment safely from DB state
     if (updates.status === 'done') {
@@ -315,7 +349,7 @@ app.put("/api/update-task/:id", checkPassword, async (req, res) => {
       { $set: { ...updates, updatedAt: new Date() } }
     );
 
-    addLog("Task Updated", `Task ID: ${req.params.id} modified`);
+    addLog("Task Updated", `${updates.title || 'Task'} modified (Status: ${updates.status || 'N/A'})`);
     res.json(result);
 
   } catch (err) {
@@ -330,7 +364,7 @@ app.delete("/api/delete-task/:id", checkPassword, async (req, res) => {
     const db = client.db("ak_process");
 
     await db.collection("assignment").deleteOne({ _id: new ObjectId(req.params.id) });
-    addLog("Task Deleted", `Task ID: ${req.params.id} removed`);
+    addLog("Task Deleted", `Task removed from system`);
     res.json({ message: "Deleted" });
 
   } catch (err) {
@@ -369,6 +403,7 @@ app.post("/api/add-client", checkPassword, async (req, res) => {
       createdAt: new Date(), updatedAt: new Date()
     });
 
+    addLog("Client Added", `New client registered: ${name}`);
     res.json(result);
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
@@ -390,6 +425,7 @@ app.put("/api/update-client/:id", checkPassword, async (req, res) => {
       } }
     );
 
+    addLog("Client Updated", `Client profile updated: ${name}`);
     res.json(result);
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
@@ -429,6 +465,7 @@ app.post("/api/add-account", checkPassword, async (req, res) => {
       createdAt: new Date()
     });
 
+    addLog("Expense Logged", `Amount: ৳${amount} for ${category}`);
     res.json(result);
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
@@ -450,6 +487,7 @@ app.put("/api/update-account/:id", checkPassword, async (req, res) => {
       } }
     );
 
+    addLog("Expense Updated", `Transaction modified`);
     res.json({ message: "Updated" });
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
@@ -461,6 +499,7 @@ app.delete("/api/delete-account/:id", checkPassword, async (req, res) => {
     
     await db.collection("accounts").deleteOne({ _id: new ObjectId(req.params.id) });
 
+    addLog("Expense Deleted", `Transaction removed`);
     res.json({ message: "Deleted" });
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
@@ -489,6 +528,7 @@ app.delete("/api/delete-invoice/:id", checkPassword, async (req, res) => {
     
     await db.collection("invoices").deleteOne({ _id: new ObjectId(req.params.id) });
 
+    addLog("Invoice Deleted", `Invoice record removed`);
     res.json({ message: "Deleted" });
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
@@ -528,6 +568,7 @@ app.post("/api/add-writer", checkPassword, async (req, res) => {
     };
 
     const result = await db.collection("writers").insertOne(newWriter);
+    addLog("Writer Added", `${name} (${writerId}) added to team`);
     res.json(result);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -545,6 +586,7 @@ app.put("/api/update-writer/:id", checkPassword, async (req, res) => {
       { _id: new ObjectId(req.params.id) },
       { $set: { ...updates, updatedAt: new Date() } }
     );
+    addLog("Writer Updated", `Writer profile modified: ${updates.name || 'N/A'}`);
     res.json(result);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -556,6 +598,7 @@ app.delete("/api/delete-writer/:id", checkPassword, async (req, res) => {
     const client = await clientPromise;
     const db = client.db("ak_process");
     await db.collection("writers").deleteOne({ _id: new ObjectId(req.params.id) });
+    addLog("Writer Deleted", `Writer removed from system`);
     res.json({ message: "Deleted" });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -565,9 +608,10 @@ app.delete("/api/delete-writer/:id", checkPassword, async (req, res) => {
 // 📜 GET LOGS
 app.get("/api/logs", async (req, res) => {
   try {
+    const limit = parseInt(req.query.limit) || 100;
     const client = await clientPromise;
     const db = client.db("ak_process");
-    const logs = await db.collection("logs").find().sort({ timestamp: -1 }).limit(20).toArray();
+    const logs = await db.collection("logs").find().sort({ timestamp: -1 }).limit(limit).toArray();
     res.json(logs);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
