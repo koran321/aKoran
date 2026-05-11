@@ -201,7 +201,7 @@ app.get("/api/tasks", async (req, res) => {
 // ➕ ADD TASK
 app.post("/api/add-task", checkPassword, async (req, res) => {
   try {
-    const { title, details, link, workType, clientId, clientName, clientPhone, clientUniversity, deadline, totalValue, advancePaid, bonus, assignedTo, status, writerPay } = req.body;
+    const { title, details, link, workType, clientId, clientName, clientPhone, clientUniversity, clientCountry, clientProgram, clientSubject, deadline, totalValue, advancePaid, bonus, assignedTo, status, writerPay } = req.body;
     const client = await clientPromise;
     const db = client.db("ak_process");
 
@@ -213,6 +213,9 @@ app.post("/api/add-task", checkPassword, async (req, res) => {
         name: clientName || "Unnamed Client", 
         phone: clientPhone || "", 
         university: clientUniversity || "",
+        country: clientCountry || "Bangladesh",
+        program: clientProgram || "None",
+        subject: clientSubject || "None",
         createdAt: new Date(), updatedAt: new Date()
       });
       finalClientId = newClient.insertedId;
@@ -357,9 +360,13 @@ app.post("/api/add-client", checkPassword, async (req, res) => {
     const client = await clientPromise;
     const db = client.db("ak_process");
     
-    const { name, phone, university } = req.body;
+    const { name, phone, university, country, program, subject } = req.body;
     const result = await db.collection("clients").insertOne({
-      name, phone, university, createdAt: new Date(), updatedAt: new Date()
+      name, phone, university, 
+      country: country || "Bangladesh", 
+      program: program || "None", 
+      subject: subject || "None",
+      createdAt: new Date(), updatedAt: new Date()
     });
 
     res.json(result);
@@ -371,10 +378,16 @@ app.put("/api/update-client/:id", checkPassword, async (req, res) => {
     const client = await clientPromise;
     const db = client.db("ak_process");
     
-    const { name, phone, university } = req.body;
+    const { name, phone, university, country, program, subject } = req.body;
     const result = await db.collection("clients").updateOne(
       { _id: new ObjectId(req.params.id) },
-      { $set: { name, phone, university, updatedAt: new Date() } }
+      { $set: { 
+        name, phone, university, 
+        country: country || "Bangladesh", 
+        program: program || "None", 
+        subject: subject || "None",
+        updatedAt: new Date() 
+      } }
     );
 
     res.json(result);
