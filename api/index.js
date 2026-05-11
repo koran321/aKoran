@@ -2,6 +2,11 @@ import express from "express";
 import cors from "cors";
 import { ObjectId } from "mongodb";
 import clientPromise from "./db.js";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -11,6 +16,9 @@ app.use(cors({
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
+
+// Serve static files from the root directory
+app.use(express.static(path.join(__dirname, "../")));
 
 
 // 🔐 SESSION VERIFICATION MIDDLEWARE
@@ -705,3 +713,8 @@ app.get("/api/writer-stats", async (req, res) => {
 });
 
 export default app;
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+});
