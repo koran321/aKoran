@@ -99,13 +99,13 @@
   <!-- Public Tracking View -->
   <div id="trackingView" class="p-4 sm:p-8 w-full max-w-2xl mx-auto flex-col gap-8">
     <div class="text-center space-y-2">
-      <h1 class="text-3xl font-black tracking-tighter text-zinc-900 dark:text-white uppercase">Assignment Koran</h1>
-      <p class="text-zinc-500 dark:text-zinc-400 font-medium tracking-wide uppercase text-[10px]">Order Tracking Portal</p>
+      <h1 class="text-3xl font-black tracking-tighter text-zinc-900 dark:text-white uppercase" data-i18n="track_portal_title">Assignment Koran</h1>
+      <p class="text-zinc-500 dark:text-zinc-400 font-medium tracking-wide uppercase text-[10px]" data-i18n="track_portal_subtitle">Order Tracking Portal</p>
     </div>
     
     <div id="trackingCard" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-10 rounded-3xl shadow-xl space-y-8 w-full">
       <div class="space-y-1">
-        <h2 id="trackTitle" class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white leading-tight">Loading order details...</h2>
+        <h2 id="trackTitle" class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white leading-tight" data-i18n="track_loading">Loading order details...</h2>
         <p id="trackClient" class="text-sm text-zinc-500 font-medium"></p>
       </div>
 
@@ -117,35 +117,38 @@
         <div class="flex justify-between mt-[-12px] relative">
           <div class="flex flex-col items-center gap-2">
             <div id="step-pending" class="w-6 h-6 rounded-full bg-indigo-500 border-4 border-white dark:border-zinc-900 z-10"></div>
-            <span class="text-[9px] font-bold uppercase tracking-wider text-zinc-400">Pending</span>
+            <span class="text-[9px] font-bold uppercase tracking-wider text-zinc-400" data-i18n="status_pending">Pending</span>
           </div>
           <div class="flex flex-col items-center gap-2">
             <div id="step-in_progress" class="w-6 h-6 rounded-full bg-zinc-200 dark:bg-zinc-800 border-4 border-white dark:border-zinc-900 z-10"></div>
-            <span class="text-[9px] font-bold uppercase tracking-wider text-zinc-400">Working</span>
+            <span class="text-[9px] font-bold uppercase tracking-wider text-zinc-400" data-i18n="status_in_progress">Working</span>
           </div>
           <div class="flex flex-col items-center gap-2">
             <div id="step-review" class="w-6 h-6 rounded-full bg-zinc-200 dark:bg-zinc-800 border-4 border-white dark:border-zinc-900 z-10"></div>
-            <span class="text-[9px] font-bold uppercase tracking-wider text-zinc-400">Review</span>
+            <span class="text-[9px] font-bold uppercase tracking-wider text-zinc-400" data-i18n="status_review">Review</span>
           </div>
           <div class="flex flex-col items-center gap-2">
             <div id="step-done" class="w-6 h-6 rounded-full bg-zinc-200 dark:bg-zinc-800 border-4 border-white dark:border-zinc-900 z-10"></div>
-            <span class="text-[9px] font-bold uppercase tracking-wider text-zinc-400">Done</span>
+            <span class="text-[9px] font-bold uppercase tracking-wider text-zinc-400" data-i18n="status_done">Done</span>
           </div>
         </div>
       </div>
 
       <div class="pt-6 border-t border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
         <div class="space-y-0.5">
-          <p class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Expected Delivery</p>
+          <p class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest" data-i18n="track_expected">Expected Delivery</p>
           <p id="trackDeadline" class="text-sm font-semibold text-zinc-900 dark:text-white">-</p>
         </div>
         <div id="trackBadge" class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-zinc-100 dark:bg-zinc-800 text-zinc-500">
-          Syncing...
+          ...
         </div>
       </div>
     </div>
 
-    <p class="text-center text-[10px] text-zinc-500 font-medium">Need help? Contact your assigned coordinator.</p>
+    <div class="flex flex-col items-center gap-4">
+      <p class="text-center text-[10px] text-zinc-500 font-medium" data-i18n="track_help">Need help? Contact your assigned coordinator.</p>
+      <button onclick="toggleLang()" class="text-[10px] font-bold uppercase tracking-widest text-indigo-500 hover:text-indigo-600 transition-colors">বাং / EN</button>
+    </div>
   </div>
 
   <!-- Fullscreen Lottie Loader -->
@@ -870,7 +873,8 @@ const translations = {
     btn_edit: "Edit", btn_done: "Done", btn_undo: "Undo", opt_add_client: "+ Add New Client / No Client", btn_delete: "Delete", modal_client_edit: "Edit Client", modal_client_add: "Add New Client", btn_view_tasks: "View Tasks", btn_edit_client: "Edit Profile", btn_save_client: "Save Client", btn_cancel: "Cancel", btn_confirm: "Confirm", modal_auth_title: "Enter Password", msg_auth_status: "Enter password to change task status.", msg_auth_del_task: "Enter password to delete task.", msg_auth_del_exp: "Enter password to delete expense.", msg_auth_save: "Enter password to save changes.", msg_auth_phone: "Enter password to reveal phone numbers.", msg_auth_inv: "Enter password to download invoice.", search_tasks: "Search tasks...", filter_all_types: "All Types", filter_all_assignees: "All Assignees", tab_list: "List View", tab_board: "Kanban Board", status_pending: "Pending", status_in_progress: "In Progress", status_review: "Under Review",
     modal_writer_add: "Add New Writer", modal_writer_edit: "Edit Writer", lbl_w_name: "Full Name*", lbl_w_phone: "Phone*", lbl_w_email: "Email", lbl_w_image: "Image Link", lbl_w_dob: "Date of Birth", lbl_w_nid: "NID Details", btn_save_writer: "Save Writer", msg_writer_added: "Writer added!", msg_writer_updated: "Writer updated!", msg_writer_deleted: "Writer removed.", msg_req_name_phone: "Name and Phone are required!",
     lbl_country: "Country", lbl_program: "Program", lbl_subject: "Subject", opt_other: "Other...",
-    lbl_writer_pay: "Writer Pay (৳)", lbl_links: "Reference Files / Links", recent_activity: "Recent Activity", workload: "Workload", earnings: "Earnings", pending_pay: "Pending Pay", urgent: "Urgent"
+    lbl_writer_pay: "Writer Pay (৳)", lbl_links: "Reference Files / Links", recent_activity: "Recent Activity", workload: "Workload", earnings: "Earnings", pending_pay: "Pending Pay", urgent: "Urgent",
+    track_portal_title: "Assignment Koran", track_portal_subtitle: "Order Tracking Portal", track_expected: "Expected Delivery", track_syncing: "Syncing...", track_help: "Need help? Contact your assigned coordinator.", track_loading: "Loading order details...", track_order_for: "Order for", track_not_found: "Order Not Found", track_invalid_link: "Please check your tracking link."
   },
   bn: {
     title: "এজেন্সি ওএস", subtitle: "টাস্ক, ক্লায়েন্ট এবং হিসাব পরিচালনা করুন।", loading_text: "এজেন্সি ওএস লোড হচ্ছে...",
@@ -886,7 +890,8 @@ const translations = {
     btn_edit: "এডিট", btn_done: "সম্পন্ন", btn_undo: "পূর্বাবস্থায়", opt_add_client: "+ নতুন ক্লায়েন্ট / ক্লায়েন্ট নেই", btn_delete: "ডিলিট", modal_client_edit: "ক্লায়েন্ট এডিট", modal_client_add: "নতুন ক্লায়েন্ট", btn_view_tasks: "কাজগুলো দেখুন", btn_edit_client: "এডিট করুন", btn_save_client: "সেভ করুন", btn_cancel: "বাতিল", btn_confirm: "নিশ্চিত করুন", modal_auth_title: "পাসওয়ার্ড দিন", msg_auth_status: "স্ট্যাটাস পরিবর্তন করতে পাসওয়ার্ড দিন।", msg_auth_del_task: "কাজ ডিলিট করতে পাসওয়ার্ড দিন।", msg_auth_del_exp: "খরচ ডিলিট করতে পাসওয়ার্ড দিন.", msg_auth_save: "সেভ করতে পাসওয়ার্ড দিন।", msg_auth_phone: "ফোন নম্বর দেখতে পাসওয়ার্ড দিন।", msg_auth_inv: "ইনভয়েস ডাউনলোড করতে পাসওয়ার্ড দিন।", search_tasks: "কাজ খুঁজুন...", filter_all_types: "সব ধরন", filter_all_assignees: "সব ব্যক্তি", tab_list: "লিস্ট ভিউ", tab_board: "কানবান বোর্ড", status_pending: "অপেক্ষমান", status_in_progress: "চলমান", status_review: "রিভিউ চলছে",
     modal_writer_add: "নতুন রাইটার যোগ করুন", modal_writer_edit: "রাইটার এডিট", lbl_w_name: "পুরো নাম*", lbl_w_phone: "ফোন নম্বর*", lbl_w_email: "ইমেইল", lbl_w_image: "ছবির লিঙ্ক", lbl_w_dob: "জন্ম তারিখ", lbl_w_nid: "এনআইডি তথ্য", btn_save_writer: "রাইটার সেভ করুন", msg_writer_added: "রাইটার যোগ করা হয়েছে!", msg_writer_updated: "রাইটার আপডেট করা হয়েছে!", msg_writer_deleted: "রাইটার ডিলিট করা হয়েছে।", msg_req_name_phone: "নাম এবং ফোন নম্বর প্রয়োজন!",
     lbl_country: "দেশ", lbl_program: "প্রোগ্রাম", lbl_subject: "বিষয়", opt_other: "অন্যান্য...",
-    lbl_writer_pay: "রাইটার পেমেন্ট (৳)", lbl_links: "রেফারেন্স ফাইল / লিঙ্ক", recent_activity: "সাম্প্রতিক কর্মকাণ্ড", workload: "কাজের চাপ", earnings: "উপার্জন", pending_pay: "বাকি পেমেন্ট", urgent: "জরুরী"
+    lbl_writer_pay: "রাইটার পেমেন্ট (৳)", lbl_links: "রেফারেন্স ফাইল / লিঙ্ক", recent_activity: "সাম্প্রতিক কর্মকাণ্ড", workload: "কাজের চাপ", earnings: "উপার্জন", pending_pay: "বাকি পেমেন্ট", urgent: "জরুরী",
+    track_portal_title: "অ্যাসাইনমেন্ট করান", track_portal_subtitle: "অর্ডার ট্র্যাকিং পোর্টাল", track_expected: "সম্ভাব্য ডেলিভারি", track_syncing: "সিংকিং...", track_help: "সহায়তা প্রয়োজন? কোঅর্ডিনেটরের সাথে যোগাযোগ করুন।", track_loading: "অর্ডার বিস্তারিত লোড হচ্ছে...", track_order_for: "অর্ডার:", track_not_found: "অর্ডার পাওয়া যায়নি", track_invalid_link: "আপনার ট্র্যাকিং লিঙ্কটি চেক করুন।"
   }
 };
 
@@ -921,6 +926,11 @@ function toggleLang() {
   currentLang = currentLang === 'en' ? 'bn' : 'en';
   localStorage.setItem('agencyLang', currentLang);
   applyTranslations();
+  
+  // If tracking view is active, re-init it to update dynamic labels
+  const params = new URLSearchParams(window.location.search);
+  const trackId = params.get('track');
+  if (trackId) initTrackingView(trackId);
 }
 
 function localNum(num) {
@@ -1309,23 +1319,28 @@ async function initTrackingView(id) {
   const trackView = document.getElementById("trackingView");
   trackView.classList.add('active');
   
-  // Hide all other UI
+  // Hide all other UI including Header
+  document.querySelector("header")?.classList.add("hidden");
   document.querySelector("aside")?.classList.add("hidden");
   document.querySelector("nav")?.classList.add("hidden");
   document.querySelectorAll("main").forEach(m => m.classList.add("hidden"));
   
   try {
     const task = await handleFetch(`${API}/track-task/${id}`);
+    
+    // Apply initial translations
+    applyTranslations();
+    
     document.getElementById("trackTitle").innerText = task.title;
-    document.getElementById("trackClient").innerText = `Order for ${task.clientName}`;
-    document.getElementById("trackDeadline").innerText = task.deadline ? new Date(task.deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Flexible';
+    document.getElementById("trackClient").innerText = `${t('track_order_for')} ${task.clientName}`;
+    document.getElementById("trackDeadline").innerText = customFormatDate(task.deadline);
     
     const statusMap = { 'pending': 1, 'in_progress': 2, 'review': 3, 'done': 4 };
     const step = statusMap[task.status] || 1;
     const progress = (step / 4) * 100;
     
     document.getElementById("trackProgress").style.width = `${progress}%`;
-    document.getElementById("trackBadge").innerText = task.status.replace('_', ' ');
+    document.getElementById("trackBadge").innerText = t(`status_${task.status}`);
     
     const steps = ['pending', 'in_progress', 'review', 'done'];
     steps.forEach((s, i) => {
@@ -1337,9 +1352,10 @@ async function initTrackingView(id) {
       }
     });
   } catch (err) {
-    document.getElementById("trackTitle").innerText = "Order Not Found";
-    document.getElementById("trackClient").innerText = "Please check your tracking link.";
-    showToast("Invalid Tracking ID", "error");
+    applyTranslations();
+    document.getElementById("trackTitle").innerText = t('track_not_found');
+    document.getElementById("trackClient").innerText = t('track_invalid_link');
+    showToast(t('track_not_found'), "error");
   }
 }
 
