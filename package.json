@@ -1,7 +1,7 @@
 {
-  "name": "agency-os-supabase",
+  "name": "assignment-koran-os",
   "version": "1.0.0",
-  "description": "Agency Management System with Supabase and Vercel",
+  "description": "Agency Management System for Assignment Koran",
   "main": "api/index.js",
   "type": "module",
   "scripts": {
@@ -9,9 +9,12 @@
     "dev": "nodemon api/index.js"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.43.0",
     "cors": "^2.8.5",
     "express": "^4.19.2",
+    "mongodb": "^6.6.2",
     "mongoose": "^8.3.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
   }
 }
