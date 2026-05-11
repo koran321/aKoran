@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Dashboard | Assignment Koran</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --glass: rgba(255, 255, 255, 0.7);
+            --glass-dark: rgba(15, 23, 42, 0.8);
+        }
+        body { font-family: 'Outfit', sans-serif; }
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .dark .glass-card {
+            background: var(--glass-dark);
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+        .progress-step.active { background: #6366f1; }
+        .progress-step.done { background: #10b981; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+    </style>
+</head>
+<body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 min-h-screen transition-colors">
+    <!-- Loader -->
+    <div id="portalLoader" class="fixed inset-0 z-50 flex items-center justify-center bg-zinc-50 dark:bg-zinc-950">
+        <div class="flex flex-col items-center">
+            <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+            <p class="mt-4 text-xs font-bold uppercase tracking-widest text-zinc-400">Syncing Dashboard...</p>
+        </div>
+    </div>
+
+    <div class="max-w-5xl mx-auto p-4 sm:p-8 pb-20">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8 animate-fade-in">
+            <div>
+                <h1 class="text-2xl font-black tracking-tighter uppercase">Assignment Koran <span class="text-indigo-500">Scholar</span></h1>
+                <p class="text-[10px] font-bold text-zinc-500 tracking-widest uppercase">Personalized Dashboard</p>
+            </div>
+            <button onclick="logout()" class="p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:text-rose-500 transition-colors">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </button>
+        </header>
+
+        <!-- Profile Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <div class="lg:col-span-2 glass-card rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6 animate-fade-in bg-white dark:bg-zinc-900 shadow-xl shadow-zinc-200/50 dark:shadow-none">
+                <div class="relative group">
+                    <div id="profilePhoto" class="w-24 h-24 sm:w-32 sm:h-32 rounded-3xl bg-zinc-100 dark:bg-zinc-800 overflow-hidden border-4 border-white dark:border-zinc-800 shadow-xl transition-all group-hover:opacity-90">
+                        <img id="clientAvatar" src="https://ui-avatars.com/api/?name=Client&background=6366f1&color=fff&size=128" alt="Profile" class="w-full h-full object-cover">
+                        <div onclick="triggerPhotoUpload()" class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                            <i class="fa-solid fa-camera text-white text-xl"></i>
+                        </div>
+                    </div>
+                    <input type="file" id="photoInput" class="hidden" accept="image/*" onchange="handlePhotoUpload(event)">
+                    <div class="absolute -bottom-2 -right-2 bg-emerald-500 text-white p-2 rounded-xl border-4 border-white dark:border-zinc-900">
+                        <i class="fa-solid fa-check text-[10px]"></i>
+                    </div>
+                </div>
+                <div class="text-center sm:text-left flex-1">
+                    <h2 id="clientName" class="text-2xl sm:text-3xl font-black tracking-tight text-zinc-900 dark:text-white">Loading...</h2>
+                    <div class="flex flex-wrap justify-center sm:justify-start gap-2 mt-2">
+                        <span id="clientPhone" class="px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 text-[10px] font-bold uppercase tracking-wider text-zinc-600 dark:text-zinc-300"></span>
+                        <span id="clientUni" class="px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-500/20"></span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mt-6">
+                        <div class="bg-zinc-50 dark:bg-zinc-800/50 p-3 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                            <p class="text-[9px] font-black uppercase text-zinc-500 dark:text-zinc-400 tracking-widest mb-0.5">Program</p>
+                            <p id="clientProg" class="text-xs font-bold text-zinc-800 dark:text-zinc-200">N/A</p>
+                        </div>
+                        <div class="bg-zinc-50 dark:bg-zinc-800/50 p-3 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                            <p class="text-[9px] font-black uppercase text-zinc-400 dark:text-zinc-400 tracking-widest mb-0.5">Department</p>
+                            <p id="clientDept" class="text-xs font-bold text-zinc-800 dark:text-zinc-200">N/A</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card rounded-3xl p-6 sm:p-8 flex flex-col justify-between animate-fade-in bg-white dark:bg-zinc-900 shadow-xl shadow-zinc-200/50 dark:shadow-none" style="animation-delay: 0.1s">
+                <div class="space-y-4">
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <p class="text-[10px] font-black uppercase text-zinc-500 dark:text-zinc-400 tracking-widest mb-1">Financial Status</p>
+                            <h3 class="text-3xl font-black text-emerald-600 dark:text-emerald-400" id="statPaid">৳0</h3>
+                        </div>
+                        <p class="text-[10px] font-bold text-emerald-500 uppercase">Paid Total</p>
+                    </div>
+                    <div class="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                        <div id="paymentProgress" class="h-full bg-emerald-500 transition-all duration-1000" style="width: 0%"></div>
+                    </div>
+                    <div class="flex justify-between text-[10px] font-bold uppercase tracking-tighter">
+                        <span class="text-zinc-500 dark:text-zinc-400">Outstanding Due:</span>
+                        <span class="text-rose-500 font-black" id="statDue">৳0</span>
+                    </div>
+                </div>
+                <button onclick="contactSupport()" class="mt-6 w-full py-3 bg-zinc-900 dark:bg-indigo-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-indigo-500/20">Support Center</button>
+            </div>
+        </div>
+
+        <!-- Orders Section -->
+        <div class="space-y-4 animate-fade-in" style="animation-delay: 0.2s">
+            <div class="flex items-center justify-between px-2">
+                <h3 class="text-sm font-black uppercase tracking-widest text-zinc-500 dark:text-zinc-400">Order History (<span id="orderCount">0</span>)</h3>
+                <div class="flex gap-2">
+                    <div class="w-2 h-2 rounded-full bg-indigo-500"></div>
+                    <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                </div>
+            </div>
+            
+            <div id="ordersContainer" class="space-y-4">
+                <!-- Orders will be injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Script -->
+    <script src="js/portal.js"></script>
+</body>
+</html>

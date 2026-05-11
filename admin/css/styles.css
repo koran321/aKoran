@@ -1,0 +1,70 @@
+    body { font-family: 'Inter', sans-serif; margin: 0; min-height: 100vh; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 4px; }
+    .dark ::-webkit-scrollbar-thumb { background: #27272a; }
+    
+    dialog::backdrop { background: rgba(0, 0, 0, 0.7); }
+    .dark dialog::backdrop { background: rgba(0, 0, 0, 0.85); }
+    dialog:not([open]) { display: none; }
+    dialog[open] { display: flex; flex-direction: column; max-height: 90dvh; overflow: hidden; width: 95%; max-width: 32rem; }
+    
+    .dialog-content { overflow-y: auto; flex: 1 1 auto; -webkit-overflow-scrolling: touch; }
+    .tab-active { border-bottom: 2px solid; color: currentColor; }
+    .tab-inactive { border-bottom: 2px solid transparent; }
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* Tracking View Styles */
+    #trackingView { display: none; }
+    #trackingView.active { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+
+    /* Glassmorphism */
+    .glass {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    .dark .glass {
+      background: rgba(24, 24, 27, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    * { transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease; }
+    
+    main { animation: fadeIn 0.4s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    
+    #activityList::-webkit-scrollbar { width: 3px; }
+    #activityList::-webkit-scrollbar-thumb { background: #e4e4e7; border-radius: 10px; }
+    .dark #activityList::-webkit-scrollbar-thumb { background: #27272a; }
+
+    /* Toast System */
+    #toast-container {
+      position: fixed; top: 1.5rem; right: 1.5rem; left: auto; bottom: auto;
+      margin: 0; padding: 0; border: none; background: transparent;
+      z-index: 100000; display: flex; flex-direction: column; gap: 0.75rem;
+      pointer-events: none; overflow: visible;
+    }
+    .toast {
+      pointer-events: auto;
+      min-width: 280px;
+      padding: 1rem 1.25rem;
+      border-radius: 1rem;
+      background: #fff;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      transform: translateX(120%);
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
+      opacity: 0;
+    }
+    .dark .toast { background: #18181b; color: #fff; border: 1px solid #27272a; }
+    .toast.show { transform: translateX(0); opacity: 1; }
+    .toast-success { border-left: 4px solid #10b981; }
+    .toast-error { border-left: 4px solid #ef4444; }
+    .toast-info { border-left: 4px solid #3b82f6; }

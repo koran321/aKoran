@@ -1,851 +1,3 @@
-<!DOCTYPE html>
-<html lang="en" class="dark">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Agency OS - Minimalist</title>
-  
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } }
-    }
-  </script>
-  
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  
-  <!-- Add SortableJS for buttery smooth Mobile & Desktop Drag and Drop -->
-  <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-  
-  <style>
-    body { font-family: 'Inter', sans-serif; margin: 0; min-height: 100vh; }
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 4px; }
-    .dark ::-webkit-scrollbar-thumb { background: #27272a; }
-    
-    dialog::backdrop { background: rgba(0, 0, 0, 0.7); }
-    .dark dialog::backdrop { background: rgba(0, 0, 0, 0.85); }
-    dialog:not([open]) { display: none; }
-    dialog[open] { display: flex; flex-direction: column; max-height: 90dvh; overflow: hidden; width: 95%; max-width: 32rem; }
-    
-    .dialog-content { overflow-y: auto; flex: 1 1 auto; -webkit-overflow-scrolling: touch; }
-    .tab-active { border-bottom: 2px solid; color: currentColor; }
-    .tab-inactive { border-bottom: 2px solid transparent; }
-    .hide-scrollbar::-webkit-scrollbar { display: none; }
-    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    
-    /* Tracking View Styles */
-    #trackingView { display: none; }
-    #trackingView.active { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
-
-    /* Glassmorphism */
-    .glass {
-      background: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-    }
-    .dark .glass {
-      background: rgba(24, 24, 27, 0.7);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    
-    * { transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease; }
-    
-    main { animation: fadeIn 0.4s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-    
-    #activityList::-webkit-scrollbar { width: 3px; }
-    #activityList::-webkit-scrollbar-thumb { background: #e4e4e7; border-radius: 10px; }
-    .dark #activityList::-webkit-scrollbar-thumb { background: #27272a; }
-
-    /* Toast System */
-    #toast-container {
-      position: fixed; top: 1.5rem; right: 1.5rem; left: auto; bottom: auto;
-      margin: 0; padding: 0; border: none; background: transparent;
-      z-index: 100000; display: flex; flex-direction: column; gap: 0.75rem;
-      pointer-events: none; overflow: visible;
-    }
-    .toast {
-      pointer-events: auto;
-      min-width: 280px;
-      padding: 1rem 1.25rem;
-      border-radius: 1rem;
-      background: #fff;
-      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      transform: translateX(120%);
-      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
-      opacity: 0;
-    }
-    .dark .toast { background: #18181b; color: #fff; border: 1px solid #27272a; }
-    .toast.show { transform: translateX(0); opacity: 1; }
-    .toast-success { border-left: 4px solid #10b981; }
-    .toast-error { border-left: 4px solid #ef4444; }
-    .toast-info { border-left: 4px solid #3b82f6; }
-  </style>
-</head>
-<body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 p-3 sm:p-8 transition-colors duration-300 relative">
-
-  <!-- Public Tracking View -->
-  <div id="trackingView" class="p-4 sm:p-8 w-full max-w-2xl mx-auto flex-col gap-8">
-    <div class="text-center space-y-2">
-      <h1 class="text-3xl font-black tracking-tighter text-zinc-900 dark:text-white uppercase" data-i18n="track_portal_title">Assignment Koran</h1>
-      <p class="text-zinc-500 dark:text-zinc-400 font-medium tracking-wide uppercase text-[10px]" data-i18n="track_portal_subtitle">Order Tracking Portal</p>
-    </div>
-    
-    <div id="trackingCard" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-10 rounded-3xl shadow-xl space-y-8 w-full">
-      <div class="space-y-1">
-        <h2 id="trackTitle" class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white leading-tight" data-i18n="track_loading">Loading order details...</h2>
-        <div class="group relative inline-block">
-          <p class="text-sm text-zinc-500 font-medium flex items-center gap-1.5">
-            <span data-i18n="track_order_for">Order for</span>
-            <span id="trackClientName" class="text-indigo-600 dark:text-indigo-400 font-bold cursor-help border-b border-dotted border-indigo-500/40 pb-0.5"></span>
-          </p>
-          <!-- University Card Tooltip -->
-          <div id="trackUniCard" class="absolute bottom-full left-0 mb-3 w-max max-w-[240px] bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 p-3.5 rounded-2xl shadow-2xl opacity-0 scale-90 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:translate-y-0 transition-all duration-300 z-50">
-            <div class="flex items-center gap-2 mb-1.5">
-              <div class="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
-              <span class="text-[9px] uppercase tracking-widest text-zinc-400 font-black" data-i18n="txt_university">University</span>
-            </div>
-            <span id="trackUniName" class="block text-[11px] font-bold text-zinc-900 dark:text-white leading-relaxed italic"></span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Progress Bar -->
-      <div class="relative pt-10 pb-4">
-        <div class="absolute top-0 left-0 w-full h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full"></div>
-        <div id="trackProgress" class="absolute top-0 left-0 h-1.5 bg-indigo-500 rounded-full transition-all duration-1000" style="width: 10%"></div>
-        
-        <div class="flex justify-between mt-[-12px] relative">
-          <div class="flex flex-col items-center gap-2">
-            <div id="step-pending" class="w-6 h-6 rounded-full bg-indigo-500 border-4 border-white dark:border-zinc-900 z-10"></div>
-            <span class="text-[9px] font-bold uppercase tracking-wider text-zinc-400" data-i18n="status_pending">Pending</span>
-          </div>
-          <div class="flex flex-col items-center gap-2">
-            <div id="step-in_progress" class="w-6 h-6 rounded-full bg-zinc-200 dark:bg-zinc-800 border-4 border-white dark:border-zinc-900 z-10"></div>
-            <span class="text-[9px] font-bold uppercase tracking-wider text-zinc-400" data-i18n="status_in_progress">Working</span>
-          </div>
-          <div class="flex flex-col items-center gap-2">
-            <div id="step-review" class="w-6 h-6 rounded-full bg-zinc-200 dark:bg-zinc-800 border-4 border-white dark:border-zinc-900 z-10"></div>
-            <span class="text-[9px] font-bold uppercase tracking-wider text-zinc-400" data-i18n="status_review">Review</span>
-          </div>
-          <div class="flex flex-col items-center gap-2">
-            <div id="step-done" class="w-6 h-6 rounded-full bg-zinc-200 dark:bg-zinc-800 border-4 border-white dark:border-zinc-900 z-10"></div>
-            <span class="text-[9px] font-bold uppercase tracking-wider text-zinc-400" data-i18n="status_done">Done</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="pt-6 border-t border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
-        <div class="space-y-0.5">
-          <p class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest" data-i18n="track_expected">Expected Delivery</p>
-          <p id="trackDeadline" class="text-sm font-semibold text-zinc-900 dark:text-white">-</p>
-        </div>
-        <div id="trackBadge" class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-zinc-100 dark:bg-zinc-800 text-zinc-500">
-          ...
-        </div>
-      </div>
-    </div>
-
-    <div class="flex flex-col items-center gap-4">
-      <p class="text-center text-[10px] text-zinc-500 font-medium" data-i18n="track_help">Need help? Contact your assigned coordinator.</p>
-      <button onclick="toggleLang()" class="text-[10px] font-bold uppercase tracking-widest text-indigo-500 hover:text-indigo-600 transition-colors">বাং / EN</button>
-    </div>
-  </div>
-
-  <!-- Portal Login Screen -->
-  <div id="portalLogin" class="fixed inset-0 z-[60] bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center p-6 hidden">
-    <div class="w-full max-w-sm space-y-8 text-center">
-      <div class="space-y-2">
-        <div class="w-16 h-16 bg-indigo-500 rounded-3xl mx-auto flex items-center justify-center shadow-xl shadow-indigo-500/20 mb-6">
-          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-        </div>
-        <h1 class="text-2xl font-black tracking-tighter text-zinc-900 dark:text-white uppercase">Portal Access</h1>
-        <p class="text-zinc-500 dark:text-zinc-400 text-xs font-medium uppercase tracking-widest">Enter password to continue</p>
-      </div>
-      
-      <form onsubmit="handlePortalLogin(event)" class="space-y-4">
-        <input type="password" id="portalPass" placeholder="••••••••" required class="w-full px-6 py-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-center text-xl font-bold tracking-[0.5em] focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
-        <button type="submit" id="btnLoginPortal" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-indigo-600/20 active:scale-[0.98] transition-all">Unlock Dashboard</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- Fullscreen Lottie Loader -->
-  <div id="catLoader" class="fixed top-0 left-0 w-full h-full z-[50] flex flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-950 transition-opacity duration-500 m-0 p-0">
-    <div class="flex flex-col items-center justify-center m-auto">
-      <lottie-player src="https://tukitaki.vercel.app/src/json/LottieFiles/cat_loader.json" background="transparent" speed="1" style="width: 120px; height: 120px; display: block; margin: 0 auto;" loop autoplay></lottie-player>
-      <p class="mt-3 text-sm font-medium text-zinc-500 animate-pulse tracking-wide text-center" data-i18n="loading_text">Loading Agency OS...</p>
-    </div>
-  </div>
-
-  <div class="max-w-6xl mx-auto">
-    <!-- Header -->
-    <header class="mb-6 sm:mb-8 border-b border-zinc-200 dark:border-zinc-800">
-      <div class="flex flex-col sm:flex-row justify-between items-center pb-4 sm:pb-6 gap-4">
-        <div class="flex-1 w-full sm:w-auto">
-          <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 dark:text-white flex items-center gap-2" data-i18n="title">Assignment Koran <span class="text-[10px] bg-indigo-500 text-white px-2 py-0.5 rounded-full uppercase tracking-tighter">Portal</span></h1>
-          <p class="text-zinc-500 dark:text-zinc-400 mt-1 text-xs sm:text-sm font-medium truncate" data-i18n="subtitle">Manage tasks, clients, and finances.</p>
-        </div>
-        <div class="flex items-center gap-3 w-full sm:w-auto">
-          <div class="relative flex-1 sm:w-64">
-            <input type="text" id="globalSearch" oninput="handleGlobalSearch()" placeholder="Search anything..." class="w-full bg-zinc-100 dark:bg-zinc-800/50 border border-transparent rounded-xl px-10 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all">
-            <svg class="absolute left-3 top-2.5 text-zinc-400" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          </div>
-          <button onclick="toggleLang()" id="langBtn" class="px-2.5 sm:px-3 py-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider border rounded-full border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shadow-sm dark:shadow-none text-indigo-600 dark:text-indigo-400">বাং/EN</button>
-          <button onclick="toggleTheme()" class="p-1.5 sm:p-2 border rounded-full border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shadow-sm dark:shadow-none text-zinc-600 dark:text-zinc-400"><svg id="themeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg></button>
-        </div>
-      </div>
-      
-      <nav class="flex gap-4 sm:gap-6 text-sm font-medium overflow-x-auto whitespace-nowrap hide-scrollbar border-zinc-900 dark:border-white">
-        <button onclick="switchTab('dashboard')" id="tab-dashboard" class="pb-3 px-1 tab-active text-zinc-900 dark:text-white border-zinc-900 dark:border-white transition-colors" data-i18n="nav_overview">Overview</button>
-        <button onclick="switchTab('clients-view')" id="tab-clients-view" class="pb-3 px-1 tab-inactive text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors" data-i18n="nav_clients">Clients</button>
-        <button onclick="switchTab('tasks')" id="tab-tasks" class="pb-3 px-1 tab-inactive text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors" data-i18n="nav_active">Active Pipeline</button>
-        <button onclick="switchTab('done')" id="tab-done" class="pb-3 px-1 tab-inactive text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors" data-i18n="nav_done">Completed Works</button>
-        <button onclick="switchTab('invoices')" id="tab-invoices" class="pb-3 px-1 tab-inactive text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors" data-i18n="nav_invoices">Invoices</button>
-        <button onclick="switchTab('writers')" id="tab-writers" class="pb-3 px-1 tab-inactive text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors" data-i18n="nav_writers">Writers</button>
-        <button onclick="switchTab('accounts')" id="tab-accounts" class="pb-3 px-1 tab-inactive text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-300 transition-colors" data-i18n="nav_accounts">Expenses</button>
-      </nav>
-    </header>
-
-    <!-- WRITERS MODAL -->
-  <dialog id="writerModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95vw] sm:w-full max-w-lg m-auto text-zinc-900 dark:text-white transition-colors">
-    <div class="flex justify-between items-center p-4 sm:p-5 border-b border-zinc-100 dark:border-zinc-800">
-      <h2 class="text-base sm:text-lg font-semibold" id="writerModalTitle" data-i18n="modal_writer_add">Add New Writer</h2>
-      <button onclick="document.getElementById('writerModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 p-1"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
-    </div>
-    <form id="writerForm" class="p-4 sm:p-5 space-y-4 max-h-[70vh] overflow-y-auto">
-      <input type="hidden" id="editWriterId">
-      <div class="grid grid-cols-2 gap-4">
-        <div class="col-span-2">
-          <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5" data-i18n="lbl_w_name">Full Name*</label>
-          <input type="text" id="wName" required class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5" data-i18n="lbl_w_phone">Phone*</label>
-          <input type="text" id="wPhone" required class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500 transition-all">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5" data-i18n="lbl_w_email">Email</label>
-          <input type="email" id="wEmail" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500 transition-all">
-        </div>
-        <div class="col-span-2">
-          <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5" data-i18n="lbl_w_image">Image Link</label>
-          <input type="text" id="wImage" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500 transition-all">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5" data-i18n="lbl_w_dob">Date of Birth</label>
-          <input type="date" id="wDob" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500 transition-all">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5" data-i18n="lbl_w_nid">NID Details</label>
-          <input type="text" id="wNid" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500 transition-all">
-        </div>
-      </div>
-      <button type="button" onclick="saveWriter()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-indigo-500/20 mt-2" data-i18n="btn_save_writer">Save Writer</button>
-    </form>
-  </dialog>
-
-    <!-- DASHBOARD VIEW -->
-    <main id="view-dashboard" class="block space-y-4 sm:space-y-6 pb-24">
-      <div class="flex justify-between items-center mb-2">
-        <h2 class="text-lg font-semibold text-zinc-900 dark:text-white" data-i18n="nav_overview">Overview</h2>
-        <select id="dashboardDateFilter" onchange="renderDashboard()" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-lg px-3 py-1.5 text-xs font-medium outline-none focus:border-indigo-500 shadow-sm">
-          <option value="all" data-i18n="filter_all_time">All Time</option>
-          <option value="this_month" data-i18n="filter_this_month">This Month</option>
-          <option value="last_month" data-i18n="filter_last_month">Last Month</option>
-          <option value="this_year" data-i18n="filter_this_year">This Year</option>
-        </select>
-      </div>
-      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div class="bg-white dark:bg-zinc-900 glass border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-none col-span-2 sm:col-span-1">
-          <p class="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs uppercase tracking-wider font-semibold mb-1" data-i18n="stat_earned">Total Earned</p>
-          <h3 class="text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400" id="stat-in">৳0</h3>
-        </div>
-        <div class="bg-white dark:bg-zinc-900 glass border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-none relative overflow-hidden">
-          <p class="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs uppercase tracking-wider font-semibold mb-1" data-i18n="stat_expected">Expected Earnings</p>
-          <h3 class="text-xl sm:text-2xl font-bold text-yellow-600 dark:text-yellow-400" id="stat-expected">৳0</h3>
-        </div>
-        <div class="bg-white dark:bg-zinc-900 glass border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-none">
-          <p class="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs uppercase tracking-wider font-semibold mb-1" data-i18n="stat_expenses">Expenses</p>
-          <h3 class="text-xl sm:text-2xl font-bold text-rose-600 dark:text-rose-400" id="stat-out">৳0</h3>
-        </div>
-        <div class="bg-white dark:bg-zinc-900 glass border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-none">
-          <p class="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs uppercase tracking-wider font-semibold mb-1" data-i18n="stat_net">Net Balance</p>
-          <h3 class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white" id="stat-net">৳0</h3>
-        </div>
-        <div class="bg-white dark:bg-zinc-900 glass border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-none">
-          <p class="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs uppercase tracking-wider font-semibold mb-1" data-i18n="stat_total_tasks">Total Tasks</p>
-          <h3 class="text-xl sm:text-2xl font-bold text-indigo-600 dark:text-indigo-400" id="stat-total-tasks">0</h3>
-        </div>
-        <div class="bg-white dark:bg-zinc-900 glass border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-none">
-          <p class="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs uppercase tracking-wider font-semibold mb-1" data-i18n="stat_pending">Active Pipeline</p>
-          <h3 class="text-xl sm:text-2xl font-bold text-blue-600 dark:text-blue-400" id="stat-pending">0 Tasks</h3>
-        </div>
-        <div class="bg-white dark:bg-zinc-900 glass border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-none col-span-2 sm:col-span-1 lg:col-span-2">
-          <p class="text-zinc-500 dark:text-zinc-400 text-[10px] sm:text-xs uppercase tracking-wider font-semibold mb-1" data-i18n="stat_completed_tasks">Completed Tasks</p>
-          <h3 class="text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400" id="stat-completed-tasks">0</h3>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mt-4 sm:mt-6">
-        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-none">
-          <h3 class="text-[10px] font-bold mb-3 text-zinc-500 uppercase tracking-widest" data-i18n="chart_income_title">Income Breakdown</h3>
-          <div class="w-full h-[180px] flex items-center justify-center"><canvas id="incomeChart"></canvas></div>
-        </div>
-        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-none">
-          <h3 class="text-[10px] font-bold mb-3 text-zinc-500 uppercase tracking-widest" data-i18n="chart_title">Expense Breakdown</h3>
-          <div class="w-full h-[180px] flex items-center justify-center"><canvas id="expenseChart"></canvas></div>
-        </div>
-        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-none">
-          <h3 class="text-[10px] font-bold mb-3 text-zinc-500 uppercase tracking-widest" data-i18n="chart_writer_title">Writer Earnings</h3>
-          <div class="w-full h-[180px] flex items-center justify-center"><canvas id="writerChart"></canvas></div>
-        </div>
-        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 rounded-2xl shadow-sm dark:shadow-none flex flex-col min-h-[250px]">
-          <h3 class="text-[10px] font-bold mb-3 text-zinc-500 uppercase tracking-widest" data-i18n="top_clients">Top Clients (Earnings)</h3>
-          <ul id="topClientsList" class="flex-1 space-y-3 overflow-y-auto pr-2"><li class="text-zinc-500 text-sm" data-i18n="calculating">Calculating...</li></ul>
-        </div>
-        <div id="activityCard" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 rounded-2xl shadow-sm dark:shadow-none flex flex-col min-h-[250px]">
-          <div class="flex justify-between items-center mb-3">
-            <h3 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest" data-i18n="recent_activity">Recent Activity</h3>
-            <button onclick="openActivityModal()" class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest hover:underline">See More</button>
-          </div>
-          <ul id="activityList" class="flex-1 space-y-4 overflow-y-auto pr-2 scrollbar-thin"></ul>
-        </div>
-      </div>
-    </main>
-
-    <!-- WRITERS VIEW -->
-    <main id="view-writers" class="hidden space-y-4 sm:space-y-6 pb-24">
-      <div class="flex justify-between items-center mb-4">
-        <div>
-          <h2 class="text-xl font-bold text-zinc-900 dark:text-white" data-i18n="nav_writers">Writers</h2>
-          <p class="text-xs text-zinc-500" data-i18n="total_writers">Total Writers: 0</p>
-        </div>
-        <button onclick="openWriterModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-lg shadow-indigo-500/20 flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          <span data-i18n="btn_new_writer">+ Add Writer</span>
-        </button>
-      </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="writerList">
-        <!-- Writers loaded here -->
-      </div>
-    </main>
-
-    <!-- CLIENTS VIEW -->
-    <main id="view-clients-view" class="hidden pb-24">
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
-        <div>
-          <h2 class="text-lg sm:text-xl font-semibold text-zinc-900 dark:text-white" data-i18n="nav_clients">Clients</h2>
-          <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400"><span data-i18n="total_clients">Total Clients:</span> <span id="clientCount" class="font-bold text-zinc-900 dark:text-white">0</span></p>
-        </div>
-        <button onclick="openClientAddModal()" class="w-full sm:w-auto justify-center bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-200 px-4 py-2 sm:py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-sm" data-i18n="btn_new_client">+ Add Client</button>
-      </div>
-      <div id="clientsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4"></div>
-    </main>
-
-    <!-- TASKS VIEW -->
-    <main id="view-tasks" class="hidden pb-24">
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-        <h2 class="text-lg sm:text-xl font-semibold text-zinc-900 dark:text-white" data-i18n="nav_active">Active Pipeline</h2>
-        <button onclick="openTaskModal()" class="w-full sm:w-auto justify-center bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-200 px-4 py-2 sm:py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-sm" data-i18n="btn_new_task">+ New Task</button>
-      </div>
-      
-      <!-- Filters and Search -->
-      <div class="flex flex-col md:flex-row gap-3 mb-6 bg-white dark:bg-zinc-900 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-        <input type="text" id="taskSearchQuery" oninput="renderTasks()" class="flex-1 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500" data-i18n-placeholder="search_tasks" placeholder="Search tasks...">
-        <select id="taskTypeFilter" onchange="renderTasks()" class="w-full md:w-40 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500 text-zinc-900 dark:text-white">
-          <option value="all" data-i18n="filter_all_types">All Types</option>
-          <option value="Assignment">Assignment</option><option value="Thesis">Thesis</option><option value="Presentation">Presentation</option><option value="Lab Project">Lab Project</option><option value="Other">Other</option>
-        </select>
-        <select id="taskAssigneeFilter" onchange="renderTasks()" class="w-full md:w-40 bg-zinc-50 dark:bg-zinc-950 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500 text-zinc-900 dark:text-white">
-          <option value="all" data-i18n="filter_all_assignees">All Assignees</option>
-          <option value="Imranul Islam Shihab">Imranul Islam Shihab</option><option value="Siyam Bhuiyan">Siyam Bhuiyan</option>
-        </select>
-        <button onclick="toggleTaskViewMode()" id="btnTaskView" class="w-full md:w-auto px-4 py-2 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 font-medium rounded-lg text-sm transition-colors border border-indigo-200 dark:border-indigo-500/20" data-i18n="tab_board">Kanban Board</button>
-      </div>
-
-      <ul id="taskList" class="grid grid-cols-1 gap-3 sm:gap-4"></ul>
-      
-      <!-- Kanban Board Container -->
-      <div id="taskBoard" class="hidden grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 items-stretch">
-        <div class="bg-zinc-100 dark:bg-zinc-900/50 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 flex flex-col">
-          <h3 class="font-bold text-sm text-zinc-500 uppercase tracking-wider mb-4 px-1" data-i18n="status_pending">Pending</h3>
-          <div id="col-pending" data-status="pending" class="flex-1 space-y-3 min-h-[150px]"></div>
-        </div>
-        <div class="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-2xl border border-blue-200 dark:border-blue-900/30 flex flex-col">
-          <h3 class="font-bold text-sm text-blue-600 dark:blue-400 uppercase tracking-wider mb-4 px-1" data-i18n="status_in_progress">In Progress</h3>
-          <div id="col-in_progress" data-status="in_progress" class="flex-1 space-y-3 min-h-[150px]"></div>
-        </div>
-        <div class="bg-orange-50 dark:bg-orange-900/10 p-4 rounded-2xl border border-orange-200 dark:border-orange-900/30 flex flex-col">
-          <h3 class="font-bold text-sm text-orange-600 dark:text-orange-400 uppercase tracking-wider mb-4 px-1" data-i18n="status_review">Under Review</h3>
-          <div id="col-review" data-status="review" class="flex-1 space-y-3 min-h-[150px]"></div>
-        </div>
-      </div>
-
-      <div id="taskPaginationControls" class="mt-6 sm:mt-8 flex justify-center hidden">
-        <button onclick="loadMoreTasks()" class="px-6 py-2.5 bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg text-sm font-medium transition-colors w-full sm:w-auto shadow-sm" data-i18n="btn_load_more">Load More</button>
-      </div>
-    </main>
-
-    <!-- DONE TASKS VIEW -->
-    <main id="view-done" class="hidden pb-24">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-lg sm:text-xl font-semibold text-zinc-900 dark:text-white" data-i18n="nav_done">Completed Works</h2>
-      </div>
-      <ul id="doneTaskList" class="grid grid-cols-1 gap-3 sm:gap-4 opacity-80"></ul>
-    </main>
-
-    <!-- INVOICES VIEW -->
-    <main id="view-invoices" class="hidden pb-24">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-lg sm:text-xl font-semibold text-zinc-900 dark:text-white" data-i18n="nav_invoices">Invoices</h2>
-      </div>
-      <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-none rounded-2xl overflow-hidden">
-        <ul id="invoiceList" class="divide-y divide-zinc-200 dark:divide-zinc-800"></ul>
-      </div>
-    </main>
-
-    <!-- EXPENSES VIEW -->
-    <main id="view-accounts" class="hidden pb-24">
-      <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-6">
-        <h2 class="text-lg sm:text-xl font-semibold text-zinc-900 dark:text-white" data-i18n="nav_accounts">Expenses</h2>
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
-          <button onclick="exportAccountsCSV()" class="justify-center bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 px-4 py-2 sm:py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-            <span data-i18n="btn_export">Export CSV</span>
-          </button>
-          <button onclick="openTxModal()" class="justify-center bg-rose-500 text-white hover:bg-rose-600 px-4 py-2 sm:py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-sm" data-i18n="btn_log_expense">Log Expense</button>
-        </div>
-      </div>
-      <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-none rounded-2xl overflow-hidden">
-        <ul id="txList" class="divide-y divide-zinc-200 dark:divide-zinc-800"></ul>
-      </div>
-    </main>
-  </div>
-
-  <!-- ==================== MODALS ==================== -->
-
-  <!-- Task Modal -->
-  <dialog id="taskModal" onkeydown="if(event.key === 'Enter' && event.target.tagName !== 'TEXTAREA') { event.preventDefault(); event.stopPropagation(); document.getElementById('btnSaveTask').click(); }" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95vw] sm:w-full max-w-lg m-auto text-zinc-900 dark:text-white transition-colors">
-    <div class="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0">
-      <h2 class="text-base sm:text-lg font-semibold" id="taskModalTitle" data-i18n="modal_task_title">Add New Task</h2>
-      <button onclick="document.getElementById('taskModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 p-1"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
-    </div>
-    <div class="p-4 sm:p-5 space-y-4 dialog-content">
-      <input type="hidden" id="editTaskId">
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-        <div class="col-span-1 sm:col-span-2 space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_desc">Description / Title</label><input type="text" id="tTitle" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none focus:border-indigo-500 dark:focus:border-indigo-500 text-sm"></div>
-        <div class="col-span-1 sm:col-span-2 space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_details">Details (Optional)</label><textarea id="tDetails" rows="2" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none focus:border-indigo-500 dark:focus:border-indigo-500 text-sm" data-i18n-placeholder="plc_details" placeholder="Enter specific requirements, links, or notes..."></textarea></div>
-        <div class="col-span-1 sm:col-span-2 space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_link">Project Link (Optional)</label><input type="url" id="tLink" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none focus:border-indigo-500 dark:focus:border-indigo-500 text-sm" placeholder="https://drive.google.com/..."></div>
-        <div class="space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_type">Type of Work</label><select id="tType" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white text-sm"><option value="Assignment">Assignment</option><option value="Thesis">Thesis</option><option value="Presentation">Presentation</option><option value="Lab Project">Lab Project</option><option value="Other">Other</option></select></div>
-        <div class="space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_deadline">Deadline</label><input type="date" id="tDeadline" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none focus:border-indigo-500 dark:[color-scheme:dark] text-sm"></div>
-        <div class="space-y-1.5">
-          <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Revision Count</label>
-          <input type="number" id="tRevisionCount" value="0" min="0" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none focus:border-indigo-500 text-sm">
-        </div>
-      </div>
-      <div class="p-3 sm:p-4 bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-xl space-y-3">
-        <div class="space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_client">Client</label><input type="text" id="clientSearchInput" oninput="filterClientDropdown()" placeholder="Search clients..." class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-t-lg border-b-0 px-3 py-2 outline-none focus:border-indigo-500 text-sm text-zinc-900 dark:text-white mb-0" data-i18n-placeholder="search_client"><select id="tClientSelect" onchange="this.size=1; toggleNewClientFields()" class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-b-lg px-3 py-2 sm:py-2.5 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white text-sm"><option value="new">+ Add New Client / No Client</option></select></div>
-        <div id="newClientFields" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <input type="text" id="tClientName" placeholder="Client Name" class="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500">
-          <input type="text" id="tClientPhone" placeholder="Phone Number" class="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500">
-          <input type="text" id="tClientUniversity" placeholder="University" class="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500">
-          <input type="text" id="tClientCountry" list="countryList" placeholder="Country" class="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500">
-          <input type="text" id="tClientProgram" list="programList" placeholder="Program (e.g. BSc)" class="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500">
-          <input type="text" id="tClientSubject" list="subjectList" placeholder="Subject (e.g. CSE)" class="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500">
-        </div>
-      </div>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-        <div class="space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_total">Total Value (৳)</label><input type="number" id="tTotal" value="0" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none focus:border-emerald-500 text-emerald-600 dark:text-emerald-400 font-medium text-sm"></div>
-        <div class="space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_advance">Advance Paid (৳)</label><input type="number" id="tAdvance" value="0" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none focus:border-emerald-500 text-sm"></div>
-        <div class="space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-indigo-500 dark:text-indigo-400 uppercase tracking-wider" data-i18n="lbl_bonus">Bonus (৳)</label><input type="number" id="tBonus" value="0" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-indigo-200 dark:border-indigo-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none focus:border-indigo-500 text-indigo-600 dark:text-indigo-400 font-medium text-sm"></div>
-      </div>
-      <div class="grid grid-cols-2 gap-3 sm:gap-4">
-        <div class="space-y-1.5">
-          <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_assign">Assign To</label>
-          <select id="tAssign" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none text-zinc-900 dark:text-white text-sm">
-            <option value="Unassigned" data-i18n="txt_unassigned">Unassigned</option>
-          </select>
-        </div>
-        <div class="space-y-1.5">
-          <label class="block text-[10px] sm:text-xs font-medium text-rose-500 dark:text-rose-400 uppercase tracking-wider" data-i18n="lbl_writer_pay">Writer Pay (৳)</label>
-          <input type="number" id="tWriterPay" value="0" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-rose-100 dark:border-rose-900/30 rounded-lg px-3 py-2 sm:py-2.5 outline-none focus:border-rose-500 text-rose-600 dark:text-rose-400 font-bold text-sm">
-        </div>
-      </div>
-      <div class="space-y-1.5">
-        <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_links">Reference Files / Links</label>
-        <textarea id="tLink" rows="2" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none focus:border-indigo-500 text-sm" placeholder="Paste multiple links or file paths..."></textarea>
-      </div>
-      <div class="flex gap-2 items-end">
-        <div class="flex-1 space-y-1.5">
-          <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Drive Folder Link (Optional)</label>
-          <input type="url" id="tDriveLink" placeholder="Paste generated link here..." class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none focus:border-indigo-500 text-sm">
-        </div>
-        <button type="button" onclick="handleDriveHelper()" class="px-3 py-2.5 sm:py-3 bg-indigo-100 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-500/20 rounded-lg font-medium text-[10px] sm:text-xs whitespace-nowrap transition-colors flex items-center gap-1.5 shadow-sm">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-          Copy Name & Open Drive
-        </button>
-      </div>
-    </div>
-    <div class="p-4 sm:p-5 border-t border-zinc-200 dark:border-zinc-800 shrink-0 bg-white dark:bg-zinc-950"><button onclick="saveTask(event)" id="btnSaveTask" class="w-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-200 rounded-lg px-4 py-3 sm:py-3 font-semibold transition-colors shadow-sm text-sm" data-i18n="btn_deploy">Deploy Task</button></div>
-  </dialog>
-
-  <!-- Expenses Modal -->
-  <dialog id="txModal" onkeydown="if(event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); document.getElementById('btnSaveTx').click(); }" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95vw] sm:w-full max-w-sm m-auto text-zinc-900 dark:text-white transition-colors">
-    <div class="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0">
-      <h2 class="text-base sm:text-lg font-semibold text-rose-600 dark:text-rose-400" data-i18n="modal_exp_title">Log Expense</h2>
-      <button onclick="document.getElementById('txModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 p-1"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
-    </div>
-    <div class="p-4 sm:p-5 space-y-4 dialog-content">
-      <div class="space-y-1.5">
-        <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_rel_task">Associated Task (Optional)</label>
-        <select id="txTaskId" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2.5 outline-none text-zinc-900 dark:text-white text-sm">
-          <option value="" data-i18n="opt_no_task">No Task / General Expense</option>
-        </select>
-      </div>
-      <div class="space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_exp_cat">Expense Category</label><select id="txCategory" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2.5 outline-none text-zinc-900 dark:text-white text-sm"><option value="Facebook Ads">Facebook Ads</option><option value="Supplements">Supplements</option><option value="Withdraws">Withdraws</option><option value="Others">Others</option></select></div>
-      <div class="space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_exp_desc">Description (Optional)</label><input type="text" id="txDescription" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2.5 outline-none text-zinc-900 dark:text-white text-sm focus:border-rose-500"></div>
-      <div class="space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_exp_amount">Amount (৳)</label><input type="number" id="txAmount" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-rose-300 dark:border-rose-800 rounded-lg px-3 py-2.5 outline-none focus:border-rose-500 font-medium text-zinc-900 dark:text-white text-sm"></div>
-    </div>
-    <div class="p-4 sm:p-5 border-t border-zinc-200 dark:border-zinc-800 shrink-0 bg-white dark:bg-zinc-950">
-      <button onclick="saveTransaction(event)" id="btnSaveTx" class="w-full bg-rose-500 text-white hover:bg-rose-600 rounded-lg px-4 py-3 font-semibold transition-colors shadow-sm text-sm" data-i18n="btn_deduct">Deduct Funds</button>
-    </div>
-  </dialog>
-
-  <!-- Client Edit/Add Modal -->
-  <dialog id="clientEditModal" onkeydown="if(event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); document.getElementById('btnSaveClient').click(); }" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95vw] sm:w-full max-w-sm m-auto text-zinc-900 dark:text-white transition-colors">
-    <div class="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0">
-      <h2 class="text-base sm:text-lg font-semibold" id="clientModalTitle" data-i18n="modal_client_edit">Edit Client</h2>
-      <button onclick="document.getElementById('clientEditModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 p-1"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
-    </div>
-    <div class="p-4 sm:p-5 space-y-4 dialog-content">
-      <input type="hidden" id="editClientId">
-      <div class="space-y-1.5">
-        <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Client Name</label>
-        <input type="text" id="cEditName" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2.5 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white text-sm">
-      </div>
-      <div class="space-y-1.5">
-        <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Phone Number</label>
-        <input type="text" id="cEditPhone" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2.5 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white text-sm">
-      </div>
-      <div class="space-y-1.5">
-        <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_university">University (Optional)</label>
-        <input type="text" id="cEditUniversity" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2.5 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white text-sm">
-      </div>
-      <div class="grid grid-cols-2 gap-3">
-        <div class="space-y-1.5">
-          <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_country">Country</label>
-          <input type="text" id="cEditCountry" list="countryList" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2.5 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white text-sm">
-        </div>
-        <div class="space-y-1.5">
-          <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_program">Program</label>
-          <input type="text" id="cEditProgram" list="programList" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2.5 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white text-sm">
-        </div>
-      </div>
-      <div class="space-y-1.5">
-        <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_subject">Subject</label>
-        <input type="text" id="cEditSubject" list="subjectList" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2.5 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white text-sm">
-      </div>
-    </div>
-    <div class="p-4 sm:p-5 border-t border-zinc-200 dark:border-zinc-800 shrink-0 bg-white dark:bg-zinc-950">
-      <button onclick="saveClient(event)" id="btnSaveClient" class="w-full bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg px-4 py-3 font-semibold transition-colors shadow-sm text-sm" data-i18n="btn_update">
-        Update Client
-      </button>
-    </div>
-  </dialog>
-
-  <!-- Client View Tasks Modal -->
-  <dialog id="clientViewModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95vw] sm:w-full max-w-2xl m-auto text-zinc-900 dark:text-white transition-colors flex flex-col">
-    <div class="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0">
-      <h2 class="text-base sm:text-lg font-semibold" id="clientViewTitle">Client Overview</h2>
-      <button onclick="document.getElementById('clientViewModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 p-1"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
-    </div>
-    <div class="p-4 sm:p-5 dialog-content"><ul id="clientViewTaskList" class="grid grid-cols-1 gap-3 sm:gap-4"></ul></div>
-  </dialog>
-
-  <!-- Custom Password Prompt Modal -->
-  <dialog id="authPromptModal" onkeydown="if(event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); confirmAuthPrompt(); }" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95vw] sm:w-full max-w-sm m-auto text-zinc-900 dark:text-white transition-colors">
-    <div class="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0">
-      <h2 class="text-base sm:text-lg font-semibold" data-i18n="modal_auth_title">Enter Password</h2>
-      <button onclick="cancelAuthPrompt()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 p-1">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-      </button>
-    </div>
-    <div class="p-4 sm:p-5 space-y-4 dialog-content">
-      <p id="authPromptMessage" class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400"></p>
-      <div class="space-y-1.5">
-        <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_token">Password</label>
-        <input type="password" id="authPromptInput" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2.5 outline-none focus:border-rose-500 text-zinc-900 dark:text-white text-sm" autocomplete="new-password">
-      </div>
-      <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4">
-        <button onclick="cancelAuthPrompt()" class="w-full sm:flex-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg px-4 py-2.5 sm:py-3 font-semibold transition-colors text-sm" data-i18n="btn_cancel">Cancel</button>
-        <button onclick="confirmAuthPrompt()" id="btnConfirmAuth" class="w-full sm:flex-1 bg-rose-500 text-white hover:bg-rose-600 rounded-lg px-4 py-2.5 sm:py-3 font-semibold transition-colors text-sm" data-i18n="btn_confirm">Confirm</button>
-      </div>
-    </div>
-  </dialog>
-
-  <!-- Activity History Modal -->
-  <dialog id="activityModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95vw] sm:w-full max-w-lg m-auto text-zinc-900 dark:text-white transition-colors flex flex-col">
-    <div class="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0">
-      <h2 class="text-base sm:text-lg font-semibold" data-i18n="recent_activity">Recent Activity</h2>
-      <button onclick="document.getElementById('activityModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 p-1"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
-    </div>
-    <div class="p-4 sm:p-5 dialog-content min-h-[300px]">
-      <ul id="fullActivityList" class="space-y-4"></ul>
-    </div>
-    <div class="p-4 border-t border-zinc-200 dark:border-zinc-800 shrink-0 bg-zinc-50 dark:bg-zinc-900/50">
-      <p class="text-[10px] text-zinc-500 text-center uppercase tracking-widest font-bold">End of History</p>
-    </div>
-  </dialog>
-
-  <datalist id="countryList">
-    <option value="Afghanistan"></option>
-    <option value="Albania"></option>
-    <option value="Algeria"></option>
-    <option value="Andorra"></option>
-    <option value="Angola"></option>
-    <option value="Antigua and Barbuda"></option>
-    <option value="Argentina"></option>
-    <option value="Armenia"></option>
-    <option value="Australia"></option>
-    <option value="Austria"></option>
-    <option value="Azerbaijan"></option>
-    <option value="Bahamas"></option>
-    <option value="Bahrain"></option>
-    <option value="Bangladesh"></option>
-    <option value="Barbados"></option>
-    <option value="Belarus"></option>
-    <option value="Belgium"></option>
-    <option value="Belize"></option>
-    <option value="Benin"></option>
-    <option value="Bhutan"></option>
-    <option value="Bolivia"></option>
-    <option value="Bosnia and Herzegovina"></option>
-    <option value="Botswana"></option>
-    <option value="Brazil"></option>
-    <option value="Brunei"></option>
-    <option value="Bulgaria"></option>
-    <option value="Burkina Faso"></option>
-    <option value="Burundi"></option>
-    <option value="Cabo Verde"></option>
-    <option value="Cambodia"></option>
-    <option value="Cameroon"></option>
-    <option value="Canada"></option>
-    <option value="Central African Republic"></option>
-    <option value="Chad"></option>
-    <option value="Chile"></option>
-    <option value="China"></option>
-    <option value="Colombia"></option>
-    <option value="Comoros"></option>
-    <option value="Congo"></option>
-    <option value="Costa Rica"></option>
-    <option value="Croatia"></option>
-    <option value="Cuba"></option>
-    <option value="Cyprus"></option>
-    <option value="Czech Republic"></option>
-    <option value="Denmark"></option>
-    <option value="Djibouti"></option>
-    <option value="Dominica"></option>
-    <option value="Dominican Republic"></option>
-    <option value="Ecuador"></option>
-    <option value="Egypt"></option>
-    <option value="El Salvador"></option>
-    <option value="Equatorial Guinea"></option>
-    <option value="Eritrea"></option>
-    <option value="Estonia"></option>
-    <option value="Eswatini"></option>
-    <option value="Ethiopia"></option>
-    <option value="Fiji"></option>
-    <option value="Finland"></option>
-    <option value="France"></option>
-    <option value="Gabon"></option>
-    <option value="Gambia"></option>
-    <option value="Georgia"></option>
-    <option value="Germany"></option>
-    <option value="Ghana"></option>
-    <option value="Greece"></option>
-    <option value="Grenada"></option>
-    <option value="Guatemala"></option>
-    <option value="Guinea"></option>
-    <option value="Guinea-Bissau"></option>
-    <option value="Guyana"></option>
-    <option value="Haiti"></option>
-    <option value="Honduras"></option>
-    <option value="Hungary"></option>
-    <option value="Iceland"></option>
-    <option value="India"></option>
-    <option value="Indonesia"></option>
-    <option value="Iran"></option>
-    <option value="Iraq"></option>
-    <option value="Ireland"></option>
-    <option value="Israel"></option>
-    <option value="Italy"></option>
-    <option value="Jamaica"></option>
-    <option value="Japan"></option>
-    <option value="Jordan"></option>
-    <option value="Kazakhstan"></option>
-    <option value="Kenya"></option>
-    <option value="Kiribati"></option>
-    <option value="Korea, North"></option>
-    <option value="Korea, South"></option>
-    <option value="Kosovo"></option>
-    <option value="Kuwait"></option>
-    <option value="Kyrgyzstan"></option>
-    <option value="Laos"></option>
-    <option value="Latvia"></option>
-    <option value="Lebanon"></option>
-    <option value="Lesotho"></option>
-    <option value="Liberia"></option>
-    <option value="Libya"></option>
-    <option value="Liechtenstein"></option>
-    <option value="Lithuania"></option>
-    <option value="Luxembourg"></option>
-    <option value="Madagascar"></option>
-    <option value="Malawi"></option>
-    <option value="Malaysia"></option>
-    <option value="Maldives"></option>
-    <option value="Mali"></option>
-    <option value="Malta"></option>
-    <option value="Marshall Islands"></option>
-    <option value="Mauritania"></option>
-    <option value="Mauritius"></option>
-    <option value="Mexico"></option>
-    <option value="Micronesia"></option>
-    <option value="Moldova"></option>
-    <option value="Monaco"></option>
-    <option value="Mongolia"></option>
-    <option value="Montenegro"></option>
-    <option value="Morocco"></option>
-    <option value="Mozambique"></option>
-    <option value="Myanmar"></option>
-    <option value="Namibia"></option>
-    <option value="Nauru"></option>
-    <option value="Nepal"></option>
-    <option value="Netherlands"></option>
-    <option value="New Zealand"></option>
-    <option value="Nicaragua"></option>
-    <option value="Niger"></option>
-    <option value="Nigeria"></option>
-    <option value="North Macedonia"></option>
-    <option value="Norway"></option>
-    <option value="Oman"></option>
-    <option value="Pakistan"></option>
-    <option value="Palau"></option>
-    <option value="Palestine"></option>
-    <option value="Panama"></option>
-    <option value="Papua New Guinea"></option>
-    <option value="Paraguay"></option>
-    <option value="Peru"></option>
-    <option value="Philippines"></option>
-    <option value="Poland"></option>
-    <option value="Portugal"></option>
-    <option value="Qatar"></option>
-    <option value="Romania"></option>
-    <option value="Russia"></option>
-    <option value="Rwanda"></option>
-    <option value="Saint Kitts and Nevis"></option>
-    <option value="Saint Lucia"></option>
-    <option value="Saint Vincent and the Grenadines"></option>
-    <option value="Samoa"></option>
-    <option value="San Marino"></option>
-    <option value="Sao Tome and Principe"></option>
-    <option value="Saudi Arabia"></option>
-    <option value="Senegal"></option>
-    <option value="Serbia"></option>
-    <option value="Seychelles"></option>
-    <option value="Sierra Leone"></option>
-    <option value="Singapore"></option>
-    <option value="Slovakia"></option>
-    <option value="Slovenia"></option>
-    <option value="Solomon Islands"></option>
-    <option value="Somalia"></option>
-    <option value="South Africa"></option>
-    <option value="South Sudan"></option>
-    <option value="Spain"></option>
-    <option value="Sri Lanka"></option>
-    <option value="Sudan"></option>
-    <option value="Suriname"></option>
-    <option value="Sweden"></option>
-    <option value="Switzerland"></option>
-    <option value="Syria"></option>
-    <option value="Taiwan"></option>
-    <option value="Tajikistan"></option>
-    <option value="Tanzania"></option>
-    <option value="Thailand"></option>
-    <option value="Timor-Leste"></option>
-    <option value="Togo"></option>
-    <option value="Tonga"></option>
-    <option value="Trinidad and Tobago"></option>
-    <option value="Tunisia"></option>
-    <option value="Turkey"></option>
-    <option value="Turkmenistan"></option>
-    <option value="Tuvalu"></option>
-    <option value="Uganda"></option>
-    <option value="Ukraine"></option>
-    <option value="United Arab Emirates"></option>
-    <option value="United Kingdom"></option>
-    <option value="United States"></option>
-    <option value="Uruguay"></option>
-    <option value="Uzbekistan"></option>
-    <option value="Vanuatu"></option>
-    <option value="Vatican City"></option>
-    <option value="Venezuela"></option>
-    <option value="Vietnam"></option>
-    <option value="Yemen"></option>
-    <option value="Zambia"></option>
-    <option value="Zimbabwe"></option>
-  </datalist>
-
-  <datalist id="programList">
-    <option value="BSc"></option>
-    <option value="MSc"></option>
-    <option value="BBA"></option>
-    <option value="MBA"></option>
-    <option value="PhD"></option>
-    <option value="Diploma"></option>
-    <option value="Undergraduate"></option>
-    <option value="Postgraduate"></option>
-    <option value="A-Level"></option>
-    <option value="O-Level"></option>
-    <option value="GED"></option>
-  </datalist>
-
-  <datalist id="subjectList">
-    <option value="Computer Science (CSE)"></option>
-    <option value="Electrical Engineering (EEE)"></option>
-    <option value="Mechanical Engineering (ME)"></option>
-    <option value="Civil Engineering (CE)"></option>
-    <option value="Business Administration"></option>
-    <option value="Accounting"></option>
-    <option value="Finance"></option>
-    <option value="Marketing"></option>
-    <option value="Economics"></option>
-    <option value="Law"></option>
-    <option value="English"></option>
-    <option value="Mathematics"></option>
-    <option value="Physics"></option>
-    <option value="Chemistry"></option>
-    <option value="Biology"></option>
-    <option value="Psychology"></option>
-    <option value="Sociology"></option>
-    <option value="International Relations"></option>
-    <option value="Pharmacy"></option>
-    <option value="Public Health"></option>
-  </datalist>
-
-<script>
 const API = "/api"; 
 let allTasks = [], allClients = [], allExpenses = [], allInvoices = [], allWriters = [], writerStats = [];
 let expenseChartInstance = null;
@@ -1127,6 +279,8 @@ function openWriterModal(id = null) {
   const title = document.getElementById("writerModalTitle");
   form.reset();
   
+  const preview = document.getElementById("wImagePreview");
+  
   if (id) {
     const w = allWriters.find(x => x._id === id);
     if (!w) return;
@@ -1135,43 +289,86 @@ function openWriterModal(id = null) {
     document.getElementById("wName").value = w.name;
     document.getElementById("wPhone").value = w.phone;
     document.getElementById("wEmail").value = w.email || "";
-    document.getElementById("wImage").value = w.imageLink || "";
+    const imgUrl = w.image || w.imageLink || "";
+    document.getElementById("wImage").value = imgUrl;
     document.getElementById("wDob").value = w.dob || "";
     document.getElementById("wNid").value = w.nid || "";
+    
+    if (imgUrl) {
+        preview.innerHTML = `<img src="${imgUrl}" class="w-full h-full object-cover">`;
+    } else {
+        preview.innerHTML = '<i class="fa-solid fa-user text-zinc-300"></i>';
+    }
   } else {
     title.innerText = t('modal_writer_add');
     document.getElementById("editWriterId").value = "";
+    document.getElementById("wImage").value = "";
+    preview.innerHTML = '<i class="fa-solid fa-user text-zinc-300"></i>';
   }
   modal.showModal();
 }
 
-async function saveWriter() {
-  const id = document.getElementById("editWriterId").value;
-  const data = {
-    name: document.getElementById("wName").value.trim(),
-    phone: document.getElementById("wPhone").value.trim(),
-    email: document.getElementById("wEmail").value.trim(),
-    imageLink: document.getElementById("wImage").value.trim(),
-    dob: document.getElementById("wDob").value,
-    nid: document.getElementById("wNid").value.trim()
-  };
-
-  const password = await requestAuthToken(t('msg_auth_save'));
-  if (!password) return;
-  data.password = password;
-
+async function commitWriterToDatabase() {
+  debugger; // PAUSE HERE TO SEE CALL STACK
+  console.log("[commitWriterToDatabase] Function entered.");
   try {
+    const id = document.getElementById("editWriterId").value;
+    let imgVal = document.getElementById("wImage").value.trim();
+    
+    console.log("[saveWriter] Start. ID:", id, "Initial imgVal:", imgVal);
+
+    // Fallback: try to grab from preview img if input is empty but preview shows an image
+    if (!imgVal) {
+      const previewImg = document.querySelector("#wImagePreview img");
+      if (previewImg) {
+        imgVal = previewImg.src;
+        console.log("[saveWriter] Fallback applied. New imgVal:", imgVal.substring(0, 50) + "...");
+      }
+    }
+    
+    if (imgVal) {
+        showToast("Saving with Image: " + imgVal.substring(0, 20) + "...", "info");
+    } else {
+        console.warn("[saveWriter] No image URL found in input or preview.");
+    }
+
+    const data = {
+      name: document.getElementById("wName").value.trim(),
+      phone: document.getElementById("wPhone").value.trim(),
+      email: document.getElementById("wEmail").value.trim(),
+      image: imgVal,
+      imageLink: imgVal,
+      dob: document.getElementById("wDob").value,
+      nid: document.getElementById("wNid").value.trim()
+    };
+
+    console.log("[saveWriter] Payload prepared:", data);
+
+    const password = await requestAuthToken(t('msg_auth_save'));
+    if (!password) {
+      console.warn("[saveWriter] Cancelled: No password provided.");
+      return;
+    }
+    data.password = password;
+
     const method = id ? "PUT" : "POST";
     const url = id ? `${API}/update-writer/${id}` : `${API}/add-writer`;
-    await handleFetch(url, {
+    
+    console.log(`[saveWriter] Calling ${method} ${url}`);
+    const result = await handleFetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data)
     });
+    
+    console.log("[saveWriter] Final Result:", result);
     document.getElementById("writerModal").close();
     showToast(id ? t('msg_writer_updated') : t('msg_writer_added'));
     fetchWriters();
-  } catch (err) { showToast(err.message, 'error'); }
+  } catch (err) {
+    console.error("[saveWriter] Failed:", err);
+    showToast(err.message, 'error');
+  }
 }
 
 async function deleteWriter(id) {
@@ -1192,12 +389,16 @@ async function deleteWriter(id) {
 let authPromptResolver = null;
 
 function requestAuthToken(message) {
+  console.log(`[requestAuthToken] Prompting for: ${message}`);
   return new Promise((resolve) => {
     const modal = document.getElementById("authPromptModal");
     document.getElementById("authPromptMessage").innerText = message;
     const input = document.getElementById("authPromptInput");
     input.value = "";
-    authPromptResolver = resolve;
+    authPromptResolver = (val) => {
+      console.log(`[requestAuthToken] Resolved with value length: ${val ? val.length : 0}`);
+      resolve(val);
+    };
     modal.showModal();
     input.focus();
     
@@ -1247,12 +448,24 @@ async function bootstrap() {
       return;
     }
 
-    await Promise.all([fetchTasks(1, false), fetchClients(), fetchExpenses(), fetchInvoices(), fetchWriters()]);
+    const fetches = [
+      fetchTasks(1, false).catch(e => console.error("Tasks fetch failed", e)),
+      fetchClients().catch(e => console.error("Clients fetch failed", e)),
+      fetchExpenses().catch(e => console.error("Expenses fetch failed", e)),
+      fetchInvoices().catch(e => console.error("Invoices fetch failed", e)),
+      fetchWriters().catch(e => console.error("Writers fetch failed", e))
+    ];
+    await Promise.all(fetches);
+    
     applyTranslations(); 
     switchTab('dashboard');
   } catch (error) {
-    console.error(error);
-    showToast("Backend connection error!", 'error');
+    console.error("Bootstrap Error:", error);
+    showToast(error.message || "Backend connection error!", 'error');
+    if (error.message.includes("Session") || error.message.includes("expired")) {
+       localStorage.removeItem('portalSession');
+       setTimeout(() => window.location.reload(), 2000);
+    }
   } finally {
     loader.style.opacity = '0';
     setTimeout(() => { loader.style.display = 'none'; }, 500);
@@ -1261,10 +474,7 @@ async function bootstrap() {
   // Close dialogs when clicking outside (on backdrop)
   document.querySelectorAll('dialog').forEach(dialog => {
     dialog.addEventListener('click', (e) => {
-      const rect = dialog.getBoundingClientRect();
-      const isInDialog = (rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&
-        rect.left <= e.clientX && e.clientX <= rect.left + rect.width);
-      if (!isInDialog) dialog.close();
+      if (e.target === dialog) dialog.close();
     });
   });
 }
@@ -1423,6 +633,28 @@ async function initTrackingView(id) {
       setTimeout(() => loader.style.display = "none", 500);
     }
   }
+
+  // Setup search input listener
+  const searchInput = document.getElementById("trackSearchInput");
+  if (searchInput) {
+    searchInput.onkeydown = (e) => {
+      if (e.key === 'Enter') handleTrackSearch();
+    };
+  }
+}
+
+function handleTrackSearch() {
+  let val = document.getElementById("trackSearchInput").value.trim();
+  if (!val) return showToast("Please enter an Order ID", "error");
+  
+  // Remove leading # if user typed it
+  val = val.replace(/^#/, "").trim();
+  
+  // Update URL without reloading if possible, or just redirect
+  const newUrl = window.location.pathname + '?track=' + val;
+  window.history.pushState({ track: val }, '', newUrl);
+  initTrackingView(val);
+  document.getElementById("trackSearchInput").value = "";
 }
 
 async function handlePortalLogin(e) {
@@ -1468,13 +700,17 @@ function handleDriveHelper() {
     });
 }
 
+function copyToClipboard(text, label = "Content") {
+  navigator.clipboard.writeText(text).then(() => {
+    showToast(`${label} copied!`, "success");
+  }).catch(() => {
+    showToast("Failed to copy", "error");
+  });
+}
+
 function copyTrackingLink(id) {
-    const url = window.location.origin + window.location.pathname + '?track=' + id;
-    navigator.clipboard.writeText(url).then(() => {
-        showToast("Tracking link copied!", "success");
-    }).catch(() => {
-        showToast("Failed to copy link", "error");
-    });
+    const url = window.location.origin + window.location.pathname + (window.location.pathname.endsWith('/') ? '' : '/') + '?track=' + id;
+    copyToClipboard(url, "Tracking link");
 }
 
 function handleGlobalSearch() {
@@ -1493,29 +729,38 @@ function handleGlobalSearch() {
 }
 
 async function handleFetch(url, options = {}) {
+  console.log(`[handleFetch] Requesting: ${url}`, options);
   const token = localStorage.getItem('portalSession');
   if (token) {
     options.headers = { ...options.headers, 'Authorization': token };
   }
   
-  const res = await fetch(url, options);
-  if (res.ok) return res.json();
-  
-  const errData = await res.json().catch(() => ({}));
-  
-  // If unauthorized, clear session and show login (unless it's the login endpoint itself)
-  if (res.status === 401 && !url.includes('/login') && !url.includes('/track-task')) {
-    // Only reload if it's a SESSION error, not an action password error
-    if (errData.error && (errData.error.toLowerCase().includes("session") || errData.error.toLowerCase().includes("token"))) {
-      localStorage.removeItem('portalSession');
-      window.location.reload();
-      return;
+  try {
+    const res = await fetch(url, options);
+    console.log(`[handleFetch] Response Status: ${res.status} for ${url}`);
+    
+    if (res.ok) {
+      const data = await res.json();
+      console.log(`[handleFetch] Success Data:`, data);
+      return data;
     }
-    // Otherwise, just throw the error (like "Invalid password") so the action handler can show a toast
-    throw new Error(errData.message || errData.error || "Unauthorized");
+    
+    const errData = await res.json().catch(() => ({}));
+    console.error(`[handleFetch] Error Data:`, errData);
+    
+    if (res.status === 401 && !url.includes('/login') && !url.includes('/track-task')) {
+      if (errData.error && (errData.error.toLowerCase().includes("session") || errData.error.toLowerCase().includes("token"))) {
+        localStorage.removeItem('portalSession');
+        window.location.reload();
+        return;
+      }
+      throw new Error(errData.message || errData.error || "Unauthorized");
+    }
+    throw new Error(errData.message || errData.error || `Server Error (${res.status})`);
+  } catch (err) {
+    console.error(`[handleFetch] Critical Error:`, err);
+    throw err;
   }
-  
-  throw new Error(errData.message || errData.error || `Server Error (${res.status})`);
 }
 
 // Data fetching
@@ -1534,13 +779,15 @@ async function loadMoreTasks() {
 }
 
 async function fetchClients() {
-  allClients = await handleFetch(API + "/clients");
+  const res = await handleFetch(API + "/clients");
+  allClients = res.data || res || [];
   allClients.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
   filterClientDropdown();
 }
 
 async function fetchExpenses() {
-  allExpenses = await handleFetch(API + "/accounts");
+  const res = await handleFetch(API + "/accounts");
+  allExpenses = res.data || res || [];
 }
 
 async function fetchInvoices() {
@@ -1951,7 +1198,7 @@ function generateTaskHTML(tk, isDone, isKanbanCard = false) {
      } else {
         actionButtons = `<button onclick="openTaskModal('${tk._id}')" class="px-3 py-2 sm:py-1.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-300 rounded text-xs font-medium transition-colors text-center w-full font-bold">${t('btn_edit')}</button><button onclick="updateTaskStatus('${tk._id}', 'done')" class="px-3 py-2 sm:py-1.5 bg-emerald-100 dark:bg-emerald-500/10 hover:bg-emerald-200 dark:hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded text-xs font-medium transition-colors text-center w-full">${t('btn_done')}</button>`;
      }
-     actionButtons += `<button onclick="copyTrackingLink('${tk._id}')" class="px-3 py-2 sm:py-1.5 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded text-xs font-medium transition-colors text-center flex items-center justify-center gap-1 w-full"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg> Copy Link</button>`;
+     actionButtons += `<button onclick="copyTrackingLink('${tk.orderId || tk._id}')" class="px-3 py-2 sm:py-1.5 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded text-xs font-medium transition-colors text-center flex items-center justify-center gap-1 w-full"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg> Copy Link</button>`;
      actionButtons += `<button onclick="deleteTask('${tk._id}')" class="px-3 py-2 sm:py-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded text-xs font-medium transition-colors text-center flex items-center justify-center gap-1 w-full"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg> ${t('btn_delete')}</button>`;
   }
 
@@ -1965,9 +1212,10 @@ function generateTaskHTML(tk, isDone, isKanbanCard = false) {
           ${urgencyHTML}
         </div>
         <div class="flex items-center gap-2">
-          <button onclick="copyTrackingLink('${tk._id}')" class="p-1 text-zinc-400 hover:text-indigo-500 transition-colors" title="Copy tracking link">
+          <button onclick="copyTrackingLink('${tk.orderId || tk._id}')" class="p-1 text-zinc-400 hover:text-indigo-500 transition-colors" title="Copy tracking link">
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
           </button>
+          <span onclick="copyToClipboard('${tk.orderId || tk._id.slice(-6).toUpperCase()}', 'ID')" class="text-[10px] text-indigo-500 font-black tracking-tighter cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-500/10 px-1 rounded transition-colors" title="Click to copy ID">#${tk.orderId || tk._id.slice(-6).toUpperCase()}</span>
           <span class="text-[10px] text-zinc-500 font-medium">${customFormatDate(tk.deadline)}</span>
         </div>
       </div>
@@ -1986,7 +1234,32 @@ function generateTaskHTML(tk, isDone, isKanbanCard = false) {
 
   const bonusHtml = bonus > 0 ? `<div class="text-indigo-600 dark:text-indigo-400">${t('txt_bonus')}: ৳${localNum(bonus)}</div>` : '';
 
-  return `<li class="border-2 ${urgencyClass || 'border-zinc-200 dark:border-zinc-800'} shadow-sm dark:shadow-none rounded-2xl p-4 sm:p-5 bg-white dark:bg-zinc-900/50 flex flex-col md:flex-row gap-4 justify-between transition-all hover:border-zinc-300 dark:hover:border-zinc-700"><div class="flex-1 space-y-3"><div class="flex items-center gap-2 flex-wrap"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${isDone ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500' : 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300'}">${t(isDone ? 'btn_done' : 'nav_active')}</span><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${colorClass}">${displayType}</span>${urgencyHTML}${revHTML}<span class="text-xs text-zinc-500 dark:text-zinc-400 font-medium ml-1 sm:ml-2">${t('txt_due')}: ${customFormatDate(tk.deadline)}</span></div><div><h3 class="text-lg font-semibold text-zinc-900 dark:text-white ${isDone ? 'line-through text-zinc-500 dark:text-zinc-500' : ''}">${tk.title}</h3>${detailsHTML}${linksHTML}<p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-1.5"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>${clientName}</p></div><div class="flex flex-wrap gap-3 sm:gap-4 text-xs font-medium border-t border-zinc-100 dark:border-zinc-800/50 pt-3"><div class="text-emerald-600 dark:text-emerald-400">${t('txt_total')}: ৳${localNum(total)}</div>${bonusHtml}<div class="text-zinc-600 dark:text-zinc-300">${t('txt_advance')}: ৳${localNum(advance)}</div><div class="text-rose-600 dark:text-rose-400">${t('txt_due')}: ৳${localNum(netBalance)}</div><div class="text-zinc-500 dark:text-zinc-500 w-full sm:w-auto sm:ml-auto flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>${tk.assignedTo || t('txt_unassigned')}</div></div></div><div class="flex flex-col gap-2 shrink-0 items-stretch justify-center w-full md:w-32 border-t md:border-t-0 md:border-l border-zinc-100 dark:border-zinc-800/50 pt-3 md:pt-0 md:pl-4">${actionButtons}</div></li>`;
+  return `<li class="border-2 ${urgencyClass || 'border-zinc-200 dark:border-zinc-800'} shadow-sm dark:shadow-none rounded-2xl p-4 sm:p-5 bg-white dark:bg-zinc-900/50 flex flex-col md:flex-row gap-4 justify-between transition-all hover:border-zinc-300 dark:hover:border-zinc-700">
+    <div class="flex-1 space-y-3">
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${isDone ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500' : 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300'}">${t(isDone ? 'btn_done' : 'nav_active')}</span>
+        <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${colorClass}">${displayType}</span>
+        <span onclick="copyToClipboard('${tk.orderId || tk._id.slice(-6).toUpperCase()}', 'ID')" class="px-2 py-0.5 rounded text-[10px] font-black tracking-tighter bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 cursor-pointer hover:bg-indigo-100 transition-colors" title="Click to copy ID">#${tk.orderId || tk._id.slice(-6).toUpperCase()}</span>
+        ${urgencyHTML}${revHTML}
+        <span class="text-xs text-zinc-500 dark:text-zinc-400 font-medium ml-1 sm:ml-2">${t('txt_due')}: ${customFormatDate(tk.deadline)}</span>
+      </div>
+      <div>
+        <h3 class="text-lg font-semibold text-zinc-900 dark:text-white ${isDone ? 'line-through text-zinc-500 dark:text-zinc-500' : ''}">${tk.title}</h3>
+        ${detailsHTML}${linksHTML}
+        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-1.5"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>${clientName}</p>
+      </div>
+      <div class="flex flex-wrap gap-3 sm:gap-4 text-xs font-medium border-t border-zinc-100 dark:border-zinc-800/50 pt-3">
+        <div class="text-emerald-600 dark:text-emerald-400">${t('txt_total')}: ৳${localNum(total)}</div>
+        ${bonusHtml}
+        <div class="text-zinc-600 dark:text-zinc-300">${t('txt_advance')}: ৳${localNum(advance)}</div>
+        <div class="text-rose-600 dark:text-rose-400">${t('txt_due')}: ৳${localNum(netBalance)}</div>
+        <div class="text-zinc-500 dark:text-zinc-500 w-full sm:w-auto sm:ml-auto flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>${tk.assignedTo || t('txt_unassigned')}</div>
+      </div>
+    </div>
+    <div class="flex flex-col gap-2 shrink-0 items-stretch justify-center w-full md:w-32 border-t md:border-t-0 md:border-l border-zinc-100 dark:border-zinc-800/50 pt-3 md:pt-0 md:pl-4">
+      ${actionButtons}
+    </div>
+  </li>`;
 }
 
 
@@ -2181,7 +1454,7 @@ async function generatePDFInvoice(taskId) {
   
   // Invoice Meta Info (Right side)
   doc.setFontSize(10); doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]); doc.setFont("helvetica", "bold");
-  doc.text("Invoice No:", pageWidth - 60, 42); doc.setFont("helvetica", "normal"); doc.text(`#${tk._id.substring(tk._id.length - 6).toUpperCase()}`, pageWidth - 20, 42, { align: "right" });
+  doc.text("Invoice No:", pageWidth - 60, 42); doc.setFont("helvetica", "normal"); doc.text(`#${tk.orderId || tk._id.slice(-6).toUpperCase()}`, pageWidth - 20, 42, { align: "right" });
   doc.setFont("helvetica", "bold"); doc.text("Date:", pageWidth - 60, 48); doc.setFont("helvetica", "normal"); doc.text(new Date().toLocaleDateString('en-GB'), pageWidth - 20, 48, { align: "right" });
   doc.setFont("helvetica", "bold"); doc.text("Due Date:", pageWidth - 60, 54); doc.setFont("helvetica", "normal"); doc.text(tk.deadline ? new Date(tk.deadline).toLocaleDateString('en-GB') : 'N/A', pageWidth - 20, 54, { align: "right" });
   
@@ -2320,7 +1593,7 @@ async function generatePDFInvoice(taskId) {
   doc.setTextColor(secondaryColor[0], secondaryColor[1], secondaryColor[2]);
   doc.text("Thank you for your business!", pageWidth - 20, footerY + 5, { align: "right" });
 
-  doc.save(`Invoice_${cName.substring(0,10)}_${tk._id.substring(tk._id.length - 4)}.pdf`);
+  doc.save(`Invoice_${cName.substring(0,10)}_${tk.orderId || tk._id.slice(-4)}.pdf`);
   showToast("Invoice generated successfully!");
 }
 function toggleNewClientFields() { 
@@ -2560,6 +1833,15 @@ function openClientEditModal(clientId) {
   document.getElementById("cEditCountry").value = client.country || "Bangladesh";
   document.getElementById("cEditProgram").value = client.program || "";
   document.getElementById("cEditSubject").value = client.subject || "";
+  document.getElementById("cEditImage").value = client.image || client.imageLink || "";
+
+  const preview = document.getElementById("cEditImagePreview");
+  const imgUrl = client.image || client.imageLink;
+  if (imgUrl) {
+    preview.innerHTML = `<img src="${imgUrl}" class="w-full h-full object-cover">`;
+  } else {
+    preview.innerHTML = '<i class="fa-solid fa-user text-zinc-300 text-xl"></i>';
+  }
 
   document.getElementById("clientModalTitle").innerText = t('modal_client_edit');
   document.getElementById("clientEditModal").showModal();
@@ -2579,6 +1861,8 @@ async function saveClient(e) {
     country: document.getElementById("cEditCountry").value,
     program: document.getElementById("cEditProgram").value,
     subject: document.getElementById("cEditSubject").value,
+    image: document.getElementById("cEditImage").value,
+    imageLink: document.getElementById("cEditImage").value,
     password
   };
   
@@ -2604,8 +1888,65 @@ function openClientViewModal(clientId) {
   document.getElementById("clientViewModal").showModal();
 }
 
-bootstrap();
-</script>
-</body>
-</html>
+async function handleAdminImageUpload(event, targetInputId, previewId) {
+    const file = event.target.files[0];
+    if (!file) return;
 
+    console.log(`[handleAdminImageUpload] Starting for ${targetInputId}. File:`, file.name, file.size);
+
+    const previewEl = document.getElementById(previewId);
+    const originalHTML = previewEl.innerHTML;
+    
+    // Better Loading Animation
+    previewEl.innerHTML = '<div class="flex flex-col items-center gap-1"><i class="fa-solid fa-circle-notch fa-spin text-indigo-500 text-lg"></i></div>';
+    previewEl.classList.add('animate-pulse');
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        const base64 = e.target.result;
+        console.log(`[handleAdminImageUpload] File read. Base64 length: ${base64.length}`);
+        try {
+            console.log(`[handleAdminImageUpload] Sending via PLAIN FETCH to /api/upload-image...`);
+            const res = await fetch(`${API}/upload-image`, {
+                method: 'POST',
+                headers: { 
+                  'Content-Type': 'application/json',
+                  'Authorization': localStorage.getItem('portalSession') || ''
+                },
+                body: JSON.stringify({ image: base64 })
+            });
+            
+            const data = await res.json();
+            console.log(`[handleAdminImageUpload] PLAIN FETCH response:`, data);
+
+            if (data.success) {
+                console.log(`[handleAdminImageUpload] SUCCESS! Setting wImage to: ${data.url}`);
+                const hiddenInput = document.getElementById(targetInputId);
+                if (hiddenInput) {
+                    hiddenInput.value = data.url;
+                    console.log(`[handleAdminImageUpload] Input ${targetInputId} now has value: ${hiddenInput.value}`);
+                }
+                previewEl.innerHTML = `<img src="${data.url}" class="w-full h-full object-cover shadow-inner">`;
+                previewEl.classList.remove('animate-pulse');
+                showToast("Photo uploaded! Click Save to finish.", "success");
+            } else {
+                throw new Error(data.error || "Upload failed on server");
+            }
+        } catch (err) {
+            console.error(`[handleAdminImageUpload] FATAL ERROR:`, err);
+            previewEl.innerHTML = originalHTML;
+            previewEl.classList.remove('animate-pulse');
+            showToast("Upload failed: " + err.message, "error");
+        } finally {
+            event.target.value = '';
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+window.addEventListener('beforeunload', (event) => {
+    console.warn("PAGE RELOAD DETECTED!");
+    // event.preventDefault(); // Optional: prevent reload for debugging
+});
+
+bootstrap();

@@ -176,6 +176,89 @@
             text-transform: uppercase;
         }
 
+        .main-actions-stack {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            gap: 1.5rem;
+        }
+        .portal-trigger-wrapper { width: 100%; display: flex; justify-content: center; }
+        .btn-portal-toggle {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(5px);
+            border: 1px solid var(--zinc-200);
+            color: var(--text-muted);
+            padding: 0.8rem 2rem;
+            border-radius: 16px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .dark .btn-portal-toggle { border-color: var(--zinc-800); background: rgba(0,0,0,0.2); }
+        .btn-portal-toggle:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.2);
+        }
+        .client-login-panel {
+            width: 100%;
+            max-width: 400px;
+            animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .panel-inner {
+            background: var(--bg-card);
+            border: 1px solid var(--zinc-200);
+            padding: 1.5rem;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1);
+        }
+        .dark .panel-inner { border-color: var(--zinc-800); }
+        .panel-tag {
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .portal-input {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            background: var(--zinc-50);
+            border: 1px solid var(--zinc-100);
+            border-radius: 12px;
+            font-size: 0.9rem;
+            color: var(--text-main);
+            outline: none;
+            transition: all 0.2s;
+            margin-bottom: 0.7rem;
+        }
+        .dark .portal-input { background: var(--zinc-900); border-color: var(--zinc-800); }
+        .portal-input:focus { border-color: var(--primary); }
+        .btn-portal-login {
+            width: 100%;
+            padding: 0.8rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-portal-login:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(99, 102, 241, 0.3); }
+        .hidden { display: none; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
         @media (max-width: 640px) {
             .input-group { flex-direction: column; padding: 0.5rem; gap: 0.5rem; border-radius: 20px; }
             .btn-track { padding: 1.2rem; border-radius: 16px; }
@@ -196,9 +279,28 @@
         <p class="tagline">Expert Academic Solutions & Implementation</p>
 
         <div class="search-container">
-            <div class="input-group">
-                <input type="text" id="trackId" placeholder="Order Tracking ID" spellcheck="false">
-                <button class="btn-track" onclick="trackOrder()">Track</button>
+            <div class="main-actions-stack">
+                <div class="search-box">
+                    <input type="text" id="trackId" placeholder="Order Tracking ID" spellcheck="false">
+                    <button class="btn-track" onclick="trackOrder()">Track</button>
+                </div>
+                
+                <div class="portal-trigger-wrapper">
+                    <button onclick="toggleClientLogin()" class="btn-portal-toggle">
+                        <i class="fa-solid fa-user-graduate"></i> 
+                        <span>Access Scholar Dashboard</span>
+                    </button>
+                </div>
+
+                <div id="clientLoginPanel" class="client-login-panel hidden">
+                    <div class="panel-inner">
+                        <p class="panel-tag">Client Login</p>
+                        <div class="portal-input-wrapper">
+                            <input type="text" id="clientPhone" placeholder="Your Phone Number" class="portal-input">
+                        </div>
+                        <button class="btn-portal-login" onclick="loginToClientPortal()">Access Now</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -234,8 +336,41 @@
         updateIcons();
 
         function trackOrder() {
-            const id = document.getElementById('trackId').value.trim();
-            if (id) window.location.href = `admin.html?track=${id}`;
+            let id = document.getElementById('trackId').value.trim();
+            id = id.replace(/^#/, "").trim();
+            if (id) window.location.href = `admin/?track=${id}`;
+        }
+
+        function toggleClientLogin() {
+            const panel = document.getElementById("clientLoginPanel");
+            panel.classList.toggle("hidden");
+            if (!panel.classList.contains("hidden")) {
+                document.getElementById("clientPhone").focus();
+            }
+        }
+
+        async function loginToClientPortal() {
+            const phone = document.getElementById("clientPhone").value.trim();
+
+            if (!phone) {
+                alert("Please enter your registered phone number.");
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/client-portal/auth?phone=${encodeURIComponent(phone)}`);
+                const data = await res.json();
+
+                if (data.success) {
+                    localStorage.setItem('clientSession', data.token);
+                    localStorage.setItem('clientPhone', phone);
+                    window.location.href = '/client/';
+                } else {
+                    alert(data.error || "Authentication failed. Check your phone number.");
+                }
+            } catch (err) {
+                alert("Connection error. Please try again.");
+            }
         }
 
         document.getElementById('trackId').addEventListener('keypress', (e) => {
