@@ -218,6 +218,10 @@
           <h3 class="text-[10px] font-bold mb-3 text-zinc-500 uppercase tracking-widest" data-i18n="chart_title">Expense Breakdown</h3>
           <div class="w-full h-[180px] flex items-center justify-center"><canvas id="expenseChart"></canvas></div>
         </div>
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-5 rounded-2xl shadow-sm dark:shadow-none">
+          <h3 class="text-[10px] font-bold mb-3 text-zinc-500 uppercase tracking-widest" data-i18n="chart_writer_title">Writer Earnings</h3>
+          <div class="w-full h-[180px] flex items-center justify-center"><canvas id="writerChart"></canvas></div>
+        </div>
         <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 rounded-2xl shadow-sm dark:shadow-none flex flex-col min-h-[250px]">
           <h3 class="text-[10px] font-bold mb-3 text-zinc-500 uppercase tracking-widest" data-i18n="top_clients">Top Clients (Earnings)</h3>
           <ul id="topClientsList" class="flex-1 space-y-3 overflow-y-auto pr-2"><li class="text-zinc-500 text-sm" data-i18n="calculating">Calculating...</li></ul>
@@ -357,7 +361,14 @@
       </div>
       <div class="p-3 sm:p-4 bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-xl space-y-3">
         <div class="space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_client">Client</label><input type="text" id="clientSearchInput" oninput="filterClientDropdown()" placeholder="Search clients..." class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-t-lg border-b-0 px-3 py-2 outline-none focus:border-indigo-500 text-sm text-zinc-900 dark:text-white mb-0" data-i18n-placeholder="search_client"><select id="tClientSelect" onchange="this.size=1; toggleNewClientFields()" class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-b-lg px-3 py-2 sm:py-2.5 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white text-sm"><option value="new">+ Add New Client / No Client</option></select></div>
-        <div id="newClientFields" class="grid grid-cols-1 sm:grid-cols-3 gap-3"><input type="text" id="tClientName" placeholder="Client Name" class="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500"><input type="text" id="tClientPhone" placeholder="Phone Number" class="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500"><input type="text" id="tClientUniversity" placeholder="University (Optional)" class="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500"></div>
+        <div id="newClientFields" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <input type="text" id="tClientName" placeholder="Client Name" class="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500">
+          <input type="text" id="tClientPhone" placeholder="Phone Number" class="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500">
+          <input type="text" id="tClientUniversity" placeholder="University" class="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500">
+          <input type="text" id="tClientCountry" list="countryList" placeholder="Country" class="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500">
+          <input type="text" id="tClientProgram" list="programList" placeholder="Program (e.g. BSc)" class="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500">
+          <input type="text" id="tClientSubject" list="subjectList" placeholder="Subject (e.g. CSE)" class="bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 text-sm outline-none focus:border-indigo-500">
+        </div>
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <div class="space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_total">Total Value (৳)</label><input type="number" id="tTotal" value="0" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none focus:border-emerald-500 text-emerald-600 dark:text-emerald-400 font-medium text-sm"></div>
@@ -426,6 +437,20 @@
         <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_university">University (Optional)</label>
         <input type="text" id="cEditUniversity" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2.5 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white text-sm">
       </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="space-y-1.5">
+          <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_country">Country</label>
+          <input type="text" id="cEditCountry" list="countryList" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2.5 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white text-sm">
+        </div>
+        <div class="space-y-1.5">
+          <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_program">Program</label>
+          <input type="text" id="cEditProgram" list="programList" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2.5 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white text-sm">
+        </div>
+      </div>
+      <div class="space-y-1.5">
+        <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_subject">Subject</label>
+        <input type="text" id="cEditSubject" list="subjectList" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2.5 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white text-sm">
+      </div>
     </div>
     <div class="p-4 sm:p-5 border-t border-zinc-200 dark:border-zinc-800 shrink-0 bg-white dark:bg-zinc-950">
       <button onclick="saveClient(event)" id="btnSaveClient" class="w-full bg-indigo-600 text-white hover:bg-indigo-700 rounded-lg px-4 py-3 font-semibold transition-colors shadow-sm text-sm" data-i18n="btn_update">
@@ -464,10 +489,246 @@
     </div>
   </dialog>
 
+  <datalist id="countryList">
+    <option value="Afghanistan"></option>
+    <option value="Albania"></option>
+    <option value="Algeria"></option>
+    <option value="Andorra"></option>
+    <option value="Angola"></option>
+    <option value="Antigua and Barbuda"></option>
+    <option value="Argentina"></option>
+    <option value="Armenia"></option>
+    <option value="Australia"></option>
+    <option value="Austria"></option>
+    <option value="Azerbaijan"></option>
+    <option value="Bahamas"></option>
+    <option value="Bahrain"></option>
+    <option value="Bangladesh"></option>
+    <option value="Barbados"></option>
+    <option value="Belarus"></option>
+    <option value="Belgium"></option>
+    <option value="Belize"></option>
+    <option value="Benin"></option>
+    <option value="Bhutan"></option>
+    <option value="Bolivia"></option>
+    <option value="Bosnia and Herzegovina"></option>
+    <option value="Botswana"></option>
+    <option value="Brazil"></option>
+    <option value="Brunei"></option>
+    <option value="Bulgaria"></option>
+    <option value="Burkina Faso"></option>
+    <option value="Burundi"></option>
+    <option value="Cabo Verde"></option>
+    <option value="Cambodia"></option>
+    <option value="Cameroon"></option>
+    <option value="Canada"></option>
+    <option value="Central African Republic"></option>
+    <option value="Chad"></option>
+    <option value="Chile"></option>
+    <option value="China"></option>
+    <option value="Colombia"></option>
+    <option value="Comoros"></option>
+    <option value="Congo"></option>
+    <option value="Costa Rica"></option>
+    <option value="Croatia"></option>
+    <option value="Cuba"></option>
+    <option value="Cyprus"></option>
+    <option value="Czech Republic"></option>
+    <option value="Denmark"></option>
+    <option value="Djibouti"></option>
+    <option value="Dominica"></option>
+    <option value="Dominican Republic"></option>
+    <option value="Ecuador"></option>
+    <option value="Egypt"></option>
+    <option value="El Salvador"></option>
+    <option value="Equatorial Guinea"></option>
+    <option value="Eritrea"></option>
+    <option value="Estonia"></option>
+    <option value="Eswatini"></option>
+    <option value="Ethiopia"></option>
+    <option value="Fiji"></option>
+    <option value="Finland"></option>
+    <option value="France"></option>
+    <option value="Gabon"></option>
+    <option value="Gambia"></option>
+    <option value="Georgia"></option>
+    <option value="Germany"></option>
+    <option value="Ghana"></option>
+    <option value="Greece"></option>
+    <option value="Grenada"></option>
+    <option value="Guatemala"></option>
+    <option value="Guinea"></option>
+    <option value="Guinea-Bissau"></option>
+    <option value="Guyana"></option>
+    <option value="Haiti"></option>
+    <option value="Honduras"></option>
+    <option value="Hungary"></option>
+    <option value="Iceland"></option>
+    <option value="India"></option>
+    <option value="Indonesia"></option>
+    <option value="Iran"></option>
+    <option value="Iraq"></option>
+    <option value="Ireland"></option>
+    <option value="Israel"></option>
+    <option value="Italy"></option>
+    <option value="Jamaica"></option>
+    <option value="Japan"></option>
+    <option value="Jordan"></option>
+    <option value="Kazakhstan"></option>
+    <option value="Kenya"></option>
+    <option value="Kiribati"></option>
+    <option value="Korea, North"></option>
+    <option value="Korea, South"></option>
+    <option value="Kosovo"></option>
+    <option value="Kuwait"></option>
+    <option value="Kyrgyzstan"></option>
+    <option value="Laos"></option>
+    <option value="Latvia"></option>
+    <option value="Lebanon"></option>
+    <option value="Lesotho"></option>
+    <option value="Liberia"></option>
+    <option value="Libya"></option>
+    <option value="Liechtenstein"></option>
+    <option value="Lithuania"></option>
+    <option value="Luxembourg"></option>
+    <option value="Madagascar"></option>
+    <option value="Malawi"></option>
+    <option value="Malaysia"></option>
+    <option value="Maldives"></option>
+    <option value="Mali"></option>
+    <option value="Malta"></option>
+    <option value="Marshall Islands"></option>
+    <option value="Mauritania"></option>
+    <option value="Mauritius"></option>
+    <option value="Mexico"></option>
+    <option value="Micronesia"></option>
+    <option value="Moldova"></option>
+    <option value="Monaco"></option>
+    <option value="Mongolia"></option>
+    <option value="Montenegro"></option>
+    <option value="Morocco"></option>
+    <option value="Mozambique"></option>
+    <option value="Myanmar"></option>
+    <option value="Namibia"></option>
+    <option value="Nauru"></option>
+    <option value="Nepal"></option>
+    <option value="Netherlands"></option>
+    <option value="New Zealand"></option>
+    <option value="Nicaragua"></option>
+    <option value="Niger"></option>
+    <option value="Nigeria"></option>
+    <option value="North Macedonia"></option>
+    <option value="Norway"></option>
+    <option value="Oman"></option>
+    <option value="Pakistan"></option>
+    <option value="Palau"></option>
+    <option value="Palestine"></option>
+    <option value="Panama"></option>
+    <option value="Papua New Guinea"></option>
+    <option value="Paraguay"></option>
+    <option value="Peru"></option>
+    <option value="Philippines"></option>
+    <option value="Poland"></option>
+    <option value="Portugal"></option>
+    <option value="Qatar"></option>
+    <option value="Romania"></option>
+    <option value="Russia"></option>
+    <option value="Rwanda"></option>
+    <option value="Saint Kitts and Nevis"></option>
+    <option value="Saint Lucia"></option>
+    <option value="Saint Vincent and the Grenadines"></option>
+    <option value="Samoa"></option>
+    <option value="San Marino"></option>
+    <option value="Sao Tome and Principe"></option>
+    <option value="Saudi Arabia"></option>
+    <option value="Senegal"></option>
+    <option value="Serbia"></option>
+    <option value="Seychelles"></option>
+    <option value="Sierra Leone"></option>
+    <option value="Singapore"></option>
+    <option value="Slovakia"></option>
+    <option value="Slovenia"></option>
+    <option value="Solomon Islands"></option>
+    <option value="Somalia"></option>
+    <option value="South Africa"></option>
+    <option value="South Sudan"></option>
+    <option value="Spain"></option>
+    <option value="Sri Lanka"></option>
+    <option value="Sudan"></option>
+    <option value="Suriname"></option>
+    <option value="Sweden"></option>
+    <option value="Switzerland"></option>
+    <option value="Syria"></option>
+    <option value="Taiwan"></option>
+    <option value="Tajikistan"></option>
+    <option value="Tanzania"></option>
+    <option value="Thailand"></option>
+    <option value="Timor-Leste"></option>
+    <option value="Togo"></option>
+    <option value="Tonga"></option>
+    <option value="Trinidad and Tobago"></option>
+    <option value="Tunisia"></option>
+    <option value="Turkey"></option>
+    <option value="Turkmenistan"></option>
+    <option value="Tuvalu"></option>
+    <option value="Uganda"></option>
+    <option value="Ukraine"></option>
+    <option value="United Arab Emirates"></option>
+    <option value="United Kingdom"></option>
+    <option value="United States"></option>
+    <option value="Uruguay"></option>
+    <option value="Uzbekistan"></option>
+    <option value="Vanuatu"></option>
+    <option value="Vatican City"></option>
+    <option value="Venezuela"></option>
+    <option value="Vietnam"></option>
+    <option value="Yemen"></option>
+    <option value="Zambia"></option>
+    <option value="Zimbabwe"></option>
+  </datalist>
+
+  <datalist id="programList">
+    <option value="BSc"></option>
+    <option value="MSc"></option>
+    <option value="BBA"></option>
+    <option value="MBA"></option>
+    <option value="PhD"></option>
+    <option value="Diploma"></option>
+    <option value="Undergraduate"></option>
+    <option value="Postgraduate"></option>
+    <option value="A-Level"></option>
+    <option value="O-Level"></option>
+    <option value="GED"></option>
+  </datalist>
+
+  <datalist id="subjectList">
+    <option value="Computer Science (CSE)"></option>
+    <option value="Electrical Engineering (EEE)"></option>
+    <option value="Mechanical Engineering (ME)"></option>
+    <option value="Civil Engineering (CE)"></option>
+    <option value="Business Administration"></option>
+    <option value="Accounting"></option>
+    <option value="Finance"></option>
+    <option value="Marketing"></option>
+    <option value="Economics"></option>
+    <option value="Law"></option>
+    <option value="English"></option>
+    <option value="Mathematics"></option>
+    <option value="Physics"></option>
+    <option value="Chemistry"></option>
+    <option value="Biology"></option>
+    <option value="Psychology"></option>
+    <option value="Sociology"></option>
+    <option value="International Relations"></option>
+    <option value="Pharmacy"></option>
+    <option value="Public Health"></option>
+  </datalist>
+
 <script>
 const API = "/api"; 
 let allTasks = [], allClients = [], allExpenses = [], allInvoices = [], allWriters = [], writerStats = [];
 let expenseChartInstance = null;
+let writerChartInstance = null;
 let editingTxId = null;
 let incomeChartInstance = null;
 
@@ -512,7 +773,7 @@ const translations = {
     title: "Agency OS", subtitle: "Manage tasks, clients, and finances.", loading_text: "Loading Agency OS...",
     nav_overview: "Overview", nav_clients: "Clients", nav_active: "Active Pipeline", nav_done: "Completed Works", nav_invoices: "Invoices", nav_writers: "Writers", nav_accounts: "Expenses",
     stat_earned: "Total Earned", stat_expected: "Expected Earnings", stat_expenses: "Expenses", stat_net: "Net Balance", stat_pending: "Active Pipeline", stat_total_tasks: "Total Tasks", stat_completed_tasks: "Completed Tasks",
-    chart_title: "Expense Breakdown", chart_income_title: "Income Breakdown", top_clients: "Top Clients (Earnings)", filter_all_time: "All Time", filter_this_month: "This Month", filter_last_month: "Last Month", filter_this_year: "This Year",
+    chart_title: "Expense Breakdown", chart_income_title: "Income Breakdown", chart_writer_title: "Writer Contribution", top_clients: "Top Clients (Earnings)", filter_all_time: "All Time", filter_this_month: "This Month", filter_last_month: "Last Month", filter_this_year: "This Year",
     total_clients: "Total Clients:", total_writers: "Total Writers:", btn_new_task: "+ New Task", btn_new_client: "+ Add Client", btn_new_writer: "+ Add Writer", btn_log_expense: "Log Expense",
     calculating: "Calculating...", no_tasks: "No tasks in pipeline.", no_done: "No completed works yet.", no_clients: "No clients registered.", no_expenses: "No expenses logged yet.",
     lbl_rel_task: "Associated Task (Optional)", opt_no_task: "No Task / General Expense", modal_exp_edit: "Edit Expense",
@@ -521,13 +782,14 @@ const translations = {
     word_tasks: "Tasks", txt_internal: "Internal/No Client", txt_due: "Due", txt_total: "Total", txt_advance: "Advance", txt_bonus: "Bonus", txt_net_income: "Net Income", txt_logged: "Logged", txt_duration: "Duration", txt_open_ended: "Open-ended", txt_overdue: "Overdue", txt_days: "days", txt_unassigned: "Unassigned", txt_university: "University",
     btn_edit: "Edit", btn_done: "Done", btn_undo: "Undo", opt_add_client: "+ Add New Client / No Client", btn_delete: "Delete", modal_client_edit: "Edit Client", modal_client_add: "Add New Client", btn_view_tasks: "View Tasks", btn_edit_client: "Edit Profile", btn_save_client: "Save Client", btn_cancel: "Cancel", btn_confirm: "Confirm", modal_auth_title: "Enter Password", msg_auth_status: "Enter password to change task status.", msg_auth_del_task: "Enter password to delete task.", msg_auth_del_exp: "Enter password to delete expense.", msg_auth_save: "Enter password to save changes.", msg_auth_phone: "Enter password to reveal phone numbers.", msg_auth_inv: "Enter password to download invoice.", search_tasks: "Search tasks...", filter_all_types: "All Types", filter_all_assignees: "All Assignees", tab_list: "List View", tab_board: "Kanban Board", status_pending: "Pending", status_in_progress: "In Progress", status_review: "Under Review",
     modal_writer_add: "Add New Writer", modal_writer_edit: "Edit Writer", lbl_w_name: "Full Name*", lbl_w_phone: "Phone*", lbl_w_email: "Email", lbl_w_image: "Image Link", lbl_w_dob: "Date of Birth", lbl_w_nid: "NID Details", btn_save_writer: "Save Writer", msg_writer_added: "Writer added!", msg_writer_updated: "Writer updated!", msg_writer_deleted: "Writer removed.", msg_req_name_phone: "Name and Phone are required!",
+    lbl_country: "Country", lbl_program: "Program", lbl_subject: "Subject", opt_other: "Other...",
     lbl_writer_pay: "Writer Pay (৳)", lbl_links: "Reference Files / Links", recent_activity: "Recent Activity", workload: "Workload", earnings: "Earnings", pending_pay: "Pending Pay", urgent: "Urgent"
   },
   bn: {
     title: "এজেন্সি ওএস", subtitle: "টাস্ক, ক্লায়েন্ট এবং হিসাব পরিচালনা করুন।", loading_text: "এজেন্সি ওএস লোড হচ্ছে...",
     nav_overview: "সারাংশ", nav_clients: "ক্লায়েন্ট", nav_active: "চলমান কাজ", nav_done: "সম্পন্ন কাজ", nav_invoices: "ইনভয়েস", nav_writers: "রাইটার", nav_accounts: "খরচ",
     stat_earned: "মোট আয়", stat_expected: "সম্ভাব্য আয়", stat_expenses: "মোট খরচ", stat_net: "নিট ব্যালেন্স", stat_pending: "চলমান কাজ", stat_total_tasks: "মোট কাজ", stat_completed_tasks: "সম্পন্ন কাজ",
-    chart_title: "খরচের বিবরণ", chart_income_title: "আয়ের বিবরণ", top_clients: "শীর্ষ ক্লায়েন্ট (আয়)", filter_all_time: "সব সময়", filter_this_month: "এই মাস", filter_last_month: "গত মাস", filter_this_year: "এই বছর",
+    chart_title: "খরচের বিবরণ", chart_income_title: "আয়ের বিবরণ", chart_writer_title: "রাইটার কন্ট্রিবিউশন", top_clients: "শীর্ষ ক্লায়েন্ট (আয়)", filter_all_time: "সব সময়", filter_this_month: "এই মাস", filter_last_month: "গত মাস", filter_this_year: "এই বছর",
     total_clients: "মোট ক্লায়েন্ট:", total_writers: "মোট রাইটার:", btn_new_task: "+ নতুন কাজ", btn_new_client: "+ ক্লায়েন্ট যোগ করুন", btn_new_writer: "+ রাইটার যোগ করুন", btn_log_expense: "খরচ যোগ করুন",
     calculating: "হিসাব করা হচ্ছে...", no_tasks: "কোনো কাজ নেই।", no_done: "কোনো কাজ সম্পন্ন হয়নি।", no_clients: "কোনো ক্লায়েন্ট নেই।", no_expenses: "কোনো খরচের রেকর্ড নেই।",
     lbl_rel_task: "সম্পর্কিত কাজ (ঐচ্ছিক)", opt_no_task: "কোনো নির্দিষ্ট কাজ নয়", modal_exp_edit: "খরচ এডিট করুন",
@@ -536,6 +798,7 @@ const translations = {
     word_tasks: "টি কাজ", txt_internal: "নিজস্ব / ক্লায়েন্ট নেই", txt_due: "বাকি", txt_total: "মোট", txt_advance: "অগ্রিম", txt_bonus: "বোনাস", txt_net_income: "নিট আয়", txt_logged: "যুক্ত হয়েছে", txt_duration: "সময়কাল", txt_open_ended: "নির্ধারিত নয়", txt_overdue: "সময় পার হয়েছে", txt_days: "দিন", txt_unassigned: "নির্ধারিত নয়", txt_university: "বিশ্ববিদ্যালয়",
     btn_edit: "এডিট", btn_done: "সম্পন্ন", btn_undo: "পূর্বাবস্থায়", opt_add_client: "+ নতুন ক্লায়েন্ট / ক্লায়েন্ট নেই", btn_delete: "ডিলিট", modal_client_edit: "ক্লায়েন্ট এডিট", modal_client_add: "নতুন ক্লায়েন্ট", btn_view_tasks: "কাজগুলো দেখুন", btn_edit_client: "এডিট করুন", btn_save_client: "সেভ করুন", btn_cancel: "বাতিল", btn_confirm: "নিশ্চিত করুন", modal_auth_title: "পাসওয়ার্ড দিন", msg_auth_status: "স্ট্যাটাস পরিবর্তন করতে পাসওয়ার্ড দিন।", msg_auth_del_task: "কাজ ডিলিট করতে পাসওয়ার্ড দিন।", msg_auth_del_exp: "খরচ ডিলিট করতে পাসওয়ার্ড দিন.", msg_auth_save: "সেভ করতে পাসওয়ার্ড দিন।", msg_auth_phone: "ফোন নম্বর দেখতে পাসওয়ার্ড দিন।", msg_auth_inv: "ইনভয়েস ডাউনলোড করতে পাসওয়ার্ড দিন।", search_tasks: "কাজ খুঁজুন...", filter_all_types: "সব ধরন", filter_all_assignees: "সব ব্যক্তি", tab_list: "লিস্ট ভিউ", tab_board: "কানবান বোর্ড", status_pending: "অপেক্ষমান", status_in_progress: "চলমান", status_review: "রিভিউ চলছে",
     modal_writer_add: "নতুন রাইটার যোগ করুন", modal_writer_edit: "রাইটার এডিট", lbl_w_name: "পুরো নাম*", lbl_w_phone: "ফোন নম্বর*", lbl_w_email: "ইমেইল", lbl_w_image: "ছবির লিঙ্ক", lbl_w_dob: "জন্ম তারিখ", lbl_w_nid: "এনআইডি তথ্য", btn_save_writer: "রাইটার সেভ করুন", msg_writer_added: "রাইটার যোগ করা হয়েছে!", msg_writer_updated: "রাইটার আপডেট করা হয়েছে!", msg_writer_deleted: "রাইটার ডিলিট করা হয়েছে।", msg_req_name_phone: "নাম এবং ফোন নম্বর প্রয়োজন!",
+    lbl_country: "দেশ", lbl_program: "প্রোগ্রাম", lbl_subject: "বিষয়", opt_other: "অন্যান্য...",
     lbl_writer_pay: "রাইটার পেমেন্ট (৳)", lbl_links: "রেফারেন্স ফাইল / লিঙ্ক", recent_activity: "সাম্প্রতিক কর্মকাণ্ড", workload: "কাজের চাপ", earnings: "উপার্জন", pending_pay: "বাকি পেমেন্ট", urgent: "জরুরী"
   }
 };
@@ -1081,6 +1344,7 @@ function renderDashboard() {
   let totalEarned = 0, expectedEarnings = 0, totalExpenses = 0, pendingTasksCount = 0, completedTasksCount = 0;
   const clientEarningsMap = {};
   const incomeBreakdown = {};
+  const writerContributionMap = {}; // Map for writer contribution (Value - Expenses)
   const filterType = document.getElementById("dashboardDateFilter").value;
 
   allTasks.forEach(tk => {
@@ -1118,6 +1382,15 @@ function renderDashboard() {
       if(!clientEarningsMap[cid]) clientEarningsMap[cid] = { name: cname, earned: 0 };
       clientEarningsMap[cid].earned += taskEarned;
     }
+
+    // Writer contribution mapping (Value - Expenses)
+    const writerName = tk.assignedTo || "Unassigned";
+    const taskExpenses = allExpenses
+        .filter(e => e.taskId === tk._id && e.type !== 'income')
+        .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+    
+    const taskNetValue = (Number(tk.totalValue) || 0) + (Number(tk.bonus) || 0) - taskExpenses;
+    writerContributionMap[writerName] = (writerContributionMap[writerName] || 0) + taskNetValue;
   });
 
   const expenseBreakdown = { "Facebook Ads": 0, "Supplements": 0, "Withdraws": 0, "Others": 0 };
@@ -1162,10 +1435,10 @@ function renderDashboard() {
     });
   }
 
-  renderCharts(expenseBreakdown, incomeBreakdown);
+  renderCharts(expenseBreakdown, incomeBreakdown, writerContributionMap);
 }
 
-function renderCharts(expenseBreakdown, incomeBreakdown) {
+function renderCharts(expenseBreakdown, incomeBreakdown, writerContributionMap) {
   Chart.defaults.color = currentTheme === 'dark' ? '#a1a1aa' : '#52525b'; 
   Chart.defaults.font.family = 'Inter';
 
@@ -1198,6 +1471,59 @@ function renderCharts(expenseBreakdown, incomeBreakdown) {
       datasets: [{ label: t('stat_earned'), data: Object.values(incomeBreakdown), backgroundColor: ['#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e'], borderRadius: 4 }]
     },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: currentTheme === 'dark' ? '#27272a' : '#e4e4e7' } }, x: { grid: { display: false } } } }
+  });
+
+  // Writer Contribution Chart (Pie)
+  const ctxWri = document.getElementById('writerChart').getContext('2d');
+  if (writerChartInstance) writerChartInstance.destroy();
+  
+  const wriKeys = Object.keys(writerContributionMap).filter(k => writerContributionMap[k] > 0);
+  const wriLabels = wriKeys;
+  const wriData = wriKeys.map(k => writerContributionMap[k]);
+
+  writerChartInstance = new Chart(ctxWri, {
+    type: 'pie',
+    data: {
+      labels: wriLabels,
+      datasets: [{
+        data: wriData,
+        backgroundColor: [
+          '#10b981', // Emerald
+          '#6366f1', // Indigo
+          '#f59e0b', // Amber
+          '#f43f5e', // Rose
+          '#06b6d4', // Cyan
+          '#8b5cf6', // Violet
+          '#f97316', // Orange
+          '#84cc16', // Lime
+          '#64748b', // Slate
+          '#ec4899'  // Pink
+        ],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: {
+            boxWidth: 10,
+            padding: 10,
+            font: { size: 9, weight: 'bold' },
+            color: currentTheme === 'dark' ? '#d4d4d8' : '#3f3f46'
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return ` ৳${localNum(context.raw)}`;
+            }
+          }
+        }
+      }
+    }
   });
 }
 
@@ -1244,6 +1570,15 @@ function renderClientsView(searchOverride = null) {
               <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
               ${client.university}
             </span>` : ''}
+            <span class="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[10px]">
+              <span class="opacity-50">${t('lbl_country')}:</span> ${client.country || 'Bangladesh'}
+            </span>
+            <span class="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[10px]">
+              <span class="opacity-50">${t('lbl_program')}:</span> ${client.program || 'None'}
+            </span>
+            <span class="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[10px]">
+              <span class="opacity-50">${t('lbl_subject')}:</span> ${client.subject || 'None'}
+            </span>
           </p>
           <div class="mt-3 inline-block bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 px-2 py-1 rounded text-xs font-semibold">
             ${t('txt_net_income')}: ৳${localNum(netIncome)}
@@ -1685,6 +2020,9 @@ function openTaskModal(taskId = null) {
     document.getElementById("tClientName").value = "";
     document.getElementById("tClientPhone").value = "";
     document.getElementById("tClientUniversity").value = "";
+    document.getElementById("tClientCountry").value = "Bangladesh";
+    document.getElementById("tClientProgram").value = "";
+    document.getElementById("tClientSubject").value = "";
     toggleNewClientFields();
   }
   modal.showModal();
@@ -1708,6 +2046,9 @@ async function saveTask(e) {
     clientName: document.getElementById("tClientName").value,
     clientPhone: document.getElementById("tClientPhone").value,
     clientUniversity: document.getElementById("tClientUniversity").value,
+    clientCountry: document.getElementById("tClientCountry").value,
+    clientProgram: document.getElementById("tClientProgram").value,
+    clientSubject: document.getElementById("tClientSubject").value,
     totalValue: Number(document.getElementById("tTotal").value) || 0,
     advancePaid: Number(document.getElementById("tAdvance").value) || 0,
     bonus: Number(document.getElementById("tBonus").value) || 0,
@@ -1718,6 +2059,7 @@ async function saveTask(e) {
   
   if(!payload.title) { showToast("Title is required", 'error'); btn.disabled = false; return; }
   btn.innerText = "...";
+
   try {
     await handleFetch(id ? `${API}/update-task/${id}` : `${API}/add-task`, { method: id ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     document.getElementById("taskModal").close(); 
@@ -1869,6 +2211,10 @@ function openClientEditModal(clientId) {
   document.getElementById("cEditName").value = client.name;
   document.getElementById("cEditPhone").value = client.phone || "";
   document.getElementById("cEditUniversity").value = client.university || "";
+  document.getElementById("cEditCountry").value = client.country || "Bangladesh";
+  document.getElementById("cEditProgram").value = client.program || "";
+  document.getElementById("cEditSubject").value = client.subject || "";
+
   document.getElementById("clientModalTitle").innerText = t('modal_client_edit');
   document.getElementById("clientEditModal").showModal();
 }
@@ -1880,7 +2226,15 @@ async function saveClient(e) {
   const password = await requestAuthToken(t('msg_auth_save'));
   if (!password) { btn.disabled = false; return; }
 
-  const payload = { name: document.getElementById("cEditName").value, phone: document.getElementById("cEditPhone").value, university: document.getElementById("cEditUniversity").value, password };
+  const payload = { 
+    name: document.getElementById("cEditName").value, 
+    phone: document.getElementById("cEditPhone").value, 
+    university: document.getElementById("cEditUniversity").value,
+    country: document.getElementById("cEditCountry").value,
+    program: document.getElementById("cEditProgram").value,
+    subject: document.getElementById("cEditSubject").value,
+    password 
+  };
   
   try {
     const url = id ? `${API}/update-client/${id}` : `${API}/add-client`;
