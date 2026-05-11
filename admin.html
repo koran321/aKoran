@@ -106,7 +106,20 @@
     <div id="trackingCard" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-10 rounded-3xl shadow-xl space-y-8 w-full">
       <div class="space-y-1">
         <h2 id="trackTitle" class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white leading-tight" data-i18n="track_loading">Loading order details...</h2>
-        <p id="trackClient" class="text-sm text-zinc-500 font-medium"></p>
+        <div class="group relative inline-block">
+          <p class="text-sm text-zinc-500 font-medium flex items-center gap-1.5">
+            <span data-i18n="track_order_for">Order for</span>
+            <span id="trackClientName" class="text-indigo-600 dark:text-indigo-400 font-bold cursor-help border-b border-dotted border-indigo-500/40 pb-0.5"></span>
+          </p>
+          <!-- University Card Tooltip -->
+          <div id="trackUniCard" class="absolute bottom-full left-0 mb-3 w-max max-w-[240px] bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 p-3.5 rounded-2xl shadow-2xl opacity-0 scale-90 translate-y-2 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:translate-y-0 transition-all duration-300 z-50">
+            <div class="flex items-center gap-2 mb-1.5">
+              <div class="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
+              <span class="text-[9px] uppercase tracking-widest text-zinc-400 font-black" data-i18n="txt_university">University</span>
+            </div>
+            <span id="trackUniName" class="block text-[11px] font-bold text-zinc-900 dark:text-white leading-relaxed italic"></span>
+          </div>
+        </div>
       </div>
 
       <!-- Progress Bar -->
@@ -148,6 +161,24 @@
     <div class="flex flex-col items-center gap-4">
       <p class="text-center text-[10px] text-zinc-500 font-medium" data-i18n="track_help">Need help? Contact your assigned coordinator.</p>
       <button onclick="toggleLang()" class="text-[10px] font-bold uppercase tracking-widest text-indigo-500 hover:text-indigo-600 transition-colors">বাং / EN</button>
+    </div>
+  </div>
+
+  <!-- Portal Login Screen -->
+  <div id="portalLogin" class="fixed inset-0 z-[60] bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center p-6 hidden">
+    <div class="w-full max-w-sm space-y-8 text-center">
+      <div class="space-y-2">
+        <div class="w-16 h-16 bg-indigo-500 rounded-3xl mx-auto flex items-center justify-center shadow-xl shadow-indigo-500/20 mb-6">
+          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+        </div>
+        <h1 class="text-2xl font-black tracking-tighter text-zinc-900 dark:text-white uppercase">Portal Access</h1>
+        <p class="text-zinc-500 dark:text-zinc-400 text-xs font-medium uppercase tracking-widest">Enter password to continue</p>
+      </div>
+      
+      <form onsubmit="handlePortalLogin(event)" class="space-y-4">
+        <input type="password" id="portalPass" placeholder="••••••••" required class="w-full px-6 py-4 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-center text-xl font-bold tracking-[0.5em] focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+        <button type="submit" id="btnLoginPortal" class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-widest rounded-2xl shadow-lg shadow-indigo-600/20 active:scale-[0.98] transition-all">Unlock Dashboard</button>
+      </form>
     </div>
   </div>
 
@@ -869,8 +900,8 @@ const translations = {
     lbl_rel_task: "Associated Task (Optional)", opt_no_task: "No Task / General Expense", modal_exp_edit: "Edit Expense",
     modal_task_title: "Add New Task", lbl_desc: "Description / Title", lbl_details: "Details (Optional)", plc_details: "Enter specific requirements, links, or notes...", lbl_type: "Type of Work", lbl_deadline: "Deadline", lbl_client: "Client", search_client: "Search clients...", lbl_total: "Total Value (৳)", lbl_advance: "Advance Paid (৳)", lbl_bonus: "Bonus (৳)", lbl_assign: "Assign To", lbl_token: "Password", lbl_university: "University", lbl_link: "Project Link (Optional)", btn_deploy: "Deploy Task", btn_load_more: "Load More",
     modal_exp_title: "Log Expense", lbl_exp_cat: "Expense Category", lbl_exp_desc: "Description (Optional)", lbl_exp_amount: "Amount (৳)", btn_deduct: "Deduct Funds", btn_update: "Update", btn_export: "Export CSV", btn_invoice: "PDF Invoice",
-    word_tasks: "Tasks", txt_internal: "Internal/No Client", txt_due: "Due", txt_total: "Total", txt_advance: "Advance", txt_bonus: "Bonus", txt_net_income: "Net Income", txt_logged: "Logged", txt_duration: "Duration", txt_open_ended: "Open-ended", txt_overdue: "Overdue", txt_days: "days", txt_unassigned: "Unassigned", txt_university: "University",
-    btn_edit: "Edit", btn_done: "Done", btn_undo: "Undo", opt_add_client: "+ Add New Client / No Client", btn_delete: "Delete", modal_client_edit: "Edit Client", modal_client_add: "Add New Client", btn_view_tasks: "View Tasks", btn_edit_client: "Edit Profile", btn_save_client: "Save Client", btn_cancel: "Cancel", btn_confirm: "Confirm", modal_auth_title: "Enter Password", msg_auth_status: "Enter password to change task status.", msg_auth_del_task: "Enter password to delete task.", msg_auth_del_exp: "Enter password to delete expense.", msg_auth_save: "Enter password to save changes.", msg_auth_phone: "Enter password to reveal phone numbers.", msg_auth_inv: "Enter password to download invoice.", search_tasks: "Search tasks...", filter_all_types: "All Types", filter_all_assignees: "All Assignees", tab_list: "List View", tab_board: "Kanban Board", status_pending: "Pending", status_in_progress: "In Progress", status_review: "Under Review",
+    word_tasks: "Tasks", txt_internal: "Internal/No Client", txt_due: "Due", txt_total: "Total", txt_advance: "Advance", txt_bonus: "Bonus", txt_net_income: "Net Income", txt_logged: "Logged", txt_duration: "Duration", txt_open_ended: "Not Specified", txt_overdue: "Overdue", txt_days: "days", txt_unassigned: "Unassigned", txt_university: "University", txt_finished: "Finished",
+    btn_edit: "Edit", btn_done: "Done", btn_undo: "Undo", opt_add_client: "+ Add New Client / No Client", btn_delete: "Delete", modal_client_edit: "Edit Client", modal_client_add: "Add New Client", btn_view_tasks: "View Tasks", btn_edit_client: "Edit Profile", btn_save_client: "Save Client", btn_cancel: "Cancel", btn_confirm: "Confirm", modal_auth_title: "Enter Password", msg_auth_status: "Enter password to change task status.", msg_auth_del_task: "Enter password to delete task.", msg_auth_del_exp: "Enter password to delete expense.", msg_auth_save: "Enter password to save changes.", msg_auth_phone: "Enter password to reveal phone numbers.", msg_auth_inv: "Enter password to download invoice.", search_tasks: "Search tasks...", filter_all_types: "All Types", filter_all_assignees: "All Assignees", tab_list: "List View", tab_board: "Kanban Board", status_pending: "Pending", status_in_progress: "In Progress", status_review: "Under Review", status_done: "Done",
     modal_writer_add: "Add New Writer", modal_writer_edit: "Edit Writer", lbl_w_name: "Full Name*", lbl_w_phone: "Phone*", lbl_w_email: "Email", lbl_w_image: "Image Link", lbl_w_dob: "Date of Birth", lbl_w_nid: "NID Details", btn_save_writer: "Save Writer", msg_writer_added: "Writer added!", msg_writer_updated: "Writer updated!", msg_writer_deleted: "Writer removed.", msg_req_name_phone: "Name and Phone are required!",
     lbl_country: "Country", lbl_program: "Program", lbl_subject: "Subject", opt_other: "Other...",
     lbl_writer_pay: "Writer Pay (৳)", lbl_links: "Reference Files / Links", recent_activity: "Recent Activity", workload: "Workload", earnings: "Earnings", pending_pay: "Pending Pay", urgent: "Urgent",
@@ -886,8 +917,8 @@ const translations = {
     lbl_rel_task: "সম্পর্কিত কাজ (ঐচ্ছিক)", opt_no_task: "কোনো নির্দিষ্ট কাজ নয়", modal_exp_edit: "খরচ এডিট করুন",
     modal_task_title: "নতুন কাজ যোগ করুন", lbl_desc: "কাজের নাম / বিবরণ", lbl_details: "বিস্তারিত (ঐচ্ছিক)", plc_details: "নির্দিষ্ট প্রয়োজনীয়তা, লিঙ্ক বা নোট লিখুন...", lbl_type: "কাজের ধরন", lbl_deadline: "শেষ সময় (Deadline)", lbl_client: "ক্লায়েন্ট", search_client: "ক্লায়েন্ট খুঁজুন...", lbl_total: "মোট মূল্য (৳)", lbl_advance: "অগ্রিম পেমেন্ট (৳)", lbl_bonus: "বোনাস (৳)", lbl_assign: "দায়িত্বপ্রাপ্ত ব্যক্তি", lbl_token: "পাসওয়ার্ড", lbl_university: "বিশ্ববিদ্যালয়", lbl_link: "প্রজেক্ট লিঙ্ক (ঐচ্ছিক)", btn_deploy: "সেভ করুন", btn_load_more: "আরও দেখুন",
     modal_exp_title: "খরচ যোগ করুন", lbl_exp_cat: "খরচের খাত", lbl_exp_desc: "বিবরণ (ঐচ্ছিক)", lbl_exp_amount: "পরিমাণ (৳)", btn_deduct: "খরচ যুক্ত করুন", btn_update: "আপডেট", btn_export: "CSV এক্সপোর্ট", btn_invoice: "পিডিএফ ইনভয়েস",
-    word_tasks: "টি কাজ", txt_internal: "নিজস্ব / ক্লায়েন্ট নেই", txt_due: "বাকি", txt_total: "মোট", txt_advance: "অগ্রিম", txt_bonus: "বোনাস", txt_net_income: "নিট আয়", txt_logged: "যুক্ত হয়েছে", txt_duration: "সময়কাল", txt_open_ended: "নির্ধারিত নয়", txt_overdue: "সময় পার হয়েছে", txt_days: "দিন", txt_unassigned: "নির্ধারিত নয়", txt_university: "বিশ্ববিদ্যালয়",
-    btn_edit: "এডিট", btn_done: "সম্পন্ন", btn_undo: "পূর্বাবস্থায়", opt_add_client: "+ নতুন ক্লায়েন্ট / ক্লায়েন্ট নেই", btn_delete: "ডিলিট", modal_client_edit: "ক্লায়েন্ট এডিট", modal_client_add: "নতুন ক্লায়েন্ট", btn_view_tasks: "কাজগুলো দেখুন", btn_edit_client: "এডিট করুন", btn_save_client: "সেভ করুন", btn_cancel: "বাতিল", btn_confirm: "নিশ্চিত করুন", modal_auth_title: "পাসওয়ার্ড দিন", msg_auth_status: "স্ট্যাটাস পরিবর্তন করতে পাসওয়ার্ড দিন।", msg_auth_del_task: "কাজ ডিলিট করতে পাসওয়ার্ড দিন।", msg_auth_del_exp: "খরচ ডিলিট করতে পাসওয়ার্ড দিন.", msg_auth_save: "সেভ করতে পাসওয়ার্ড দিন।", msg_auth_phone: "ফোন নম্বর দেখতে পাসওয়ার্ড দিন।", msg_auth_inv: "ইনভয়েস ডাউনলোড করতে পাসওয়ার্ড দিন।", search_tasks: "কাজ খুঁজুন...", filter_all_types: "সব ধরন", filter_all_assignees: "সব ব্যক্তি", tab_list: "লিস্ট ভিউ", tab_board: "কানবান বোর্ড", status_pending: "অপেক্ষমান", status_in_progress: "চলমান", status_review: "রিভিউ চলছে",
+    word_tasks: "টি কাজ", txt_internal: "নিজস্ব / ক্লায়েন্ট নেই", txt_due: "বাকি", txt_total: "মোট", txt_advance: "অগ্রিম", txt_bonus: "বোনাস", txt_net_income: "নিট আয়", txt_logged: "যুক্ত হয়েছে", txt_duration: "সময়কাল", txt_open_ended: "নির্ধারিত নয়", txt_overdue: "সময় পার হয়েছে", txt_days: "দিন", txt_unassigned: "নির্ধারিত নয়", txt_university: "বিশ্ববিদ্যালয়", txt_finished: "সম্পন্ন",
+    btn_edit: "এডিট", btn_done: "সম্পন্ন", btn_undo: "পূর্বাবস্থায়", opt_add_client: "+ নতুন ক্লায়েন্ট / ক্লায়েন্ট নেই", btn_delete: "ডিলিট", modal_client_edit: "ক্লায়েন্ট এডিট", modal_client_add: "নতুন ক্লায়েন্ট", btn_view_tasks: "কাজগুলো দেখুন", btn_edit_client: "এডিট করুন", btn_save_client: "সেভ করুন", btn_cancel: "বাতিল", btn_confirm: "নিশ্চিত করুন", modal_auth_title: "পাসওয়ার্ড দিন", msg_auth_status: "স্ট্যাটাস পরিবর্তন করতে পাসওয়ার্ড দিন।", msg_auth_del_task: "কাজ ডিলিট করতে পাসওয়ার্ড দিন।", msg_auth_del_exp: "খরচ ডিলিট করতে পাসওয়ার্ড দিন.", msg_auth_save: "সেভ করতে পাসওয়ার্ড দিন।", msg_auth_phone: "ফোন নম্বর দেখতে পাসওয়ার্ড দিন।", msg_auth_inv: "ইনভয়েস ডাউনলোড করতে পাসওয়ার্ড দিন।", search_tasks: "কাজ খুঁজুন...", filter_all_types: "সব ধরন", filter_all_assignees: "সব ব্যক্তি", tab_list: "লিস্ট ভিউ", tab_board: "কানবান বোর্ড", status_pending: "অপেক্ষমান", status_in_progress: "চলমান", status_review: "রিভিউ চলছে", status_done: "সম্পন্ন",
     modal_writer_add: "নতুন রাইটার যোগ করুন", modal_writer_edit: "রাইটার এডিট", lbl_w_name: "পুরো নাম*", lbl_w_phone: "ফোন নম্বর*", lbl_w_email: "ইমেইল", lbl_w_image: "ছবির লিঙ্ক", lbl_w_dob: "জন্ম তারিখ", lbl_w_nid: "এনআইডি তথ্য", btn_save_writer: "রাইটার সেভ করুন", msg_writer_added: "রাইটার যোগ করা হয়েছে!", msg_writer_updated: "রাইটার আপডেট করা হয়েছে!", msg_writer_deleted: "রাইটার ডিলিট করা হয়েছে।", msg_req_name_phone: "নাম এবং ফোন নম্বর প্রয়োজন!",
     lbl_country: "দেশ", lbl_program: "প্রোগ্রাম", lbl_subject: "বিষয়", opt_other: "অন্যান্য...",
     lbl_writer_pay: "রাইটার পেমেন্ট (৳)", lbl_links: "রেফারেন্স ফাইল / লিঙ্ক", recent_activity: "সাম্প্রতিক কর্মকাণ্ড", workload: "কাজের চাপ", earnings: "উপার্জন", pending_pay: "বাকি পেমেন্ট", urgent: "জরুরী",
@@ -906,7 +937,10 @@ function applyTranslations() {
   if (editClientBtn) editClientBtn.innerText = document.getElementById('editClientId').value ? t('btn_update') : t('btn_save_client');
   
   // Refresh current view to apply translations to dynamic content
-  refreshCurrentView();
+  const params = new URLSearchParams(window.location.search);
+  if (!params.get('track')) {
+    refreshCurrentView();
+  }
 }
 
 function refreshCurrentView() {
@@ -1014,8 +1048,8 @@ async function unlockPhones() {
 async function fetchWriters() {
   try {
     const [resW, resS] = await Promise.all([
-      fetch(`${API}/writers`).then(r => r.json()),
-      fetch(`${API}/writer-stats`).then(r => r.json())
+      handleFetch(`${API}/writers`),
+      handleFetch(`${API}/writer-stats`)
     ]);
     allWriters = resW;
     writerStats = resS;
@@ -1122,8 +1156,6 @@ async function saveWriter() {
     nid: document.getElementById("wNid").value.trim()
   };
 
-  if (!data.name || !data.phone) return showToast(t('msg_req_name_phone'), 'error');
-
   const password = await requestAuthToken(t('msg_auth_save'));
   if (!password) return;
   data.password = password;
@@ -1205,6 +1237,14 @@ async function bootstrap() {
     
     if (trackId) {
       return initTrackingView(trackId);
+    }
+
+    // Check Portal Session
+    const session = localStorage.getItem('portalSession');
+    if (!session) {
+      document.getElementById("portalLogin").classList.remove("hidden");
+      loader.style.display = "none";
+      return;
     }
 
     await Promise.all([fetchTasks(1, false), fetchClients(), fetchExpenses(), fetchInvoices(), fetchWriters()]);
@@ -1317,6 +1357,16 @@ async function openActivityModal() {
 // === PUBLIC TRACKING VIEW LOGIC ===
 async function initTrackingView(id) {
   const trackView = document.getElementById("trackingView");
+  const loader = document.getElementById("catLoader");
+  
+  // Show loader while fetching
+  if (loader) {
+    loader.style.display = "flex";
+    loader.style.opacity = "1";
+    const lText = loader.querySelector("p");
+    if (lText) lText.setAttribute('data-i18n', 'track_loading');
+  }
+
   trackView.classList.add('active');
   
   // Hide all other UI including Header
@@ -1332,8 +1382,16 @@ async function initTrackingView(id) {
     applyTranslations();
     
     document.getElementById("trackTitle").innerText = task.title;
-    document.getElementById("trackClient").innerText = `${t('track_order_for')} ${task.clientName}`;
-    document.getElementById("trackDeadline").innerText = customFormatDate(task.deadline);
+    document.getElementById("trackClientName").innerText = task.clientName;
+    document.getElementById("trackUniName").innerText = task.clientUniversity || "N/A";
+    
+    if (task.status === 'done') {
+      const labelEl = document.querySelector('[data-i18n="track_expected"]');
+      if (labelEl) labelEl.innerText = t('status_done');
+      document.getElementById("trackDeadline").innerText = t('txt_finished');
+    } else {
+      document.getElementById("trackDeadline").innerText = customFormatDate(task.deadline);
+    }
     
     const statusMap = { 'pending': 1, 'in_progress': 2, 'review': 3, 'done': 4 };
     const step = statusMap[task.status] || 1;
@@ -1352,10 +1410,41 @@ async function initTrackingView(id) {
       }
     });
   } catch (err) {
+    console.error("Tracking error:", err);
     applyTranslations();
     document.getElementById("trackTitle").innerText = t('track_not_found');
-    document.getElementById("trackClient").innerText = t('track_invalid_link');
+    const clientEl = document.getElementById("trackClientName");
+    if (clientEl) clientEl.innerText = t('track_invalid_link');
     showToast(t('track_not_found'), "error");
+  } finally {
+    // Hide loader
+    if (loader) {
+      loader.style.opacity = "0";
+      setTimeout(() => loader.style.display = "none", 500);
+    }
+  }
+}
+
+async function handlePortalLogin(e) {
+  e.preventDefault();
+  const btn = document.getElementById("btnLoginPortal");
+  const pass = document.getElementById("portalPass").value;
+  btn.disabled = true;
+  btn.innerText = "Verifying...";
+  
+  try {
+    const data = await handleFetch(`${API}/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: pass })
+    });
+    
+    localStorage.setItem('portalSession', data.token);
+    window.location.reload(); 
+  } catch (err) {
+    showToast(err.message, "error");
+    btn.disabled = false;
+    btn.innerText = "Unlock Dashboard";
   }
 }
 
@@ -1403,10 +1492,29 @@ function handleGlobalSearch() {
   }
 }
 
-async function handleFetch(url, options) {
+async function handleFetch(url, options = {}) {
+  const token = localStorage.getItem('portalSession');
+  if (token) {
+    options.headers = { ...options.headers, 'Authorization': token };
+  }
+  
   const res = await fetch(url, options);
   if (res.ok) return res.json();
+  
   const errData = await res.json().catch(() => ({}));
+  
+  // If unauthorized, clear session and show login (unless it's the login endpoint itself)
+  if (res.status === 401 && !url.includes('/login') && !url.includes('/track-task')) {
+    // Only reload if it's a SESSION error, not an action password error
+    if (errData.error && (errData.error.toLowerCase().includes("session") || errData.error.toLowerCase().includes("token"))) {
+      localStorage.removeItem('portalSession');
+      window.location.reload();
+      return;
+    }
+    // Otherwise, just throw the error (like "Invalid password") so the action handler can show a toast
+    throw new Error(errData.message || errData.error || "Unauthorized");
+  }
+  
   throw new Error(errData.message || errData.error || `Server Error (${res.status})`);
 }
 
@@ -1980,7 +2088,7 @@ async function dropTask(ev, newStatus) {
     tk.status = newStatus;
     renderTasks();
     try { 
-      await fetch(`${API}/update-task/${dragId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: newStatus, password: "none_req_for_dnd" }) }); 
+      await handleFetch(`${API}/update-task/${dragId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: newStatus, password: "none_req_for_dnd" }) }); 
     } catch(err) { console.log("DnD Update failed."); }
   }
   dragId = null;
@@ -2015,7 +2123,7 @@ function initKanbanBoards() {
           if (tk && tk.status !== newStatus) {
             tk.status = newStatus;
             try { 
-              await fetch(`${API}/update-task/${taskId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: newStatus, password: "none_req_for_dnd" }) }); 
+              await handleFetch(`${API}/update-task/${taskId}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: newStatus, password: "none_req_for_dnd" }) }); 
             } catch(err) { console.log("DnD Update failed."); }
           }
         }
@@ -2355,16 +2463,14 @@ function openEditTxModal(id) {
 async function saveTransaction(e) {
   const btn = document.getElementById("btnSaveTx");
   btn.disabled = true;
-  const password = await requestAuthToken(t('msg_auth_save'));
-  if(!password) { btn.disabled = false; return; }
   
   const payload = { 
     category: document.getElementById("txCategory").value, 
     description: document.getElementById("txDescription").value, 
     amount: Number(document.getElementById("txAmount").value), 
     taskId: document.getElementById("txTaskId").value || null,
-    type: "expense", 
-    password 
+    type: "expense",
+    password
   };
   
   if(payload.amount <= 0) { 
@@ -2473,7 +2579,7 @@ async function saveClient(e) {
     country: document.getElementById("cEditCountry").value,
     program: document.getElementById("cEditProgram").value,
     subject: document.getElementById("cEditSubject").value,
-    password 
+    password
   };
   
   try {
@@ -2502,3 +2608,4 @@ bootstrap();
 </script>
 </body>
 </html>
+v
