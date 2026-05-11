@@ -38,6 +38,10 @@
     .tab-inactive { border-bottom: 2px solid transparent; }
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    /* Tracking View Styles */
+    #trackingView { display: none; }
+    #trackingView.active { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
 
     /* Glassmorphism */
     .glass {
@@ -91,6 +95,58 @@
   </style>
 </head>
 <body class="bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 p-3 sm:p-8 transition-colors duration-300 relative">
+
+  <!-- Public Tracking View -->
+  <div id="trackingView" class="p-4 sm:p-8 w-full max-w-2xl mx-auto flex-col gap-8">
+    <div class="text-center space-y-2">
+      <h1 class="text-3xl font-black tracking-tighter text-zinc-900 dark:text-white uppercase">Assignment Koran</h1>
+      <p class="text-zinc-500 dark:text-zinc-400 font-medium tracking-wide uppercase text-[10px]">Order Tracking Portal</p>
+    </div>
+    
+    <div id="trackingCard" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-6 sm:p-10 rounded-3xl shadow-xl space-y-8 w-full">
+      <div class="space-y-1">
+        <h2 id="trackTitle" class="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white leading-tight">Loading order details...</h2>
+        <p id="trackClient" class="text-sm text-zinc-500 font-medium"></p>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="relative pt-10 pb-4">
+        <div class="absolute top-0 left-0 w-full h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full"></div>
+        <div id="trackProgress" class="absolute top-0 left-0 h-1.5 bg-indigo-500 rounded-full transition-all duration-1000" style="width: 10%"></div>
+        
+        <div class="flex justify-between mt-[-12px] relative">
+          <div class="flex flex-col items-center gap-2">
+            <div id="step-pending" class="w-6 h-6 rounded-full bg-indigo-500 border-4 border-white dark:border-zinc-900 z-10"></div>
+            <span class="text-[9px] font-bold uppercase tracking-wider text-zinc-400">Pending</span>
+          </div>
+          <div class="flex flex-col items-center gap-2">
+            <div id="step-in_progress" class="w-6 h-6 rounded-full bg-zinc-200 dark:bg-zinc-800 border-4 border-white dark:border-zinc-900 z-10"></div>
+            <span class="text-[9px] font-bold uppercase tracking-wider text-zinc-400">Working</span>
+          </div>
+          <div class="flex flex-col items-center gap-2">
+            <div id="step-review" class="w-6 h-6 rounded-full bg-zinc-200 dark:bg-zinc-800 border-4 border-white dark:border-zinc-900 z-10"></div>
+            <span class="text-[9px] font-bold uppercase tracking-wider text-zinc-400">Review</span>
+          </div>
+          <div class="flex flex-col items-center gap-2">
+            <div id="step-done" class="w-6 h-6 rounded-full bg-zinc-200 dark:bg-zinc-800 border-4 border-white dark:border-zinc-900 z-10"></div>
+            <span class="text-[9px] font-bold uppercase tracking-wider text-zinc-400">Done</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-6 border-t border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
+        <div class="space-y-0.5">
+          <p class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Expected Delivery</p>
+          <p id="trackDeadline" class="text-sm font-semibold text-zinc-900 dark:text-white">-</p>
+        </div>
+        <div id="trackBadge" class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-zinc-100 dark:bg-zinc-800 text-zinc-500">
+          Syncing...
+        </div>
+      </div>
+    </div>
+
+    <p class="text-center text-[10px] text-zinc-500 font-medium">Need help? Contact your assigned coordinator.</p>
+  </div>
 
   <!-- Fullscreen Lottie Loader -->
   <div id="catLoader" class="fixed top-0 left-0 w-full h-full z-[50] flex flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-950 transition-opacity duration-500 m-0 p-0">
@@ -227,7 +283,10 @@
           <ul id="topClientsList" class="flex-1 space-y-3 overflow-y-auto pr-2"><li class="text-zinc-500 text-sm" data-i18n="calculating">Calculating...</li></ul>
         </div>
         <div id="activityCard" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 p-4 sm:p-6 rounded-2xl shadow-sm dark:shadow-none flex flex-col min-h-[250px]">
-          <h3 class="text-[10px] font-bold mb-3 text-zinc-500 uppercase tracking-widest" data-i18n="recent_activity">Recent Activity</h3>
+          <div class="flex justify-between items-center mb-3">
+            <h3 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest" data-i18n="recent_activity">Recent Activity</h3>
+            <button onclick="openActivityModal()" class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest hover:underline">See More</button>
+          </div>
           <ul id="activityList" class="flex-1 space-y-4 overflow-y-auto pr-2 scrollbar-thin"></ul>
         </div>
       </div>
@@ -358,6 +417,10 @@
         <div class="col-span-1 sm:col-span-2 space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_link">Project Link (Optional)</label><input type="url" id="tLink" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none focus:border-indigo-500 dark:focus:border-indigo-500 text-sm" placeholder="https://drive.google.com/..."></div>
         <div class="space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_type">Type of Work</label><select id="tType" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white text-sm"><option value="Assignment">Assignment</option><option value="Thesis">Thesis</option><option value="Presentation">Presentation</option><option value="Lab Project">Lab Project</option><option value="Other">Other</option></select></div>
         <div class="space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_deadline">Deadline</label><input type="date" id="tDeadline" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none focus:border-indigo-500 dark:[color-scheme:dark] text-sm"></div>
+        <div class="space-y-1.5">
+          <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Revision Count</label>
+          <input type="number" id="tRevisionCount" value="0" min="0" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none focus:border-indigo-500 text-sm">
+        </div>
       </div>
       <div class="p-3 sm:p-4 bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-xl space-y-3">
         <div class="space-y-1.5"><label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_client">Client</label><input type="text" id="clientSearchInput" oninput="filterClientDropdown()" placeholder="Search clients..." class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-t-lg border-b-0 px-3 py-2 outline-none focus:border-indigo-500 text-sm text-zinc-900 dark:text-white mb-0" data-i18n-placeholder="search_client"><select id="tClientSelect" onchange="this.size=1; toggleNewClientFields()" class="w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-b-lg px-3 py-2 sm:py-2.5 outline-none focus:border-indigo-500 text-zinc-900 dark:text-white text-sm"><option value="new">+ Add New Client / No Client</option></select></div>
@@ -390,6 +453,16 @@
       <div class="space-y-1.5">
         <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider" data-i18n="lbl_links">Reference Files / Links</label>
         <textarea id="tLink" rows="2" class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none focus:border-indigo-500 text-sm" placeholder="Paste multiple links or file paths..."></textarea>
+      </div>
+      <div class="flex gap-2 items-end">
+        <div class="flex-1 space-y-1.5">
+          <label class="block text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">Drive Folder Link (Optional)</label>
+          <input type="url" id="tDriveLink" placeholder="Paste generated link here..." class="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 rounded-lg px-3 py-2 sm:py-2.5 outline-none focus:border-indigo-500 text-sm">
+        </div>
+        <button type="button" onclick="handleDriveHelper()" class="px-3 py-2.5 sm:py-3 bg-indigo-100 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-500/20 rounded-lg font-medium text-[10px] sm:text-xs whitespace-nowrap transition-colors flex items-center gap-1.5 shadow-sm">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          Copy Name & Open Drive
+        </button>
       </div>
     </div>
     <div class="p-4 sm:p-5 border-t border-zinc-200 dark:border-zinc-800 shrink-0 bg-white dark:bg-zinc-950"><button onclick="saveTask(event)" id="btnSaveTask" class="w-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 hover:bg-zinc-800 dark:hover:bg-zinc-200 rounded-lg px-4 py-3 sm:py-3 font-semibold transition-colors shadow-sm text-sm" data-i18n="btn_deploy">Deploy Task</button></div>
@@ -486,6 +559,20 @@
         <button onclick="cancelAuthPrompt()" class="w-full sm:flex-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 rounded-lg px-4 py-2.5 sm:py-3 font-semibold transition-colors text-sm" data-i18n="btn_cancel">Cancel</button>
         <button onclick="confirmAuthPrompt()" id="btnConfirmAuth" class="w-full sm:flex-1 bg-rose-500 text-white hover:bg-rose-600 rounded-lg px-4 py-2.5 sm:py-3 font-semibold transition-colors text-sm" data-i18n="btn_confirm">Confirm</button>
       </div>
+    </div>
+  </dialog>
+
+  <!-- Activity History Modal -->
+  <dialog id="activityModal" class="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-2xl p-0 w-[95vw] sm:w-full max-w-lg m-auto text-zinc-900 dark:text-white transition-colors flex flex-col">
+    <div class="p-4 sm:p-5 border-b border-zinc-200 dark:border-zinc-800 flex justify-between items-center shrink-0">
+      <h2 class="text-base sm:text-lg font-semibold" data-i18n="recent_activity">Recent Activity</h2>
+      <button onclick="document.getElementById('activityModal').close()" class="text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300 p-1"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+    </div>
+    <div class="p-4 sm:p-5 dialog-content min-h-[300px]">
+      <ul id="fullActivityList" class="space-y-4"></ul>
+    </div>
+    <div class="p-4 border-t border-zinc-200 dark:border-zinc-800 shrink-0 bg-zinc-50 dark:bg-zinc-900/50">
+      <p class="text-[10px] text-zinc-500 text-center uppercase tracking-widest font-bold">End of History</p>
     </div>
   </dialog>
 
@@ -820,7 +907,7 @@ function applyTranslations() {
 function refreshCurrentView() {
   const tabId = localStorage.getItem('activeTab') || 'dashboard';
   switch(tabId) {
-    case 'dashboard': renderDashboard(); fetchLogs(); break;
+    case 'dashboard': renderDashboard(); updateDashboardLogs(); break;
     case 'tasks': renderTasks(); break;
     case 'done': renderTasks(); break;
     case 'clients-view': renderClientsView(); break;
@@ -1103,6 +1190,13 @@ async function bootstrap() {
   currentTaskPage = 1;
   
   try {
+    const params = new URLSearchParams(window.location.search);
+    const trackId = params.get('track');
+    
+    if (trackId) {
+      return initTrackingView(trackId);
+    }
+
     await Promise.all([fetchTasks(1, false), fetchClients(), fetchExpenses(), fetchInvoices(), fetchWriters()]);
     applyTranslations(); 
     switchTab('dashboard');
@@ -1113,6 +1207,16 @@ async function bootstrap() {
     loader.style.opacity = '0';
     setTimeout(() => { loader.style.display = 'none'; }, 500);
   }
+
+  // Close dialogs when clicking outside (on backdrop)
+  document.querySelectorAll('dialog').forEach(dialog => {
+    dialog.addEventListener('click', (e) => {
+      const rect = dialog.getBoundingClientRect();
+      const isInDialog = (rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&
+        rect.left <= e.clientX && e.clientX <= rect.left + rect.width);
+      if (!isInDialog) dialog.close();
+    });
+  });
 }
 
 function switchTab(tabId) {
@@ -1151,41 +1255,121 @@ function switchTab(tabId) {
   if(tabId === 'writers' && allWriters.length === 0) fetchWriters();
 }
 
-async function fetchLogs() {
+async function fetchLogs(limit = 10) {
   try {
-    const logs = await handleFetch(`${API}/logs`);
-    renderLogs(logs);
-  } catch (err) { console.error("Logs error:", err); }
+    return await handleFetch(`${API}/logs?limit=${limit}`);
+  } catch (err) { console.error("Logs error:", err); return []; }
 }
 
-function renderLogs(logs) {
-  const list = document.getElementById("activityList");
-  list.innerHTML = "";
-  if (!logs.length) {
-    list.innerHTML = `<li class="text-xs text-zinc-500 italic">No recent activity</li>`;
-    return;
-  }
-
-  logs.forEach(log => {
-    const item = document.createElement("li");
-    item.className = "flex gap-3 items-start group";
+function generateLogHTML(log) {
+    const actionLower = log.action.toLowerCase();
+    const isSuccess = actionLower.includes("created") || actionLower.includes("added") || actionLower.includes("logged") || actionLower.includes("done");
+    const isDanger = actionLower.includes("deleted") || actionLower.includes("removed");
     
-    const iconColor = log.action.includes("Created") ? "text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10" : 
-                     log.action.includes("Deleted") ? "text-rose-500 bg-rose-50 dark:bg-rose-500/10" : 
-                     "text-blue-500 bg-blue-50 dark:bg-blue-500/10";
+    const iconColor = isSuccess ? "text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10" : 
+                     isDanger ? "text-rose-500 bg-rose-50 dark:bg-rose-500/10" : 
+                     "text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10";
 
-    item.innerHTML = `
-      <div class="p-1.5 rounded-lg ${iconColor} shrink-0 mt-0.5">
-        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-      </div>
-      <div>
-        <p class="text-[11px] font-bold text-zinc-900 dark:text-white leading-tight">${log.action}</p>
-        <p class="text-[10px] text-zinc-500 line-clamp-1">${log.details}</p>
-        <p class="text-[9px] text-zinc-400 mt-0.5">${new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-      </div>
+    return `
+      <li class="flex gap-3 items-start group">
+        <div class="p-2 rounded-lg ${iconColor} shrink-0 mt-0.5">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-[11px] font-bold text-zinc-900 dark:text-white leading-tight truncate">${log.action}</p>
+          <p class="text-[10px] text-zinc-500 line-clamp-2 mt-0.5 leading-relaxed">${log.details}</p>
+          <p class="text-[9px] text-zinc-400 mt-1 font-medium">${customFormatDateTime(log.timestamp)}</p>
+        </div>
+      </li>
     `;
-    list.appendChild(item);
-  });
+}
+
+function customFormatDateTime(ts) {
+    const d = new Date(ts);
+    return d.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+async function updateDashboardLogs() {
+    const logs = await fetchLogs(5);
+    const list = document.getElementById("activityList");
+    list.innerHTML = logs.length ? logs.map(generateLogHTML).join('') : `<li class="text-xs text-zinc-500 italic">No recent activity</li>`;
+}
+
+async function openActivityModal() {
+    const list = document.getElementById("fullActivityList");
+    list.innerHTML = `<li class="text-center py-8 text-zinc-500 animate-pulse">Loading history...</li>`;
+    document.getElementById("activityModal").showModal();
+    
+    const logs = await fetchLogs(100);
+    list.innerHTML = logs.length ? logs.map(generateLogHTML).join('') : `<li class="text-zinc-500 text-center py-8">No activity recorded yet.</li>`;
+}
+
+// === PUBLIC TRACKING VIEW LOGIC ===
+async function initTrackingView(id) {
+  const trackView = document.getElementById("trackingView");
+  trackView.classList.add('active');
+  
+  // Hide all other UI
+  document.querySelector("aside")?.classList.add("hidden");
+  document.querySelector("nav")?.classList.add("hidden");
+  document.querySelectorAll("main").forEach(m => m.classList.add("hidden"));
+  
+  try {
+    const task = await handleFetch(`${API}/track-task/${id}`);
+    document.getElementById("trackTitle").innerText = task.title;
+    document.getElementById("trackClient").innerText = `Order for ${task.clientName}`;
+    document.getElementById("trackDeadline").innerText = task.deadline ? new Date(task.deadline).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Flexible';
+    
+    const statusMap = { 'pending': 1, 'in_progress': 2, 'review': 3, 'done': 4 };
+    const step = statusMap[task.status] || 1;
+    const progress = (step / 4) * 100;
+    
+    document.getElementById("trackProgress").style.width = `${progress}%`;
+    document.getElementById("trackBadge").innerText = task.status.replace('_', ' ');
+    
+    const steps = ['pending', 'in_progress', 'review', 'done'];
+    steps.forEach((s, i) => {
+      const el = document.getElementById(`step-${s}`);
+      if (i < step) {
+        el.className = "w-6 h-6 rounded-full bg-indigo-500 border-4 border-white dark:border-zinc-900 z-10 transition-all duration-500";
+      } else {
+        el.className = "w-6 h-6 rounded-full bg-zinc-200 dark:bg-zinc-800 border-4 border-white dark:border-zinc-900 z-10";
+      }
+    });
+  } catch (err) {
+    document.getElementById("trackTitle").innerText = "Order Not Found";
+    document.getElementById("trackClient").innerText = "Please check your tracking link.";
+    showToast("Invalid Tracking ID", "error");
+  }
+}
+
+// === DRIVE FOLDER HELPER ===
+function handleDriveHelper() {
+    const select = document.getElementById("tClientSelect");
+    let clientName = "Client";
+    if (select.value === 'new') {
+        clientName = document.getElementById("tClientName").value || "New Client";
+    } else {
+        clientName = select.options[select.selectedIndex].text.split('(')[0].trim();
+    }
+    const taskTitle = document.getElementById("tTitle").value || "Task";
+    const folderName = `${clientName} - ${taskTitle}`;
+    
+    navigator.clipboard.writeText(folderName).then(() => {
+      showToast("Folder name copied!", "success");
+      window.open('https://drive.google.com/drive/my-drive', '_blank');
+    }).catch(() => {
+      showToast("Clipboard blocked", "error");
+    });
+}
+
+function copyTrackingLink(id) {
+    const url = window.location.origin + window.location.pathname + '?track=' + id;
+    navigator.clipboard.writeText(url).then(() => {
+        showToast("Tracking link copied!", "success");
+    }).catch(() => {
+        showToast("Failed to copy link", "error");
+    });
 }
 
 function handleGlobalSearch() {
@@ -1598,6 +1782,7 @@ function generateTaskHTML(tk, isDone, isKanbanCard = false) {
   const total = tk.totalValue || 0;
   const advance = tk.advancePaid || 0;
   const bonus = tk.bonus || 0;
+  const revisionCount = tk.revisionCount || 0;
   
   const typeMap = { "Assignment": "অ্যাসাইনমেন্ট", "Thesis": "থিসিস", "Presentation": "প্রেজেন্টেশন", "Lab Project": "ল্যাব", "Other": "অন্যান্য" };
   const displayType = currentLang === 'bn' ? (typeMap[tk.workType] || tk.workType) : (tk.workType || 'Task');
@@ -1606,13 +1791,19 @@ function generateTaskHTML(tk, isDone, isKanbanCard = false) {
   
   // Deadline Urgency Check
   let urgencyHTML = '';
+  let urgencyClass = '';
   if (!isDone && tk.deadline) {
     const diff = new Date(tk.deadline) - new Date();
     const hours = diff / (1000 * 60 * 60);
-    if (hours > 0 && hours < 24) {
-      urgencyHTML = `<span class="bg-rose-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full animate-pulse uppercase ml-2">${t('urgent')}</span>`;
+    if (hours < 24) {
+      urgencyHTML = `<span class="bg-rose-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full animate-pulse uppercase ml-2">🔥 ${hours < 0 ? 'Overdue' : 'Urgent'}</span>`;
+      urgencyClass = 'border-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.2)] dark:shadow-[0_0_20px_rgba(244,63,94,0.1)]';
     }
   }
+
+  // Revision Warning
+  const revWarning = revisionCount >= 3 ? 'border-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.2)]' : '';
+  const revHTML = revisionCount > 0 ? `<span class="flex items-center gap-1 text-[10px] font-bold ${revisionCount >= 3 ? 'text-orange-600' : 'text-zinc-400'}">🔄 Rev: ${revisionCount}</span>` : '';
 
   // Handle Multiple Links
   const links = (tk.link || "").split('\n').filter(l => l.trim());
@@ -1624,25 +1815,54 @@ function generateTaskHTML(tk, isDone, isKanbanCard = false) {
 
   let actionButtons = '';
   if (isKanbanCard) {
-     actionButtons = `<button onclick="openTaskModal('${tk._id}')" class="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded text-[10px] w-full">${t('btn_edit')}</button>`;
+     actionButtons = `<button onclick="openTaskModal('${tk._id}')" class="px-2 py-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded text-[10px] w-full font-bold">${t('btn_edit')}</button>`;
   } else {
      if (isDone) {
-        actionButtons = `<button onclick="generatePDFInvoice('${tk._id}')" class="px-3 py-2 sm:py-1.5 bg-blue-100 dark:bg-blue-500/10 hover:bg-blue-200 dark:hover:bg-blue-500/20 text-blue-700 dark:text-blue-400 rounded text-xs font-medium transition-colors text-center w-full flex justify-center items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> ${t('btn_invoice')}</button><button onclick="updateTaskStatus('${tk._id}', 'pending')" class="px-3 py-2 sm:py-1.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded text-xs font-medium text-center transition-colors w-full">${t('btn_undo')}</button>`;
+        const waText = encodeURIComponent(`Hello ${clientName}, your assignment '${tk.title}' is ready! Let us know if you need anything else. - Assignment Koran.`);
+        const phone = tk.client?.phone ? tk.client.phone.replace(/[^0-9+]/g, '') : '';
+        actionButtons = `
+          <button onclick="generatePDFInvoice('${tk._id}')" class="px-3 py-2 sm:py-1.5 bg-blue-100 dark:bg-blue-500/10 hover:bg-blue-200 dark:hover:bg-blue-500/20 text-blue-700 dark:text-blue-400 rounded text-xs font-medium transition-colors text-center w-full flex justify-center items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> ${t('btn_invoice')}</button>
+          ${phone ? `<a href="https://wa.me/${phone}?text=${waText}" target="_blank" class="px-3 py-2 sm:py-1.5 bg-emerald-100 dark:bg-emerald-500/10 hover:bg-emerald-200 dark:hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded text-xs font-medium transition-colors text-center w-full flex justify-center items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg> WhatsApp</a>` : ''}
+          <button onclick="updateTaskStatus('${tk._id}', 'pending')" class="px-3 py-2 sm:py-1.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded text-xs font-medium text-center transition-colors w-full">${t('btn_undo')}</button>`;
      } else {
-        actionButtons = `<button onclick="openTaskModal('${tk._id}')" class="px-3 py-2 sm:py-1.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-300 rounded text-xs font-medium transition-colors text-center w-full">${t('btn_edit')}</button><button onclick="updateTaskStatus('${tk._id}', 'done')" class="px-3 py-2 sm:py-1.5 bg-emerald-100 dark:bg-emerald-500/10 hover:bg-emerald-200 dark:hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded text-xs font-medium transition-colors text-center w-full">${t('btn_done')}</button>`;
+        actionButtons = `<button onclick="openTaskModal('${tk._id}')" class="px-3 py-2 sm:py-1.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-300 rounded text-xs font-medium transition-colors text-center w-full font-bold">${t('btn_edit')}</button><button onclick="updateTaskStatus('${tk._id}', 'done')" class="px-3 py-2 sm:py-1.5 bg-emerald-100 dark:bg-emerald-500/10 hover:bg-emerald-200 dark:hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded text-xs font-medium transition-colors text-center w-full">${t('btn_done')}</button>`;
      }
+     actionButtons += `<button onclick="copyTrackingLink('${tk._id}')" class="px-3 py-2 sm:py-1.5 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded text-xs font-medium transition-colors text-center flex items-center justify-center gap-1 w-full"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg> Copy Link</button>`;
      actionButtons += `<button onclick="deleteTask('${tk._id}')" class="px-3 py-2 sm:py-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded text-xs font-medium transition-colors text-center flex items-center justify-center gap-1 w-full"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg> ${t('btn_delete')}</button>`;
   }
 
   const netBalance = (total + bonus) - advance;
 
   if (isKanbanCard) {
-    return `<div data-id="${tk._id}" class="bg-white dark:bg-zinc-950 p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm cursor-grab active:cursor-grabbing hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors"><div class="flex items-center justify-between mb-2"><div class="flex items-center gap-1"><span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${colorClass}">${displayType}</span>${urgencyHTML}</div><span class="text-[10px] text-zinc-500 font-medium">${customFormatDate(tk.deadline)}</span></div><h4 class="text-sm font-semibold text-zinc-900 dark:text-white leading-tight">${tk.title}</h4><p class="text-[11px] text-zinc-500 mt-1 truncate">${clientName}</p>${linksHTML}<div class="mt-3 flex justify-between items-center border-t border-zinc-100 dark:border-zinc-800 pt-2"><span class="text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 px-1.5 rounded">${tk.assignedTo?.split(' ')[0] || '-'}</span><span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">৳${localNum(netBalance)}</span></div></div>`;
+    return `<div data-id="${tk._id}" class="bg-white dark:bg-zinc-950 p-3 rounded-xl border-2 ${urgencyClass || revWarning || 'border-zinc-200 dark:border-zinc-800'} shadow-sm cursor-grab active:cursor-grabbing hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-1">
+          <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${colorClass}">${displayType}</span>
+          ${urgencyHTML}
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="copyTrackingLink('${tk._id}')" class="p-1 text-zinc-400 hover:text-indigo-500 transition-colors" title="Copy tracking link">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+          </button>
+          <span class="text-[10px] text-zinc-500 font-medium">${customFormatDate(tk.deadline)}</span>
+        </div>
+      </div>
+      <h4 class="text-sm font-semibold text-zinc-900 dark:text-white leading-tight">${tk.title}</h4>
+      <p class="text-[11px] text-zinc-500 mt-1 truncate">${clientName}</p>
+      ${linksHTML}
+      <div class="mt-3 flex justify-between items-center border-t border-zinc-100 dark:border-zinc-800 pt-2">
+        <div class="flex items-center gap-2">
+          <span class="text-[10px] font-medium bg-zinc-100 dark:bg-zinc-800 px-1.5 rounded">${tk.assignedTo?.split(' ')[0] || '-'}</span>
+          ${revHTML}
+        </div>
+        <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">৳${localNum(netBalance)}</span>
+      </div>
+    </div>`;
   }
 
   const bonusHtml = bonus > 0 ? `<div class="text-indigo-600 dark:text-indigo-400">${t('txt_bonus')}: ৳${localNum(bonus)}</div>` : '';
 
-  return `<li class="border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-none rounded-2xl p-4 sm:p-5 bg-white dark:bg-zinc-900/50 flex flex-col md:flex-row gap-4 justify-between transition-all hover:border-zinc-300 dark:hover:border-zinc-700"><div class="flex-1 space-y-3"><div class="flex items-center gap-2 flex-wrap"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${isDone ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500' : 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300'}">${t(isDone ? 'btn_done' : 'nav_active')}</span><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${colorClass}">${displayType}</span>${urgencyHTML}<span class="text-xs text-zinc-500 dark:text-zinc-400 font-medium ml-1 sm:ml-2">${t('txt_due')}: ${customFormatDate(tk.deadline)}</span></div><div><h3 class="text-lg font-semibold text-zinc-900 dark:text-white ${isDone ? 'line-through text-zinc-500 dark:text-zinc-500' : ''}">${tk.title}</h3>${detailsHTML}${linksHTML}<p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-1.5"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>${clientName}</p></div><div class="flex flex-wrap gap-3 sm:gap-4 text-xs font-medium border-t border-zinc-100 dark:border-zinc-800/50 pt-3"><div class="text-emerald-600 dark:text-emerald-400">${t('txt_total')}: ৳${localNum(total)}</div>${bonusHtml}<div class="text-zinc-600 dark:text-zinc-300">${t('txt_advance')}: ৳${localNum(advance)}</div><div class="text-rose-600 dark:text-rose-400">${t('txt_due')}: ৳${localNum(netBalance)}</div><div class="text-zinc-500 dark:text-zinc-500 w-full sm:w-auto sm:ml-auto flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>${tk.assignedTo || t('txt_unassigned')}</div></div></div><div class="flex flex-col gap-2 shrink-0 items-stretch justify-center w-full md:w-32 border-t md:border-t-0 md:border-l border-zinc-100 dark:border-zinc-800/50 pt-3 md:pt-0 md:pl-4">${actionButtons}</div></li>`;
+  return `<li class="border-2 ${urgencyClass || 'border-zinc-200 dark:border-zinc-800'} shadow-sm dark:shadow-none rounded-2xl p-4 sm:p-5 bg-white dark:bg-zinc-900/50 flex flex-col md:flex-row gap-4 justify-between transition-all hover:border-zinc-300 dark:hover:border-zinc-700"><div class="flex-1 space-y-3"><div class="flex items-center gap-2 flex-wrap"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${isDone ? 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500' : 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300'}">${t(isDone ? 'btn_done' : 'nav_active')}</span><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${colorClass}">${displayType}</span>${urgencyHTML}${revHTML}<span class="text-xs text-zinc-500 dark:text-zinc-400 font-medium ml-1 sm:ml-2">${t('txt_due')}: ${customFormatDate(tk.deadline)}</span></div><div><h3 class="text-lg font-semibold text-zinc-900 dark:text-white ${isDone ? 'line-through text-zinc-500 dark:text-zinc-500' : ''}">${tk.title}</h3>${detailsHTML}${linksHTML}<p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1 flex items-center gap-1.5"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>${clientName}</p></div><div class="flex flex-wrap gap-3 sm:gap-4 text-xs font-medium border-t border-zinc-100 dark:border-zinc-800/50 pt-3"><div class="text-emerald-600 dark:text-emerald-400">${t('txt_total')}: ৳${localNum(total)}</div>${bonusHtml}<div class="text-zinc-600 dark:text-zinc-300">${t('txt_advance')}: ৳${localNum(advance)}</div><div class="text-rose-600 dark:text-rose-400">${t('txt_due')}: ৳${localNum(netBalance)}</div><div class="text-zinc-500 dark:text-zinc-500 w-full sm:w-auto sm:ml-auto flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>${tk.assignedTo || t('txt_unassigned')}</div></div></div><div class="flex flex-col gap-2 shrink-0 items-stretch justify-center w-full md:w-32 border-t md:border-t-0 md:border-l border-zinc-100 dark:border-zinc-800/50 pt-3 md:pt-0 md:pl-4">${actionButtons}</div></li>`;
 }
 
 
@@ -1996,22 +2216,24 @@ function openTaskModal(taskId = null) {
     document.getElementById("tTitle").value = tk.title;
     document.getElementById("tDetails").value = tk.details || "";
     document.getElementById("tLink").value = tk.link || "";
+    document.getElementById("tDriveLink").value = tk.driveLink || "";
+    document.getElementById("tRevisionCount").value = tk.revisionCount || 0;
     document.getElementById("tType").value = tk.workType || tk.type || "Assignment";
     document.getElementById("tTotal").value = tk.totalValue || 0;
     document.getElementById("tAdvance").value = tk.advancePaid || 0;
     document.getElementById("tBonus").value = tk.bonus || 0;
     document.getElementById("tWriterPay").value = tk.writerPay || 0;
     document.getElementById("tAssign").value = tk.assignedTo || "Unassigned";
-    document.getElementById("taskModalTitle").innerText = t('btn_update');
     document.getElementById("tDeadline").value = tk.deadline ? tk.deadline.split('T')[0] : "";
     document.getElementById("tClientSelect").value = tk.client ? tk.client._id : "new";
     toggleNewClientFields();
-    document.getElementById("tLink").value = tk.link || "";
   } else {
     document.getElementById("taskModalTitle").innerText = t('modal_task_title');
     document.getElementById("tTitle").value = "";
     document.getElementById("tDetails").value = "";
     document.getElementById("tLink").value = "";
+    document.getElementById("tDriveLink").value = "";
+    document.getElementById("tRevisionCount").value = "0";
     document.getElementById("tTotal").value = "0";
     document.getElementById("tAdvance").value = "0";
     document.getElementById("tBonus").value = "0";
@@ -2040,6 +2262,8 @@ async function saveTask(e) {
     title: document.getElementById("tTitle").value,
     details: document.getElementById("tDetails").value,
     link: document.getElementById("tLink").value,
+    driveLink: document.getElementById("tDriveLink").value,
+    revisionCount: Number(document.getElementById("tRevisionCount").value) || 0,
     workType: document.getElementById("tType").value, 
     deadline: document.getElementById("tDeadline").value || null, 
     clientId: document.getElementById("tClientSelect").value,
