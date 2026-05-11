@@ -12,6 +12,44 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
+
+// 🔐 SESSION VERIFICATION MIDDLEWARE
+async function checkSession(req, res, next) {
+  try {
+    const token = req.headers.authorization;
+    if (!token) return res.status(401).json({ error: "No session token" });
+
+    const client = await clientPromise;
+    const db = client.db("ak_process");
+    
+    const session = await db.collection("sessions").findOne({ 
+      token, 
+      expiresAt: { $gt: new Date() } 
+    });
+
+    if (!session) return res.status(401).json({ error: "Session expired or invalid" });
+    next();
+  } catch (err) { res.status(500).json({ error: "Session check failed" }); }
+}
+
+// Global Session Protection (Excluding Login and Tracking)
+app.use((req, res, next) => {
+  const url = req.url || "";
+  
+  // 1. Allow non-API routes (like static files and root page)
+  if (!url.startsWith("/api/")) {
+    return next();
+  }
+
+  // 2. Exclude public API routes
+  if (url.includes("/login") || url.includes("/track-task")) {
+    return next();
+  }
+
+  // 3. Verify session for all other API routes
+  checkSession(req, res, next);
+});
+
 // 📝 LOGGING UTILITY
 async function addLog(action, details) {
   try {
@@ -50,6 +88,33 @@ async function checkPassword(req, res, next) {
     res.status(500).json({ error: "Auth error" });
   }
 }
+
+
+// 🔑 PUBLIC LOGIN (Session-based)
+app.post("/api/login", async (req, res) => {
+  try {
+    const { password } = req.body;
+    const client = await clientPromise;
+    const db = client.db("ak_process");
+
+    const sec = await db.collection("security").findOne({ 
+      _id: new ObjectId("6a01f6718ccd1d4ba50dd048") 
+    });
+
+    if (!sec || sec.password !== password) {
+      return res.status(401).json({ error: "Invalid portal password" });
+    }
+
+    // Create session (1 month)
+    const token = Math.random().toString(36).substring(2) + Date.now().toString(36);
+    const expiresAt = new Date();
+    expiresAt.setMonth(expiresAt.getMonth() + 1);
+
+    await db.collection("sessions").insertOne({ token, expiresAt, createdAt: new Date() });
+
+    res.json({ token, expiresAt });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
 
 // 📱 VERIFY PHONE REVEAL PASSWORD ENDPOINT
 app.post("/api/verify-phone-password", async (req, res) => {
@@ -216,10 +281,11 @@ app.get("/api/track-task/:id", async (req, res) => {
       },
       {
         $addFields: {
-          clientName: { $ifNull: [{ $arrayElemAt: ["$clientData.name", 0] }, "Internal"] }
+          clientName: { $ifNull: [{ $arrayElemAt: ["$clientData.name", 0] }, "Internal"] },
+          clientUniversity: { $ifNull: [{ $arrayElemAt: ["$clientData.university", 0] }, ""] }
         }
       },
-      { $project: { title: 1, status: 1, deadline: 1, clientName: 1 } }
+      { $project: { title: 1, status: 1, deadline: 1, clientName: 1, clientUniversity: 1 } }
     ]).next();
 
     if (!task) return res.status(404).json({ message: "Task not found" });
